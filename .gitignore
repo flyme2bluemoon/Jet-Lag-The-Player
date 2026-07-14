@@ -27,6 +27,12 @@ out/
 coverage/
 .nyc_output/
 
+# Playwright CLI artifacts
+/.playwright-cli/
+/app/.playwright-cli/
+/output/playwright/
+/app/output/playwright/
+
 # Logs
 *.log
 npm-debug.log*

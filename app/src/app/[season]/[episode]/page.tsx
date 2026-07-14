@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { EpisodeDashboard } from "@/components/episode/episode-dashboard";
 import { getSeasonPage, seasonPages } from "@/data/season-pages";
 import { EpisodeSwitcher } from "./episode-switcher";
 
@@ -44,7 +45,7 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
     <main className="page-texture max-w-page px-gutter tablet:pt-7 tablet:pb-16 mx-auto min-h-screen w-full overflow-hidden pt-4.5 pb-10">
       <header className="border-paper/20 tablet:flex-row tablet:items-end tablet:justify-between tablet:gap-8 tablet:pt-8 flex flex-col items-stretch gap-6 border-b pt-7 pb-5.5">
         <div>
-          <Link className="text-copy-muted hover:text-paper focus-visible:text-paper mb-6 inline-flex items-center gap-2 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href={`/${season.slug}`}><span className="text-signal text-lg" aria-hidden="true">←</span> {season.name}</Link>
+          <Link className="text-copy-muted hover:text-paper focus-visible:text-paper tablet:relative tablet:-top-5 mb-6 inline-flex items-center gap-2 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href={`/${season.slug}`}><span className="text-signal text-lg" aria-hidden="true">←</span> {season.name}</Link>
           <p className="text-signal mb-2 font-mono text-xs leading-none font-bold tracking-widest uppercase">Season {season.number}</p>
           <h1 className="font-display tablet:text-[clamp(48px,6vw,84px)] text-5xl leading-[.88] font-black tracking-tight uppercase">{episode.label}</h1>
         </div>
@@ -54,9 +55,13 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
           {nextEpisode ? <Button asChild variant="ghost" className="text-control hover:text-paper focus-visible:text-paper tablet:min-w-40 tablet:px-4 tablet:text-xs h-auto min-w-0 gap-2 rounded-none border-0 bg-transparent px-2 font-mono text-0 leading-none font-bold tracking-widest uppercase shadow-none hover:bg-white/5 focus-visible:bg-white/5"><Link href={episodeHref(nextEpisode.slug)}>Next episode <FastForwardIcon /></Link></Button> : <Button variant="ghost" className="text-control-disabled tablet:min-w-40 tablet:px-4 tablet:text-xs h-auto min-w-0 gap-2 rounded-none border-0 bg-transparent px-2 font-mono text-0 leading-none font-bold tracking-widest uppercase shadow-none disabled:cursor-not-allowed disabled:opacity-100" disabled>Next episode <FastForwardIcon /></Button>}
         </nav>
       </header>
-      <section className="video-panel mx-auto mt-6 w-full md:w-1/2 xl:w-1/3" aria-label={`${episode.label} video player`}>
-        <div className="-mx-gutter border-paper/35 bg-player tablet:mx-0 tablet:w-full tablet:border tablet:shadow-player relative aspect-video w-[calc(100%+2*var(--spacing-gutter))] border-y"><iframe className="absolute inset-0 size-full border-0" src={`https://www.youtube.com/embed/${episode.video}`} title={`${episode.label}: ${episode.title}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
-      </section>
+      <EpisodeDashboard
+        seasonSlug={season.slug}
+        episodeSlug={episode.slug}
+        label={episode.label}
+        title={episode.title}
+        videoId={episode.video}
+      />
     </main>
   );
 }

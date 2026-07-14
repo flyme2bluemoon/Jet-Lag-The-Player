@@ -45,7 +45,7 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
       <header className="border-paper/20 tablet:flex-row tablet:items-end tablet:justify-between tablet:gap-8 tablet:pt-8 flex flex-col items-stretch gap-6 border-b pt-7 pb-5.5">
         <div>
           <Link className="text-copy-muted hover:text-paper focus-visible:text-paper mb-6 inline-flex items-center gap-2 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href={`/${season.slug}`}><span className="text-signal text-lg" aria-hidden="true">←</span> {season.name}</Link>
-          <p className="text-signal mb-2 font-mono text-xs leading-none font-bold tracking-widest uppercase">Season {season.number} · Dashboard</p>
+          <p className="text-signal mb-2 font-mono text-xs leading-none font-bold tracking-widest uppercase">Season {season.number}</p>
           <h1 className="font-display tablet:text-[clamp(48px,6vw,84px)] text-5xl leading-[.88] font-black tracking-tight uppercase">{episode.label}</h1>
         </div>
         <nav className="border-paper/40 bg-panel tablet:inline-flex tablet:w-auto grid min-h-11 w-full grid-cols-[1fr_1.15fr_1fr] items-stretch border" aria-label="Episode controls">

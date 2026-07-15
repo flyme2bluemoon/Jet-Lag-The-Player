@@ -4,8 +4,6 @@
 
 Jet Lag: The Game is a travel game show where in each season teams or individuals compete in a game while traveling some part of the world.
 
-The transcripts for the show are available in `transcript_downloader/transcripts/`. Do not run the transcript downloader on your own. If you can't find the transcripts, stop and ask the user to download them instead.
-
 ### Seasons
 
 There are 18 full length seasons and a special Hide and Seek Across NYC mini season. Each team has a primary and one or more secondary colors to be used in graphics to denote that team. Some games only have two teams and thus the third column is empty. In individual games (e.g., Tag, Hide & Seek), player and team may be used interchangably.
@@ -40,5 +38,6 @@ There are 18 full length seasons and a special Hide and Seek Across NYC mini sea
 ## Dashboards
 
 - Each season has a custom dashboard.
+- Use Barlow Condensed (`font-heading`/`font-display`) for short headings, large numbers, and display text; use Rubik (`font-sans`) for prose, descriptions, and longer headings or titles; use monospace only for passport stamps.
 - When creating new cards, make sure this card is synced with the timestamp of the YouTube video by using the YouTube IFrame Player API.
 - Most cards will be the same for all episodes in a dashboard but it may be possible that a card should only be shown for certain episodes.

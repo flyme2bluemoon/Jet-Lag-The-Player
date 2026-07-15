@@ -1,4 +1,11 @@
-import { seasonFourEpisodeOrder, type TeamId } from "./state-claims";
+import { seasonFour } from "@/data/season-4";
+import { compareTimestamps } from "@/lib/timestamps";
+import {
+    seasonFourEpisodeOrder,
+    seasonFourStateClaims,
+    type StateClaim,
+} from "./state-claims";
+import type { TeamId } from "./team-data";
 
 export type PowerupTransaction = {
     id: string;
@@ -8,6 +15,7 @@ export type PowerupTransaction = {
     amount: number;
     title: string;
     detail?: string;
+    claim?: StateClaim;
 };
 
 export type TravelBudgetCredit = {
@@ -29,15 +37,6 @@ export type TransportMode =
     | "bike-share"
     | "scooter-share";
 
-export const seasonFourTeams: Record<TeamId, { name: string; color: string }> = {
-    "sam-brian": { name: "Sam & Brian", color: "#63A26B" },
-    "ben-adam": { name: "Ben & Adam", color: "#DC4742" },
-};
-
-// Each team starts with $3,000 and receives another $1,000 when each
-// subsequent game day begins. Most individual fares are not spoken in the
-// episodes, so this is intentionally presented as allocated budget rather
-// than an invented remaining balance.
 export const seasonFourTravelBudgetCredits: TravelBudgetCredit[] = [
     {
         id: "day-one-budget",
@@ -456,18 +455,7 @@ export const seasonFourTravelBudgetCredits: TravelBudgetCredit[] = [
     },
 ];
 
-// Powerup token transactions are taken from the timestamped Season 4
-// transcripts. Challenge rewards appear when the challenge is completed;
-// purchases appear when the team commits to using the powerup.
-export const seasonFourPowerupTransactions: PowerupTransaction[] = [
-    {
-        id: "sb-dc-reward",
-        episode: "episode-1",
-        at: 1343,
-        team: "sam-brian",
-        amount: 1,
-        title: "Visit every Spirit Halloween",
-    },
+const seasonFourPowerupPurchases: PowerupTransaction[] = [
     {
         id: "sb-first-card-swap",
         episode: "episode-1",
@@ -475,30 +463,6 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         team: "sam-brian",
         amount: -1,
         title: "Card Swap",
-    },
-    {
-        id: "ba-delaware-reward",
-        episode: "episode-1",
-        at: 2340,
-        team: "ben-adam",
-        amount: 1,
-        title: "High five at the highest point",
-    },
-    {
-        id: "ba-connecticut-reward",
-        episode: "episode-2",
-        at: 985,
-        team: "ben-adam",
-        amount: 1,
-        title: "Respect the weirdest roadside attraction",
-    },
-    {
-        id: "ba-illinois-reward",
-        episode: "episode-3",
-        at: 1024,
-        team: "ben-adam",
-        amount: 1,
-        title: "Take a Chevy to a levee and eat pie",
     },
     {
         id: "ba-indiana-border",
@@ -510,14 +474,6 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         detail: "Illinois-Indiana",
     },
     {
-        id: "ba-indiana-reward",
-        episode: "episode-3",
-        at: 1491,
-        team: "ben-adam",
-        amount: 1,
-        title: "Criticize the most beautiful place",
-    },
-    {
         id: "ba-michigan-border",
         episode: "episode-3",
         at: 1778,
@@ -525,14 +481,6 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         amount: -1,
         title: "Border Pass",
         detail: "Indiana-Michigan",
-    },
-    {
-        id: "sb-california-reward",
-        episode: "episode-4",
-        at: 895,
-        team: "sam-brian",
-        amount: 1,
-        title: "Find a four leaf clover as a leprechaun",
     },
     {
         id: "sb-second-card-swap",
@@ -551,14 +499,6 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         title: "Card Swap",
     },
     {
-        id: "ba-nevada-reward",
-        episode: "episode-4",
-        at: 1587,
-        team: "ben-adam",
-        amount: 1,
-        title: "Forge great American art",
-    },
-    {
         id: "ba-arizona-border",
         episode: "episode-4",
         at: 1917,
@@ -568,28 +508,12 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         detail: "Nevada-Arizona",
     },
     {
-        id: "sb-arizona-reward",
-        episode: "finale",
-        at: 266,
-        team: "sam-brian",
-        amount: 2,
-        title: "Eat soup in a helicopter",
-    },
-    {
         id: "sb-tracker",
         episode: "finale",
         at: 1327,
         team: "sam-brian",
         amount: -1,
         title: "Tracker",
-    },
-    {
-        id: "sb-colorado-reward",
-        episode: "finale",
-        at: 1779,
-        team: "sam-brian",
-        amount: 1,
-        title: "Get a hole in one in mini golf",
     },
     {
         id: "sb-finale-card-swap",
@@ -616,74 +540,68 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
         title: "Border Pass",
         detail: "Colorado-Wyoming",
     },
-    {
-        id: "sb-wyoming-reward",
-        episode: "finale",
-        at: 2409,
-        team: "sam-brian",
-        amount: 1,
-        title: "Ineffectively advertise Jet Lag: The Game",
-    },
 ];
+
+const seasonFourPowerupRewards: PowerupTransaction[] =
+    seasonFourStateClaims.flatMap((claim) => {
+        const amount = claim.challenge.powerUpTokens;
+
+        if (!amount) return [];
+        if (!seasonFourEpisodeOrder.includes(
+            claim.episode as (typeof seasonFourEpisodeOrder)[number],
+        )) {
+            throw new RangeError(
+                `Powerup reward claim belongs to unknown episode "${claim.episode}".`,
+            );
+        }
+
+        return [{
+            id: `reward-${claim.episode}-${claim.at}-${claim.team}`,
+            episode: claim.episode as (typeof seasonFourEpisodeOrder)[number],
+            at: claim.at,
+            team: claim.team,
+            amount,
+            title: claim.challenge.title,
+            claim,
+        }];
+    });
+
+export const seasonFourPowerupTransactions: PowerupTransaction[] = [
+    ...seasonFourPowerupPurchases,
+    ...seasonFourPowerupRewards,
+].toSorted((left, right) => compareTimestamps(seasonFour, left, right));
 
 export function getVisiblePowerupTransactions(
     episode: string,
     currentTime: number,
 ) {
-    const episodeIndex = seasonFourEpisodeOrder.indexOf(
+    if (!seasonFourEpisodeOrder.includes(
         episode as (typeof seasonFourEpisodeOrder)[number],
+    )) {
+        return [];
+    }
+
+    const currentTimestamp = { episode, at: currentTime };
+
+    return seasonFourPowerupTransactions.filter(
+        (transaction) =>
+            compareTimestamps(seasonFour, transaction, currentTimestamp) <= 0,
     );
-
-    if (episodeIndex === -1) return [];
-
-    return seasonFourPowerupTransactions.filter((transaction) => {
-        const transactionEpisodeIndex = seasonFourEpisodeOrder.indexOf(
-            transaction.episode,
-        );
-        return (
-            transactionEpisodeIndex < episodeIndex ||
-            (transactionEpisodeIndex === episodeIndex && transaction.at <= currentTime)
-        );
-    });
 }
 
 export function getVisibleTravelBudgetCredits(
     episode: string,
     currentTime: number,
 ) {
-    const episodeIndex = seasonFourEpisodeOrder.indexOf(
+    if (!seasonFourEpisodeOrder.includes(
         episode as (typeof seasonFourEpisodeOrder)[number],
-    );
+    )) {
+        return [];
+    }
 
-    if (episodeIndex === -1) return [];
+    const currentTimestamp = { episode, at: currentTime };
 
-    return seasonFourTravelBudgetCredits.filter((credit) => {
-        const creditEpisodeIndex = seasonFourEpisodeOrder.indexOf(credit.episode);
-        return (
-            creditEpisodeIndex < episodeIndex ||
-            (creditEpisodeIndex === episodeIndex && credit.at <= currentTime)
-        );
-    });
-}
-
-export function getTravelBudgetAllocation(
-    credits: TravelBudgetCredit[],
-    team: TeamId,
-) {
-    return credits.reduce(
-        (total, credit) =>
-            !credit.team || credit.team === team ? total + credit.amount : total,
-        0,
-    );
-}
-
-export function getTeamBalance(
-    transactions: PowerupTransaction[],
-    team: TeamId,
-) {
-    return transactions.reduce(
-        (balance, transaction) =>
-            transaction.team === team ? balance + transaction.amount : balance,
-        0,
+    return seasonFourTravelBudgetCredits.filter(
+        (credit) => compareTimestamps(seasonFour, credit, currentTimestamp) <= 0,
     );
 }

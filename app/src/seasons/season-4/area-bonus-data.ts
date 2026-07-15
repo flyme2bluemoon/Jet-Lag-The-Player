@@ -1,15 +1,13 @@
-import {
-    seasonFourEpisodeOrder,
-    type StateClaim,
-    type TeamId,
-} from "./state-claims";
+import { seasonFour } from "@/data/season-4";
+import { compareTimestamps } from "@/lib/timestamps";
+import type { StateClaim } from "./state-claims";
+import type { TeamId } from "./team-data";
 
 export const AREA_BONUS_REVEALED_AT = 24 * 60 + 29;
 export const AREA_BONUS_POINTS = 2;
 
-// Total areas in square miles, rounded to the nearest square mile. These match
-// the Census Bureau's MAF/TIGER state area measurements and the total-area
-// figure for Texas cited in the show.
+// Census Bureau MAF/TIGER total-area measurements in square miles, rounded to
+// the nearest square mile.
 const stateAreas: Record<string, number> = {
     Alaska: 665384,
     Arizona: 113990,
@@ -41,14 +39,11 @@ export type AreaBonusScore = {
 };
 
 export function isAreaBonusVisible(episodeSlug: string, currentTime: number) {
-    const episodeIndex = seasonFourEpisodeOrder.indexOf(
-        episodeSlug as (typeof seasonFourEpisodeOrder)[number],
-    );
-    const revealEpisodeIndex = seasonFourEpisodeOrder.indexOf("episode-2");
-
-    return episodeIndex > revealEpisodeIndex || (
-        episodeIndex === revealEpisodeIndex && currentTime >= AREA_BONUS_REVEALED_AT
-    );
+    return compareTimestamps(
+        seasonFour,
+        { episode: episodeSlug, at: currentTime },
+        { episode: "episode-2", at: AREA_BONUS_REVEALED_AT },
+    ) >= 0;
 }
 
 export function getAreaBonusScores(

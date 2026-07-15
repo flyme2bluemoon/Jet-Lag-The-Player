@@ -1,46 +1,29 @@
+import { seasonFour } from "@/data/season-4";
+import { compareTimestamps, type EpisodeTimestamp } from "@/lib/timestamps";
+import { seasonFourBattles } from "./battle-status-data";
+import { seasonFourCards, type ChallengeCard } from "./hand-data";
 import {
-    MARYLAND_BATTLE_RESOLVED_AT,
     seasonFourEpisodeOrder,
-    type TeamId,
+    seasonFourStateClaims,
 } from "./state-claims";
+import type { TeamId } from "./team-data";
 
-export type ChallengeWindow = {
-    episode: string;
+type ChallengeWindowBase = {
+    episode: (typeof seasonFourEpisodeOrder)[number];
     team: TeamId;
     start: number;
-    end: number;
-    title: string;
+    challenge: ChallengeCard;
     displayTitle?: string;
     subtitle?: string;
-    kind?: "battle";
 };
 
-const challengeDescriptions: Record<string, string> = {
-    "Praise the ugliest building": "Find the ugliest building you can and sincerely praise three things about it.",
-    "Visit every Spirit Halloween": "Visit every Spirit Halloween in the state, buy one costume item at each, and wear the assembled costume.",
-    "Sell something from one pawn shop to another": "Purchase an item at a pawn shop, then sell it for at least half its purchase price at a pawn shop in another state.",
-    "File a Geodetic Mark Recovery Form": "Find a geodetic survey mark and submit an official recovery report for it.",
-    "High five at the highest point": "Photograph both teammates jumping and high fiving at the state's highest publicly accessible point.",
-    "Photograph your partner from far away": "From at least half a mile away, photograph your teammate so they are visible in the image.",
-    "Find the most foreign license plate": "Find a license plate from the country farthest from your current location before the other team does.",
-    "Ship this card": "Ship this card to another state, then retrieve it there to claim the state where it arrived.",
-    "Respect the weirdest roadside attraction": "Visit the state's weirdest roadside attraction and salute it for the entire national anthem.",
-    "Win a prize from a claw machine": "Successfully retrieve any prize from a claw machine.",
-    "Get Drunk, Again": "Have one teammate become legally intoxicated after asking the bartender or server which liquor they recommend and ordering shots of it.",
-    "Spend $100 at Buc-ee's": "Spend at least $100 in one visit to a Buc-ee's store.",
-    "Photograph the most birds": "Photograph more distinct birds than the other team before the battle ends.",
-    "Take a Chevy to a levee and eat pie": "Arrive at a levee in a Chevrolet, then fully consume at least one slice of pie between both teammates.",
-    "Criticize the most beautiful place": "Travel to the state's most beautiful location and list three things you hate about it.",
-    "Eat at In-N-Out": "Visit any In-N-Out restaurant and have both teammates finish at least one menu item each.",
-    "Break a law from Crime Spree": "Recreate one of the harmless law-breaking challenges from Crime Spree.",
-    "Find a four leaf clover as a leprechaun": "Dress as a leprechaun, then find and present a genuine four leaf clover.",
-    "Eat soup in a helicopter": "Consume any amount of any kind of soup while the helicopter is in the air.",
-    "Forge great American art": "Make a convincing copy of a recognizable piece of American art.",
-    "Clean up a national park": "Pick up at least five separate pieces of litter in a national park and properly dispose of them.",
-    "Draw George Washington": "Create the better drawing of George Washington before the battle ends.",
-    "Get a hole in one in mini golf": "Score a hole in one on any hole at a miniature golf course.",
-    "Ineffectively advertise Jet Lag: The Game": "Create an advertisement for Jet Lag that is visible but deliberately ineffective.",
-    "Spell “HELP” in rocks on an island": "While on an island, arrange rocks into a clearly legible HELP sign.",
+type ChallengeWindowDefinition = ChallengeWindowBase & {
+    // Only interrupted or abandoned attempts define their own end.
+    end?: EpisodeTimestamp;
+};
+
+export type ChallengeWindow = ChallengeWindowBase & {
+    end: EpisodeTimestamp;
 };
 
 type FailedChallengeBase = {
@@ -48,126 +31,175 @@ type FailedChallengeBase = {
     team: TeamId;
     at: number;
     state: string;
-    title: string;
+    challenge: ChallengeCard;
 };
 
 type FailedBattleChallenge = FailedChallengeBase & {
-    kind: "battle";
     originalClaim: {
-        episode: string;
-        at: number;
         team: TeamId;
     };
-    originalChallenge?: string;
 };
 
-type FailedStandardChallenge = FailedChallengeBase & {
-    kind?: undefined;
-    originalClaim?: never;
-    originalChallenge?: never;
-};
+export type FailedChallenge = FailedBattleChallenge;
 
-export type FailedChallenge = FailedBattleChallenge | FailedStandardChallenge;
+export const seasonFourFailedChallenges: FailedChallenge[] =
+    seasonFourBattles.map((battle) => ({
+        ...battle.concluded,
+        team: battle.winner === battle.attacker
+            ? battle.defender
+            : battle.attacker,
+        state: battle.state,
+        challenge: battle.challenge,
+        originalClaim: { team: battle.defender },
+    }));
 
 // Challenge windows are taken from the timestamped Season 4 transcripts.
 // A challenge starts once a team commits to completing it and includes travel
 // undertaken specifically for that card. It ends when the task is completed,
-// becomes impossible, or is superseded by a battle challenge.
-export const seasonFourChallengeWindows: ChallengeWindow[] = [
+// fails, is abandoned, or is superseded by a battle challenge. Completed and
+// failed windows derive their end from the corresponding outcome record.
+// Battle windows are derived separately from their authoritative battle record.
+const challengeWindowDefinitions: ChallengeWindowDefinition[] = [
     // Episode 1
-    { episode: "episode-1", team: "ben-adam", start: 100, end: 304.415, title: "Praise the ugliest building" },
-    { episode: "episode-1", team: "sam-brian", start: 1176, end: 1343, title: "Visit every Spirit Halloween" },
-    { episode: "episode-1", team: "ben-adam", start: 1010, end: 1618, title: "Sell something from one pawn shop to another" },
-    { episode: "episode-1", team: "sam-brian", start: 1715, end: 1988, title: "File a Geodetic Mark Recovery Form" },
-    { episode: "episode-1", team: "ben-adam", start: 2167, end: 2340, title: "High five at the highest point" },
-    { episode: "episode-1", team: "sam-brian", start: 2152, end: 2314, title: "Photograph your partner from far away" },
+    { episode: "episode-1", team: "ben-adam", start: 100, challenge: seasonFourCards.praiseBuilding },
+    { episode: "episode-1", team: "sam-brian", start: 1176, challenge: seasonFourCards.spiritHalloween },
+    { episode: "episode-1", team: "ben-adam", start: 1010, challenge: seasonFourCards.pawnShop },
+    { episode: "episode-1", team: "sam-brian", start: 1715, challenge: seasonFourCards.geodeticMarker },
+    { episode: "episode-1", team: "ben-adam", start: 2167, challenge: seasonFourCards.highFive },
+    { episode: "episode-1", team: "sam-brian", start: 2152, challenge: seasonFourCards.photographPartner },
 
     // Episode 2
-    { episode: "episode-2", team: "sam-brian", start: 29.64, end: 242.94, title: "Find the most foreign license plate", kind: "battle" },
-    { episode: "episode-2", team: "ben-adam", start: 29.64, end: 242.94, title: "Find the most foreign license plate", kind: "battle" },
-    { episode: "episode-2", team: "ben-adam", start: 794.49, end: 985, title: "Respect the weirdest roadside attraction" },
-    { episode: "episode-2", team: "sam-brian", start: 1185, end: 1247, title: "Win a prize from a claw machine" },
-    { episode: "episode-2", team: "ben-adam", start: 1304.985, end: 1548, title: "Get Drunk, Again" },
-    { episode: "episode-2", team: "sam-brian", start: 1441.365, end: 1881.92, title: "Spend $100 at Buc-ee's" },
-    { episode: "episode-2", team: "sam-brian", start: 1881.92, end: Number.POSITIVE_INFINITY, title: "Photograph the most birds", kind: "battle" },
-    { episode: "episode-2", team: "ben-adam", start: 1881.92, end: Number.POSITIVE_INFINITY, title: "Photograph the most birds", kind: "battle" },
-
-    // Episode 3
-    { episode: "episode-3", team: "sam-brian", start: 0, end: 92.384, title: "Photograph the most birds", kind: "battle" },
-    { episode: "episode-3", team: "ben-adam", start: 0, end: 92.384, title: "Photograph the most birds", kind: "battle" },
-    { episode: "episode-3", team: "sam-brian", start: 338, end: 564, title: "Spend $100 at Buc-ee's" },
-    { episode: "episode-3", team: "ben-adam", start: 455, end: 1024, title: "Take a Chevy to a levee and eat pie" },
-    { episode: "episode-3", team: "ben-adam", start: 1169, end: 1491, title: "Criticize the most beautiful place" },
-    { episode: "episode-3", team: "sam-brian", start: 1554, end: 2005, title: "Eat at In-N-Out" },
-    { episode: "episode-3", team: "ben-adam", start: 1869, end: Number.POSITIVE_INFINITY, title: "Break a law from Crime Spree", displayTitle: "Seduce and Debauch an Unmarried Woman (Mich.)", subtitle: "Break a law from Crime Spree" },
-
-    // Episode 4
-    { episode: "episode-4", team: "ben-adam", start: 0, end: 377, title: "Break a law from Crime Spree", displayTitle: "Seduce and Debauch an Unmarried Woman (Mich.)", subtitle: "Break a law from Crime Spree" },
-    { episode: "episode-4", team: "sam-brian", start: 543, end: 895, title: "Find a four leaf clover as a leprechaun" },
-    { episode: "episode-4", team: "sam-brian", start: 1822, end: Number.POSITIVE_INFINITY, title: "Eat soup in a helicopter" },
-    { episode: "episode-4", team: "ben-adam", start: 1289, end: 1587, title: "Forge great American art" },
-    { episode: "episode-4", team: "ben-adam", start: 1792, end: Number.POSITIVE_INFINITY, title: "Clean up a national park" },
-
-    // Finale
-    { episode: "finale", team: "sam-brian", start: 0, end: 266, title: "Eat soup in a helicopter" },
-    { episode: "finale", team: "ben-adam", start: 0, end: 266, title: "Clean up a national park" },
-    { episode: "finale", team: "sam-brian", start: 654.824, end: 1076.061, title: "Draw George Washington", kind: "battle" },
-    { episode: "finale", team: "ben-adam", start: 654.824, end: 1076.061, title: "Draw George Washington", kind: "battle" },
-    { episode: "finale", team: "sam-brian", start: 1624, end: 1779, title: "Get a hole in one in mini golf" },
-    { episode: "finale", team: "sam-brian", start: 1998, end: 2409, title: "Ineffectively advertise Jet Lag: The Game" },
-    { episode: "finale", team: "ben-adam", start: 2138, end: 2204, title: "Spell “HELP” in rocks on an island" },
-];
-
-export const seasonFourFailedChallenges: FailedChallenge[] = [
+    { episode: "episode-2", team: "ben-adam", start: 794.49, challenge: seasonFourCards.roadsideAttraction },
+    { episode: "episode-2", team: "sam-brian", start: 1185, challenge: seasonFourCards.clawMachine },
+    { episode: "episode-2", team: "ben-adam", start: 1304.985, challenge: seasonFourCards.getDrunk },
     {
         episode: "episode-2",
         team: "sam-brian",
-        at: MARYLAND_BATTLE_RESOLVED_AT,
-        state: "Maryland",
-        title: "Find the most foreign license plate",
-        kind: "battle",
-        originalClaim: { episode: "episode-1", at: 1988, team: "sam-brian" },
-        originalChallenge: "File a Geodetic Mark Recovery Form",
+        start: 1441.365,
+        end: { episode: "episode-2", at: 1881.92 },
+        challenge: seasonFourCards.spendBucees,
     },
+
+    // Episode 3
+    { episode: "episode-3", team: "sam-brian", start: 338, challenge: seasonFourCards.spendBucees },
+    { episode: "episode-3", team: "ben-adam", start: 455, challenge: seasonFourCards.chevyLevee },
+    { episode: "episode-3", team: "ben-adam", start: 1169, challenge: seasonFourCards.criticizePlace },
+    { episode: "episode-3", team: "sam-brian", start: 1554, challenge: seasonFourCards.eatInNOut },
     {
         episode: "episode-3",
         team: "ben-adam",
-        at: 92.384,
-        state: "Massachusetts",
-        title: "Photograph the most birds",
-        kind: "battle",
-        originalClaim: { episode: "episode-2", at: 1247, team: "sam-brian" },
+        start: 1869,
+        challenge: seasonFourCards.breakLaw,
+        displayTitle: "Seduce and Debauch an Unmarried Woman (Mich.)",
+        subtitle: seasonFourCards.breakLaw.title,
     },
+
+    // Episode 4
+    { episode: "episode-4", team: "sam-brian", start: 543, challenge: seasonFourCards.fourLeafClover },
+    { episode: "episode-4", team: "sam-brian", start: 1822, challenge: seasonFourCards.soupHelicopter },
+    { episode: "episode-4", team: "ben-adam", start: 1289, challenge: seasonFourCards.forgeArt },
     {
-        episode: "finale",
-        team: "sam-brian",
-        at: 1076.061,
-        state: "Nevada",
-        title: "Draw George Washington",
-        kind: "battle",
-        originalClaim: { episode: "episode-4", at: 1587, team: "ben-adam" },
+        episode: "episode-4",
+        team: "ben-adam",
+        start: 1792,
+        end: { episode: "finale", at: 266 },
+        challenge: seasonFourCards.cleanPark,
     },
+
+    // Finale
+    { episode: "finale", team: "sam-brian", start: 1624, challenge: seasonFourCards.miniGolf },
+    { episode: "finale", team: "sam-brian", start: 1998, challenge: seasonFourCards.advertise },
+    { episode: "finale", team: "ben-adam", start: 2138, challenge: seasonFourCards.spellHelp },
 ];
+
+const standardChallengeWindows: ChallengeWindow[] =
+    challengeWindowDefinitions.map((window) => ({
+        ...window,
+        end: resolveChallengeWindowEnd(window),
+    }));
+
+const battleChallengeWindows: ChallengeWindow[] = seasonFourBattles.flatMap(
+    (battle) => [battle.attacker, battle.defender].map((team) => ({
+        episode: battle.revealed.episode,
+        team,
+        start: battle.revealed.at,
+        challenge: battle.challenge,
+        end: battle.concluded,
+    })),
+);
+
+export const seasonFourChallengeWindows: ChallengeWindow[] = [
+    ...standardChallengeWindows,
+    ...battleChallengeWindows,
+].sort((left, right) => compareTimestamps(
+    seasonFour,
+    { episode: left.episode, at: left.start },
+    { episode: right.episode, at: right.start },
+));
 
 export function getActiveChallenge(
     episode: string,
     currentTime: number,
     team: TeamId,
 ) {
-    const challenge = seasonFourChallengeWindows.find(
-        (challenge) =>
-            challenge.episode === episode &&
-            challenge.team === team &&
-            challenge.start <= currentTime &&
-            currentTime < challenge.end,
+    if (!seasonFourEpisodeOrder.includes(
+        episode as (typeof seasonFourEpisodeOrder)[number],
+    )) {
+        return undefined;
+    }
+
+    const currentTimestamp = { episode, at: currentTime };
+    const window = seasonFourChallengeWindows.find(
+        (candidate) =>
+            candidate.team === team &&
+            compareTimestamps(
+                seasonFour,
+                { episode: candidate.episode, at: candidate.start },
+                currentTimestamp,
+            ) <= 0 &&
+            compareTimestamps(
+                seasonFour,
+                currentTimestamp,
+                candidate.end,
+            ) < 0,
     );
 
-    if (!challenge) return undefined;
+    if (!window) return undefined;
 
     return {
-        ...challenge,
-        description: challengeDescriptions[challenge.title] ?? "No description available.",
+        ...window,
+        ...window.challenge,
     };
+}
+
+function resolveChallengeWindowEnd(window: ChallengeWindowDefinition) {
+    if (window.end) return window.end;
+
+    const start = { episode: window.episode, at: window.start };
+    const completion = seasonFourStateClaims.find(
+        (claim) =>
+            claim.team === window.team &&
+            claim.challenge === window.challenge &&
+            compareTimestamps(seasonFour, claim, start) >= 0,
+    );
+    const failure = seasonFourFailedChallenges.find(
+        (challenge) =>
+            challenge.team === window.team &&
+            challenge.challenge === window.challenge &&
+            compareTimestamps(seasonFour, challenge, start) >= 0,
+    );
+
+    if (completion && failure) {
+        return compareTimestamps(seasonFour, completion, failure) <= 0
+            ? completion
+            : failure;
+    }
+    if (completion) return completion;
+    if (failure) return failure;
+
+    throw new Error(
+        `Challenge window for "${window.challenge.title}" has no claim, failure, or explicit end time.`,
+    );
 }
 
 export function getFailedChallenges(
@@ -175,20 +207,17 @@ export function getFailedChallenges(
     currentTime: number,
     team: TeamId,
 ) {
-    const episodeIndex = seasonFourEpisodeOrder.indexOf(
+    if (!seasonFourEpisodeOrder.includes(
         episode as (typeof seasonFourEpisodeOrder)[number],
-    );
+    )) {
+        return [];
+    }
 
-    if (episodeIndex === -1) return [];
+    const currentTimestamp = { episode, at: currentTime };
 
-    return seasonFourFailedChallenges.filter((challenge) => {
-        const challengeEpisodeIndex = seasonFourEpisodeOrder.indexOf(
-            challenge.episode as (typeof seasonFourEpisodeOrder)[number],
-        );
-        return (
+    return seasonFourFailedChallenges.filter(
+        (challenge) =>
             challenge.team === team &&
-            (challengeEpisodeIndex < episodeIndex ||
-                (challengeEpisodeIndex === episodeIndex && challenge.at <= currentTime))
-        );
-    });
+            compareTimestamps(seasonFour, challenge, currentTimestamp) <= 0,
+    );
 }

@@ -5,145 +5,484 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --ink: #061724;
-  --paper: #f4f0e9;
-  --red: #fb302d;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-  --season-card-hover-scale: 1.035;
-  --thumbnail-hover-saturation: 1.08;
+    --ink: #061724;
+    --paper: #f4f0e9;
+    --red: #fb302d;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --radius: 0.625rem;
+    --season-card-hover-scale: 1.035;
+    --thumbnail-hover-saturation: 1.08;
 }
 
 /* The passport artwork stays in CSS because its overlapping grid areas and
    nested stamp geometry are one cohesive illustration, not reusable UI. */
-.passport-stamps { position:absolute; inset:0; font-family:var(--font-geist-mono),monospace; text-transform:uppercase; }
-.passport-stamp { position:absolute; display:grid; place-content:center; gap:5px; padding:15px; overflow:hidden; text-align:center; line-height:1; opacity:.72; filter:drop-shadow(0 1px 0 rgba(255,255,255,.03)); }
-.passport-stamp::before { content:""; position:absolute; inset:5px; border:1px dashed currentColor; border-radius:inherit; opacity:.64; }
-.passport-stamp span,.passport-stamp b,.passport-stamp strong,.passport-stamp small { position:relative; z-index:1; }
-.passport-stamp span { font-size:8px; letter-spacing:.12em; }.passport-stamp b { font-size:16px; letter-spacing:.08em; }.passport-stamp strong { font-size:18px; letter-spacing:.08em; }.passport-stamp small { font-size:7px; letter-spacing:.1em; }
-.stamp-usa { width:198px; height:126px; right:1%; top:7%; color:#7f9bb4; border:3px double currentColor; border-radius:50%; transform:rotate(7deg); }
-.stamp-usa .stamp-rim { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }.stamp-usa .stamp-rim text { fill:currentColor; font:700 6px var(--font-geist-mono),monospace; letter-spacing:.08em; text-transform:uppercase; }.stamp-usa .stamp-airport { position:absolute; top:25px; left:0; right:0; font-size:9px; font-weight:800; letter-spacing:.18em; }.stamp-usa b { margin:0; font-size:13px; }.stamp-usa strong { color:#bd7774; font-size:17px; }.stamp-usa b,.stamp-usa strong,.stamp-usa > small:last-child { transform:translateY(12px); }
-.stamp-schengen { width:202px; height:124px; left:5%; top:41%; overflow:hidden; color:#b8817b; border:3px solid currentColor; border-radius:0; transform:rotate(-7deg); grid-template-columns:42px 1fr 30px; grid-template-rows:28px 28px 20px; place-content:center stretch; gap:0; }
-.stamp-schengen .stamp-country { grid-area:1/1/2/2; align-self:center; justify-self:start; font-size:17px; font-weight:900; letter-spacing:.04em; }.stamp-schengen .stamp-plane { grid-area:1/3/2/4; align-self:center; justify-self:end; font-size:20px; transform:rotate(-10deg); }.stamp-schengen strong { grid-area:2/1/3/4; align-self:center; color:#cf635c; font-size:17px; }.stamp-schengen b { grid-area:3/1/4/4; align-self:center; font-size:13px; }.stamp-entry-arrow { position:absolute!important; left:14px; bottom:9px; width:23px; height:18px; background:var(--ink); border:2px solid currentColor; display:block; font-size:0!important; line-height:1; letter-spacing:0!important; }.stamp-entry-arrow i { position:absolute; left:-10px; top:-4px; color:currentColor; font:normal 950 22px/1 var(--font-geist-mono),monospace; }
-.stamp-japan { width:154px; height:166px; right:29%; bottom:-4%; padding:9px; color:#5a9cb6; border:3px solid currentColor; border-radius:0; transform:rotate(5deg); grid-template-columns:1fr 30px; grid-template-rows:14px 18px 15px 12px 15px 13px 9px; place-content:center stretch; gap:0; }
-.stamp-japan::before { border-radius:0; }.stamp-japan .stamp-plane { grid-area:1/2/2/3; align-self:center; font-size:16px; }.stamp-japan .stamp-exit { grid-area:1/1/2/3; align-self:center; font-size:12px; font-weight:900; }.stamp-japan b { grid-area:2/1/3/3; align-self:center; margin:0; font-size:16px; }.stamp-japan .stamp-inspector { grid-area:3/1/4/3; align-self:center; font-size:8px; font-weight:700; letter-spacing:.045em; }.stamp-japan .stamp-date { grid-area:4/1/5/3; align-self:center; font-size:12px; }.stamp-japan .stamp-airport-name { grid-area:5/1/6/3; align-self:center; font-size:11px; font-weight:800; letter-spacing:.1em; }.stamp-japan small { grid-area:6/1/7/3; align-self:end; font-size:6px; letter-spacing:.16em; }
-.stamp-uk { width:205px; height:118px; right:0; bottom:8%; color:#8b8b9e; border:3px double currentColor; border-radius:18px; transform:rotate(-5deg); grid-template-rows:14px 24px 18px 12px; place-content:center stretch; gap:2px; }
-.stamp-uk::before { border-radius:12px; }.stamp-uk span { align-self:center; font-size:9px; }.stamp-uk strong { align-self:center; font-size:16px; }.stamp-uk b { align-self:center; font-size:13px; }.stamp-uk small { align-self:center; font-size:6px; }
+.passport-stamps {
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-geist-mono), monospace;
+    text-transform: uppercase;
+}
+.passport-stamp {
+    position: absolute;
+    display: grid;
+    place-content: center;
+    gap: 5px;
+    padding: 15px;
+    overflow: hidden;
+    text-align: center;
+    line-height: 1;
+    opacity: 0.72;
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.03));
+}
+.passport-stamp::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px dashed currentColor;
+    border-radius: inherit;
+    opacity: 0.64;
+}
+.passport-stamp span,
+.passport-stamp b,
+.passport-stamp strong,
+.passport-stamp small {
+    position: relative;
+    z-index: 1;
+}
+.passport-stamp span {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+}
+.passport-stamp b {
+    font-size: 16px;
+    letter-spacing: 0.08em;
+}
+.passport-stamp strong {
+    font-size: 18px;
+    letter-spacing: 0.08em;
+}
+.passport-stamp small {
+    font-size: 7px;
+    letter-spacing: 0.1em;
+}
+.stamp-usa {
+    width: 198px;
+    height: 126px;
+    right: 1%;
+    top: 7%;
+    color: #7f9bb4;
+    border: 3px double currentColor;
+    border-radius: 50%;
+    transform: rotate(7deg);
+}
+.stamp-usa .stamp-rim {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.stamp-usa .stamp-rim text {
+    fill: currentColor;
+    font:
+        700 6px var(--font-geist-mono),
+        monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.stamp-usa .stamp-airport {
+    position: absolute;
+    top: 25px;
+    left: 0;
+    right: 0;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+}
+.stamp-usa b {
+    margin: 0;
+    font-size: 13px;
+}
+.stamp-usa strong {
+    color: #bd7774;
+    font-size: 17px;
+}
+.stamp-usa b,
+.stamp-usa strong,
+.stamp-usa > small:last-child {
+    transform: translateY(12px);
+}
+.stamp-schengen {
+    width: 202px;
+    height: 124px;
+    left: 5%;
+    top: 41%;
+    overflow: hidden;
+    color: #b8817b;
+    border: 3px solid currentColor;
+    border-radius: 0;
+    transform: rotate(-7deg);
+    grid-template-columns: 42px 1fr 30px;
+    grid-template-rows: 28px 28px 20px;
+    place-content: center stretch;
+    gap: 0;
+}
+.stamp-schengen .stamp-country {
+    grid-area: 1/1/2/2;
+    align-self: center;
+    justify-self: start;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+}
+.stamp-schengen .stamp-plane {
+    grid-area: 1/3/2/4;
+    align-self: center;
+    justify-self: end;
+    font-size: 20px;
+    transform: rotate(-10deg);
+}
+.stamp-schengen strong {
+    grid-area: 2/1/3/4;
+    align-self: center;
+    color: #cf635c;
+    font-size: 17px;
+}
+.stamp-schengen b {
+    grid-area: 3/1/4/4;
+    align-self: center;
+    font-size: 13px;
+}
+.stamp-entry-arrow {
+    position: absolute !important;
+    left: 14px;
+    bottom: 9px;
+    width: 23px;
+    height: 18px;
+    background: var(--ink);
+    border: 2px solid currentColor;
+    display: block;
+    font-size: 0 !important;
+    line-height: 1;
+    letter-spacing: 0 !important;
+}
+.stamp-entry-arrow i {
+    position: absolute;
+    left: -10px;
+    top: -4px;
+    color: currentColor;
+    font:
+        normal 950 22px/1 var(--font-geist-mono),
+        monospace;
+}
+.stamp-japan {
+    width: 154px;
+    height: 166px;
+    right: 29%;
+    bottom: -4%;
+    padding: 9px;
+    color: #5a9cb6;
+    border: 3px solid currentColor;
+    border-radius: 0;
+    transform: rotate(5deg);
+    grid-template-columns: 1fr 30px;
+    grid-template-rows: 14px 18px 15px 12px 15px 13px 9px;
+    place-content: center stretch;
+    gap: 0;
+}
+.stamp-japan::before {
+    border-radius: 0;
+}
+.stamp-japan .stamp-plane {
+    grid-area: 1/2/2/3;
+    align-self: center;
+    font-size: 16px;
+}
+.stamp-japan .stamp-exit {
+    grid-area: 1/1/2/3;
+    align-self: center;
+    font-size: 12px;
+    font-weight: 900;
+}
+.stamp-japan b {
+    grid-area: 2/1/3/3;
+    align-self: center;
+    margin: 0;
+    font-size: 16px;
+}
+.stamp-japan .stamp-inspector {
+    grid-area: 3/1/4/3;
+    align-self: center;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+}
+.stamp-japan .stamp-date {
+    grid-area: 4/1/5/3;
+    align-self: center;
+    font-size: 12px;
+}
+.stamp-japan .stamp-airport-name {
+    grid-area: 5/1/6/3;
+    align-self: center;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+}
+.stamp-japan small {
+    grid-area: 6/1/7/3;
+    align-self: end;
+    font-size: 6px;
+    letter-spacing: 0.16em;
+}
+.stamp-uk {
+    width: 205px;
+    height: 118px;
+    right: 0;
+    bottom: 8%;
+    color: #8b8b9e;
+    border: 3px double currentColor;
+    border-radius: 18px;
+    transform: rotate(-5deg);
+    grid-template-rows: 14px 24px 18px 12px;
+    place-content: center stretch;
+    gap: 2px;
+}
+.stamp-uk::before {
+    border-radius: 12px;
+}
+.stamp-uk span {
+    align-self: center;
+    font-size: 9px;
+}
+.stamp-uk strong {
+    align-self: center;
+    font-size: 16px;
+}
+.stamp-uk b {
+    align-self: center;
+    font-size: 13px;
+}
+.stamp-uk small {
+    align-self: center;
+    font-size: 6px;
+}
 
-@media (max-width: 1000px) { .stamp-schengen { left:-5%; }.stamp-usa { right:-7%; }.stamp-uk { display:none; }.stamp-japan { right:7%; } }
-@media (max-width: 700px) { .stamp-schengen { display:none; }.stamp-usa { width:166px;height:106px;right:18%;top:18%; }.stamp-usa .stamp-rim text { font-size:5px; }.stamp-usa .stamp-airport { top:21px;font-size:7px; }.stamp-usa b { margin:0;font-size:11px; }.stamp-usa strong { font-size:14px; }.stamp-usa b,.stamp-usa strong,.stamp-usa > small:last-child { transform:translateY(9px); }.stamp-japan { width:124px;height:142px;right:35%;bottom:0;padding:5px;grid-template-columns:1fr 24px;grid-template-rows:12px 17px 13px 11px 13px 11px 8px;gap:0; }.stamp-japan .stamp-plane { font-size:13px; }.stamp-japan .stamp-exit { font-size:10px; }.stamp-japan b { font-size:13px; }.stamp-japan .stamp-inspector { font-size:6px;letter-spacing:.03em; }.stamp-japan .stamp-date { font-size:9px; }.stamp-japan .stamp-airport-name { font-size:8px; }.stamp-japan small { font-size:5px; } }
+@media (max-width: 1000px) {
+    .stamp-schengen {
+        left: -5%;
+    }
+    .stamp-usa {
+        right: -7%;
+    }
+    .stamp-uk {
+        display: none;
+    }
+    .stamp-japan {
+        right: 7%;
+    }
+}
+@media (max-width: 700px) {
+    .stamp-schengen {
+        display: none;
+    }
+    .stamp-usa {
+        width: 166px;
+        height: 106px;
+        right: 18%;
+        top: 18%;
+    }
+    .stamp-usa .stamp-rim text {
+        font-size: 5px;
+    }
+    .stamp-usa .stamp-airport {
+        top: 21px;
+        font-size: 7px;
+    }
+    .stamp-usa b {
+        margin: 0;
+        font-size: 11px;
+    }
+    .stamp-usa strong {
+        font-size: 14px;
+    }
+    .stamp-usa b,
+    .stamp-usa strong,
+    .stamp-usa > small:last-child {
+        transform: translateY(9px);
+    }
+    .stamp-japan {
+        width: 124px;
+        height: 142px;
+        right: 35%;
+        bottom: 0;
+        padding: 5px;
+        grid-template-columns: 1fr 24px;
+        grid-template-rows: 12px 17px 13px 11px 13px 11px 8px;
+        gap: 0;
+    }
+    .stamp-japan .stamp-plane {
+        font-size: 13px;
+    }
+    .stamp-japan .stamp-exit {
+        font-size: 10px;
+    }
+    .stamp-japan b {
+        font-size: 13px;
+    }
+    .stamp-japan .stamp-inspector {
+        font-size: 6px;
+        letter-spacing: 0.03em;
+    }
+    .stamp-japan .stamp-date {
+        font-size: 9px;
+    }
+    .stamp-japan .stamp-airport-name {
+        font-size: 8px;
+    }
+    .stamp-japan small {
+        font-size: 5px;
+    }
+}
 
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } * { transition:none!important; } }
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    * {
+        transition: none !important;
+    }
+}
 
 @theme inline {
-  --color-ink: #061724;
-  --color-paper: #f4f0e9;
-  --color-signal: #fb302d;
-  --color-panel: #071b29;
-  --color-surface: #0d2636;
-  --color-player: #020a0f;
-  --color-select: #0c2433;
-  --color-select-active: #18384a;
-  --color-select-hover: #245269;
-  --color-map-line: #74828a;
-  --color-copy-muted: #b7c1c7;
-  --color-meta: #9da7ad;
-  --color-card-meta: #aeb8be;
-  --color-control: #c4ccd0;
-  --color-control-disabled: #59666e;
-  --color-footer-copy: #8c9aa2;
-  --color-map-canvas: #071722;
-  --color-team-sam-brian: #63a26b;
-  --color-team-ben-adam: #dc4742;
-  --color-budget-credit: #8bc897;
-  --color-budget-debit: #d9827f;
-  --container-page: 100rem;
-  --container-copy: 48rem;
-  --spacing-gutter: clamp(1.375rem, 5vw, 5rem);
-  --breakpoint-tablet: 43.75rem;
-  --breakpoint-wide: 62.5rem;
-  --font-display: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  --text-4xs: 0.5rem;
-  --text-3xs: 0.5625rem;
-  --text-2xs: 0.625rem;
-  --text-button-sm: 0.8rem;
-  --text-page-hero: clamp(3.5rem, 18vw, 5.5rem);
-  --text-page-hero-tablet: clamp(4.125rem, 8.25vw, 8.25rem);
-  --text-season-title: clamp(3.25rem, 14vw, 4.875rem);
-  --text-season-title-md: clamp(3.125rem, 5.7vw, 5.5rem);
-  --text-season-number: 9.375rem;
-  --text-season-number-md: clamp(8.125rem, 13vw, 13.125rem);
-  --text-episode-title-tablet: clamp(3rem, 6vw, 5.25rem);
-  --text-episode-list-title: clamp(1.1875rem, 1.6vw, 1.5625rem);
-  --leading-display: 0.84;
-  --leading-display-title: 0.88;
-  --leading-season-number: 0.68;
-  --tracking-display: -0.045em;
-  --tracking-overline: 0.18em;
-  --tracking-section-label: 0.16em;
-  --shadow-card-hover: 0.5rem 0.5rem 0 rgb(251 48 45 / 17%);
-  --shadow-player: 0.75rem 0.75rem 0 rgb(251 48 45 / 8%);
-  --font-heading: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-hover: color-mix(in oklch, var(--secondary), var(--foreground) 5%);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-control-xs: min(var(--radius-md), 0.625rem);
-  --radius-control-sm: min(var(--radius-md), 0.75rem);
+    --color-ink: #061724;
+    --color-paper: #f4f0e9;
+    --color-signal: #fb302d;
+    --color-panel: #071b29;
+    --color-surface: #0d2636;
+    --color-player: #020a0f;
+    --color-select: #0c2433;
+    --color-select-active: #18384a;
+    --color-select-hover: #245269;
+    --color-map-line: #74828a;
+    --color-copy-muted: #b7c1c7;
+    --color-meta: #9da7ad;
+    --color-card-meta: #aeb8be;
+    --color-control: #c4ccd0;
+    --color-control-disabled: #59666e;
+    --color-footer-copy: #8c9aa2;
+    --color-map-canvas: #071722;
+    /*--color-green-team-primary: #63a26b;
+  --color-red-team-primary: #dc4742;*/
+    --color-budget-credit: #8bc897;
+    --color-budget-debit: #d9827f;
+    --container-page: 100rem;
+    --container-copy: 48rem;
+    --spacing-gutter: clamp(1.375rem, 5vw, 5rem);
+    --breakpoint-tablet: 43.75rem;
+    --breakpoint-wide: 62.5rem;
+    --font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+    --text-4xs: 0.5rem;
+    --text-3xs: 0.5625rem;
+    --text-2xs: 0.625rem;
+    --text-button-sm: 0.8rem;
+    --text-page-hero: clamp(3.5rem, 18vw, 5.5rem);
+    --text-page-hero-tablet: clamp(4.125rem, 8.25vw, 8.25rem);
+    --text-season-title: clamp(3.25rem, 14vw, 4.875rem);
+    --text-season-title-md: clamp(3.125rem, 5.7vw, 5.5rem);
+    --text-season-number: 9.375rem;
+    --text-season-number-md: clamp(8.125rem, 13vw, 13.125rem);
+    --text-episode-title-tablet: clamp(3rem, 6vw, 5.25rem);
+    --text-episode-list-title: clamp(1.1875rem, 1.6vw, 1.5625rem);
+    --leading-display: 0.84;
+    --leading-display-title: 0.88;
+    --leading-season-number: 0.68;
+    --tracking-display: -0.045em;
+    --tracking-overline: 0.18em;
+    --tracking-section-label: 0.16em;
+    --shadow-card-hover: 0.5rem 0.5rem 0 rgb(251 48 45 / 17%);
+    --shadow-player: 0.75rem 0.75rem 0 rgb(251 48 45 / 8%);
+    --font-heading: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Rubik", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, monospace;
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-hover: color-mix(
+        in oklch,
+        var(--secondary),
+        var(--foreground) 5%
+    );
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-control-xs: min(var(--radius-md), 0.625rem);
+    --radius-control-sm: min(var(--radius-md), 0.75rem);
 }
 
 @layer base {
-  * { @apply border-border outline-ring/50; }
-  html { @apply scroll-smooth font-sans; }
-  body { @apply bg-background text-foreground; }
-  a { @apply text-inherit no-underline; }
-  .maplibregl-popup-content { @apply bg-transparent! shadow-none! p-0! rounded-none!; }
-  .maplibregl-popup-tip { @apply hidden!; }
+    * {
+        @apply border-border outline-ring/50;
+    }
+    html {
+        @apply scroll-smooth font-sans;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+    a {
+        @apply text-inherit no-underline;
+    }
+    .maplibregl-popup-content {
+        @apply bg-transparent! shadow-none! p-0! rounded-none!;
+    }
+    .maplibregl-popup-tip {
+        @apply hidden!;
+    }
 }
 
 @utility page-texture {
-  background-image: linear-gradient(rgb(255 255 255 / 1.2%) 1px, transparent 1px);
-  background-size: 100% 0.375rem;
+    background-image: linear-gradient(
+        rgb(255 255 255 / 1.2%) 1px,
+        transparent 1px
+    );
+    background-size: 100% 0.375rem;
 }
 
 @utility text-stroke-paper-subtle {
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 16%, transparent);
+    -webkit-text-stroke: 1px
+        color-mix(in srgb, var(--color-paper) 16%, transparent);
 }

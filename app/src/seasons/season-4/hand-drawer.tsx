@@ -11,8 +11,8 @@ import {
     DrawerTrigger,
 } from "@/components/ui/drawer";
 import { getCurrentHand, type ChallengeCard } from "./hand-data";
-import { seasonFourTeams } from "./budget-data";
-import type { TeamId } from "./state-claims";
+import { seasonFourStateClaims } from "./state-claims";
+import { seasonFourTeams, type TeamId } from "./team-data";
 
 type HandDrawerProps = {
     episodeSlug: string;
@@ -21,7 +21,12 @@ type HandDrawerProps = {
 };
 
 export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) {
-    const hand = getCurrentHand(episodeSlug, currentTime, team);
+    const hand = getCurrentHand(
+        episodeSlug,
+        currentTime,
+        team,
+        seasonFourStateClaims,
+    );
     const teamDetails = seasonFourTeams[team];
 
     return (
@@ -30,14 +35,14 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
                 <Button
                     variant="outline"
                     size="sm"
-                    className="border-paper/25 bg-paper/[0.04] text-paper hover:bg-paper hover:text-ink h-8 gap-2 rounded-md px-3 font-mono text-4xs font-bold tracking-wider uppercase"
+                    className="border-paper/25 bg-paper/[0.04] text-paper hover:bg-paper hover:text-ink h-8 gap-2 rounded-md px-3 font-display text-sm leading-none font-bold uppercase"
                     aria-label={`View ${teamDetails.name}'s current hand`}
                 >
                     <WalletCards className="size-3.5" aria-hidden="true" />
                     View hand
                 </Button>
             </DrawerTrigger>
-            <DrawerContent className="border-paper/25 bg-panel text-paper max-h-[70vh] rounded-t-2xl">
+            <DrawerContent className="border-paper/25 bg-panel text-paper max-h-[70vh] rounded-t-lg">
                 <div className="mx-auto flex min-h-0 w-full max-w-[100rem] flex-1 flex-col">
                     <DrawerHeader className="border-paper/15 shrink-0 border-b px-5 pt-5 pb-4 text-left sm:px-8">
                         <div className="flex items-center gap-3">
@@ -45,7 +50,7 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
                                 className="size-3 shrink-0"
                                 style={{ backgroundColor: teamDetails.color }}
                             />
-                            <DrawerTitle className="text-paper font-display text-3xl leading-none font-black tracking-tight uppercase">
+                            <DrawerTitle className="text-paper font-heading text-3xl leading-none font-bold tracking-tight uppercase">
                                 {teamDetails.name}&apos;s hand
                             </DrawerTitle>
                         </div>
@@ -73,7 +78,7 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
 function StartingHandSkeleton() {
     return (
         <div role="status" aria-live="polite">
-            <p className="text-card-meta mb-3 text-center font-heading text-sm font-bold uppercase">
+            <p className="text-card-meta mb-3 text-center font-display text-lg leading-none font-bold uppercase">
                 Starting hand not yet drawn
             </p>
             <div className="grid w-max grid-flow-col auto-cols-[10rem] gap-3 lg:w-full lg:grid-flow-row lg:grid-cols-7 lg:auto-cols-auto">
@@ -135,14 +140,13 @@ function HandCard({ card }: { card: ChallengeCard }) {
                         ))}
                     </span>
                 )}
-                {!hasAbilities && <span className="text-paper/45 font-mono text-4xs tracking-widest uppercase">Standard</span>}
             </div>
             <div className="flex flex-1 flex-col px-3.5 pt-4 pb-5">
-                <h3 className="font-heading text-sm leading-tight font-black tracking-tight uppercase">
+                <h3 className="font-heading text-[1.1875rem] leading-tight font-bold tracking-tight uppercase">
                     {card.title}
                 </h3>
                 <div className="bg-ink/15 my-3 h-px" />
-                <p className="text-[0.6875rem] leading-relaxed text-ink/75">
+                <p className="text-xs leading-relaxed text-ink/75">
                     {card.description}
                 </p>
             </div>

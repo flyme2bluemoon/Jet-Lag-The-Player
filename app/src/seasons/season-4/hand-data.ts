@@ -1,21 +1,28 @@
-import { seasonFourEpisodeOrder, type TeamId } from "./state-claims";
+import { seasonFour } from "@/data/season-4";
+import { compareTimestamps } from "@/lib/timestamps";
+import type { StateClaim } from "./state-claims";
+import type { TeamId } from "./team-data";
 
 export type ChallengeCard = {
     id: string;
     title: string;
     description: string;
+    kind?: "battle";
     powerUpTokens?: 1 | 2;
     doubleClaim?: boolean;
 };
 
-type HandSnapshot = {
-    episode: (typeof seasonFourEpisodeOrder)[number];
+type EpisodeSlug = (typeof seasonFour.episodes)[number]["slug"];
+
+type HandChange = {
+    episode: EpisodeSlug;
     at: number;
     team: TeamId;
-    cards: Array<string | null>;
+    add?: ChallengeCardKey[];
+    remove?: ChallengeCardKey[];
 };
 
-const cards: Record<string, ChallengeCard> = {
+export const seasonFourCards = {
     praiseBuilding: {
         id: "praise-building",
         title: "Praise the ugliest building",
@@ -23,7 +30,7 @@ const cards: Record<string, ChallengeCard> = {
     },
     pawnShop: {
         id: "pawn-shop",
-        title: "Sell something from a pawn shop at a pawn shop",
+        title: "Sell something from one pawn shop to another",
         description: "Purchase an item at a pawn shop, then sell it for at least half its purchase price at a pawn shop in another state.",
         doubleClaim: true,
     },
@@ -195,338 +202,123 @@ const cards: Record<string, ChallengeCard> = {
         title: "Make s'mores over an open fire",
         description: "Toast the marshmallows over an open flame and assemble two complete s'mores.",
     },
-};
+    foreignLicensePlateBattle: {
+        id: "foreign-license-plate-battle",
+        title: "Find the most foreign license plate",
+        description: "Find a license plate from the country farthest from your current location before the other team does.",
+        kind: "battle",
+    },
+    photographBirdsBattle: {
+        id: "photograph-birds-battle",
+        title: "Photograph the most birds",
+        description: "Photograph more distinct birds than the other team before the battle ends.",
+        kind: "battle",
+    },
+    drawGeorgeWashingtonBattle: {
+        id: "draw-george-washington-battle",
+        title: "Draw George Washington",
+        description: "Create the better drawing of George Washington before the battle ends.",
+        kind: "battle",
+    },
+} as const satisfies Record<string, ChallengeCard>;
 
-const snapshots: HandSnapshot[] = [
-    {
-        episode: "episode-1",
-        at: 73,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "spiritHalloween", "eatInNOut", "carnivalPrize", "highFive", "soupHelicopter"],
-    },
-    {
-        episode: "episode-1",
-        at: 62,
-        team: "ben-adam",
-        cards: ["photographPartner", "praiseBuilding", "pawnShop", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee"],
-    },
-    {
-        episode: "episode-1",
-        at: 304.415,
-        team: "ben-adam",
-        cards: ["photographPartner", "pawnShop", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", null],
-    },
-    {
-        episode: "episode-1",
-        at: 376,
-        team: "ben-adam",
-        cards: ["photographPartner", "pawnShop", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", "geodeticMarker"],
-    },
-    {
-        episode: "episode-1",
-        at: 1343,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "carnivalPrize", "highFive", "soupHelicopter", null],
-    },
-    {
-        episode: "episode-1",
-        at: 1400,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "carnivalPrize", "highFive", "soupHelicopter", "clawMachine"],
-    },
-    {
-        episode: "episode-1",
-        at: 1472,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "clawMachine", "geodeticMarker", "photographPartner"],
-    },
-    {
-        episode: "episode-1",
-        at: 1472,
-        team: "ben-adam",
-        cards: ["pawnShop", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", "highFive", "carnivalPrize"],
-    },
-    {
-        episode: "episode-1",
-        at: 1618,
-        team: "ben-adam",
-        cards: [null, "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", "highFive", "carnivalPrize"],
-    },
-    {
-        episode: "episode-1",
-        at: 1702,
-        team: "ben-adam",
-        cards: ["touchOceans", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", "highFive", "carnivalPrize"],
-    },
-    {
-        episode: "episode-1",
-        at: 1988,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "clawMachine", null, "photographPartner"],
-    },
-    {
-        episode: "episode-1",
-        at: 2076,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "clawMachine", "spendBucees", "photographPartner"],
-    },
-    {
-        episode: "episode-1",
-        at: 2314,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "clawMachine", "spendBucees", null],
-    },
-    {
-        episode: "episode-1",
-        at: 2340,
-        team: "ben-adam",
-        cards: ["touchOceans", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", null, "carnivalPrize"],
-    },
-    {
-        episode: "episode-1",
-        at: 2490,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "clawMachine", "spendBucees", "snowman"],
-    },
-    {
-        episode: "episode-1",
-        at: 2499,
-        team: "ben-adam",
-        cards: ["touchOceans", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee", "getDrunk", "carnivalPrize"],
-    },
-    {
-        episode: "episode-2",
-        at: 985,
-        team: "ben-adam",
-        cards: ["touchOceans", null, "cleanPark", "criticizePlace", "chevyLevee", "getDrunk", "carnivalPrize"],
-    },
-    {
-        episode: "episode-2",
-        at: 1009,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "criticizePlace", "chevyLevee", "getDrunk", "carnivalPrize"],
-    },
-    {
-        episode: "episode-2",
-        at: 1247,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", null, "spendBucees", "snowman"],
-    },
-    {
-        episode: "episode-2",
-        at: 1341,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "buildRaft", "spendBucees", "snowman"],
-    },
-    {
-        episode: "episode-2",
-        at: 1548,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "criticizePlace", "chevyLevee", null, "carnivalPrize"],
-    },
-    {
-        episode: "episode-2",
-        at: 1628,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "criticizePlace", "chevyLevee", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-3",
-        at: 564,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "buildRaft", null, "snowman"],
-    },
-    {
-        episode: "episode-3",
-        at: 641,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "eatInNOut", "soupHelicopter", "buildRaft", "advertise", "snowman"],
-    },
-    {
-        episode: "episode-3",
-        at: 1024,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "criticizePlace", null, "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-3",
-        at: 1143,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "criticizePlace", "bullseye", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-3",
-        at: 1491,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", null, "bullseye", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-3",
-        at: 1594,
-        team: "ben-adam",
-        cards: ["touchOceans", "breakLaw", "cleanPark", "skyDiving", "bullseye", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-3",
-        at: 2005,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", null, "soupHelicopter", "buildRaft", "advertise", "snowman"],
-    },
-    {
-        episode: "episode-4",
-        at: 82,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "fourLeafClover", "soupHelicopter", "buildRaft", "advertise", "snowman"],
-    },
-    {
-        episode: "episode-4",
-        at: 377,
-        team: "ben-adam",
-        cards: ["touchOceans", null, "cleanPark", "skyDiving", "bullseye", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-4",
-        at: 399,
-        team: "ben-adam",
-        cards: ["touchOceans", "forgeArt", "cleanPark", "skyDiving", "bullseye", "spellHelp", "carnivalPrize"],
-    },
-    {
-        episode: "episode-4",
-        at: 895,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", null, "soupHelicopter", "buildRaft", "advertise", "snowman"],
-    },
-    {
-        episode: "episode-4",
-        at: 1061,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "smores", "soupHelicopter", "buildRaft", "advertise", "snowman"],
-    },
-    {
-        episode: "episode-4",
-        at: 1075,
-        team: "sam-brian",
-        cards: ["grandCanyon", "shipCard", "soupHelicopter", "buildRaft", "advertise", "snowman", "smores"],
-    },
-    {
-        episode: "episode-4",
-        at: 1137,
-        team: "sam-brian",
-        cards: ["grandCanyon", "soupHelicopter", "buildRaft", "advertise", "smores", "forgeArt", "spellHelp"],
-    },
-    {
-        episode: "episode-4",
-        at: 1137,
-        team: "ben-adam",
-        cards: ["touchOceans", "cleanPark", "skyDiving", "bullseye", "carnivalPrize", "snowman", "shipCard"],
-    },
-    {
-        episode: "episode-4",
-        at: 1249,
-        team: "sam-brian",
-        cards: ["grandCanyon", "soupHelicopter", "buildRaft", "advertise", "smores", "touchOceans", "shipCard"],
-    },
-    {
-        episode: "episode-4",
-        at: 1249,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "snowman", "forgeArt", "spellHelp"],
-    },
-    {
-        episode: "episode-4",
-        at: 1587,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "snowman", null, "spellHelp"],
-    },
-    {
-        episode: "episode-4",
-        at: 1654,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "snowman", "skipStone", "spellHelp"],
-    },
-    {
-        episode: "finale",
-        at: 266,
-        team: "sam-brian",
-        cards: ["grandCanyon", null, "buildRaft", "advertise", "smores", "touchOceans", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 557,
-        team: "sam-brian",
-        cards: ["grandCanyon", "miniGolf", "buildRaft", "advertise", "smores", "touchOceans", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 1779,
-        team: "sam-brian",
-        cards: ["grandCanyon", null, "buildRaft", "advertise", "smores", "touchOceans", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 1818,
-        team: "sam-brian",
-        cards: ["grandCanyon", "roulette", "buildRaft", "advertise", "smores", "touchOceans", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 2068,
-        team: "sam-brian",
-        cards: ["roulette", "buildRaft", "advertise", "smores", "touchOceans", "snowman", "spellHelp"],
-    },
-    {
-        episode: "finale",
-        at: 2068,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "skipStone", "grandCanyon", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 2083,
-        team: "sam-brian",
-        cards: ["roulette", "buildRaft", "advertise", "touchOceans", "snowman", "grandCanyon", "shipCard"],
-    },
-    {
-        episode: "finale",
-        at: 2083,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "skipStone", "smores", "spellHelp"],
-    },
-    {
-        episode: "finale",
-        at: 2204,
-        team: "ben-adam",
-        cards: ["cleanPark", "skyDiving", "bullseye", "carnivalPrize", "skipStone", "smores", null],
-    },
-    {
-        episode: "finale",
-        at: 2409,
-        team: "sam-brian",
-        cards: ["roulette", "buildRaft", null, "touchOceans", "snowman", "grandCanyon", "shipCard"],
-    },
+export type ChallengeCardKey = keyof typeof seasonFourCards;
+
+// Successful challenge cards are removed through seasonFourStateClaims. These
+// changes only describe the initial hands, replacement draws, and card trades.
+const handChanges: HandChange[] = [
+    { episode: "episode-1", at: 62, team: "ben-adam", add: ["photographPartner", "praiseBuilding", "pawnShop", "roadsideAttraction", "cleanPark", "criticizePlace", "chevyLevee"] },
+    { episode: "episode-1", at: 73, team: "sam-brian", add: ["grandCanyon", "shipCard", "spiritHalloween", "eatInNOut", "carnivalPrize", "highFive", "soupHelicopter"] },
+    { episode: "episode-1", at: 376, team: "ben-adam", add: ["geodeticMarker"] },
+    { episode: "episode-1", at: 1400, team: "sam-brian", add: ["clawMachine"] },
+    { episode: "episode-1", at: 1472, team: "sam-brian", remove: ["carnivalPrize", "highFive"], add: ["geodeticMarker", "photographPartner"] },
+    { episode: "episode-1", at: 1472, team: "ben-adam", remove: ["photographPartner", "geodeticMarker"], add: ["highFive", "carnivalPrize"] },
+    { episode: "episode-1", at: 1702, team: "ben-adam", add: ["touchOceans"] },
+    { episode: "episode-1", at: 2076, team: "sam-brian", add: ["spendBucees"] },
+    { episode: "episode-1", at: 2490, team: "sam-brian", add: ["snowman"] },
+    { episode: "episode-1", at: 2499, team: "ben-adam", add: ["getDrunk"] },
+    { episode: "episode-2", at: 1009, team: "ben-adam", add: ["breakLaw"] },
+    { episode: "episode-2", at: 1341, team: "sam-brian", add: ["buildRaft"] },
+    { episode: "episode-2", at: 1628, team: "ben-adam", add: ["spellHelp"] },
+    { episode: "episode-3", at: 641, team: "sam-brian", add: ["advertise"] },
+    { episode: "episode-3", at: 1143, team: "ben-adam", add: ["bullseye"] },
+    { episode: "episode-3", at: 1594, team: "ben-adam", add: ["skyDiving"] },
+    { episode: "episode-4", at: 82, team: "sam-brian", add: ["fourLeafClover"] },
+    { episode: "episode-4", at: 399, team: "ben-adam", add: ["forgeArt"] },
+    { episode: "episode-4", at: 1061, team: "sam-brian", add: ["smores"] },
+    { episode: "episode-4", at: 1137, team: "sam-brian", remove: ["shipCard", "snowman"], add: ["forgeArt", "spellHelp"] },
+    { episode: "episode-4", at: 1137, team: "ben-adam", remove: ["forgeArt", "spellHelp"], add: ["snowman", "shipCard"] },
+    { episode: "episode-4", at: 1249, team: "sam-brian", remove: ["forgeArt", "spellHelp"], add: ["touchOceans", "shipCard"] },
+    { episode: "episode-4", at: 1249, team: "ben-adam", remove: ["touchOceans", "shipCard"], add: ["forgeArt", "spellHelp"] },
+    { episode: "episode-4", at: 1654, team: "ben-adam", add: ["skipStone"] },
+    { episode: "finale", at: 557, team: "sam-brian", add: ["miniGolf"] },
+    { episode: "finale", at: 1818, team: "sam-brian", add: ["roulette"] },
+    { episode: "finale", at: 2068, team: "sam-brian", remove: ["grandCanyon", "shipCard"], add: ["snowman", "spellHelp"] },
+    { episode: "finale", at: 2068, team: "ben-adam", remove: ["snowman", "spellHelp"], add: ["grandCanyon", "shipCard"] },
+    { episode: "finale", at: 2083, team: "sam-brian", remove: ["smores", "spellHelp"], add: ["grandCanyon", "shipCard"] },
+    { episode: "finale", at: 2083, team: "ben-adam", remove: ["grandCanyon", "shipCard"], add: ["smores", "spellHelp"] },
 ];
 
-export function getCurrentHand(episode: string, currentTime: number, team: TeamId) {
-    const episodeIndex = seasonFourEpisodeOrder.indexOf(
-        episode as (typeof seasonFourEpisodeOrder)[number],
+const HAND_SIZE = 7;
+
+export function getCurrentHand(
+    episode: string,
+    currentTime: number,
+    team: TeamId,
+    stateClaims: Iterable<StateClaim>,
+) {
+    if (!seasonFour.episodes.some((candidate) => candidate.slug === episode)) {
+        return [];
+    }
+
+    const currentTimestamp = { episode, at: currentTime };
+    const visibleChanges = handChanges.filter(
+        (change) =>
+            change.team === team &&
+            compareTimestamps(seasonFour, change, currentTimestamp) <= 0,
     );
 
-    if (episodeIndex === -1) return [];
+    if (!visibleChanges.length) return [];
 
-    const snapshot = snapshots
-        .filter((candidate) => {
-            const candidateEpisodeIndex = seasonFourEpisodeOrder.indexOf(candidate.episode);
-            return candidate.team === team && (
-                candidateEpisodeIndex < episodeIndex ||
-                (candidateEpisodeIndex === episodeIndex && candidate.at <= currentTime)
-            );
-        })
-        .at(-1);
+    const hand: ChallengeCardKey[] = [];
 
-    const hand = snapshot?.cards.map((card) => card ? cards[card] : null) ?? [];
+    for (const change of visibleChanges) {
+        for (const card of change.remove ?? []) {
+            removeCard(hand, card);
+        }
+        hand.push(...(change.add ?? []));
+    }
+
+    const claimedCardIds = new Set(
+        [...stateClaims]
+            .filter(
+                (claim) =>
+                    claim.team === team &&
+                    compareTimestamps(seasonFour, claim, currentTimestamp) <= 0,
+            )
+            .map((claim) => claim.challenge.id),
+    );
+
+    for (const card of [...hand]) {
+        if (claimedCardIds.has(seasonFourCards[card].id)) {
+            removeCard(hand, card);
+        }
+    }
+
+    const currentHand: Array<ChallengeCard | null> = hand.map(
+        (card) => seasonFourCards[card],
+    );
 
     return [
-        ...hand.filter((card) => card !== null),
-        ...hand.filter((card) => card === null),
+        ...currentHand,
+        ...Array.from(
+            { length: Math.max(0, HAND_SIZE - currentHand.length) },
+            () => null,
+        ),
     ];
+}
+
+function removeCard(hand: ChallengeCardKey[], card: ChallengeCardKey) {
+    const index = hand.indexOf(card);
+    if (index !== -1) hand.splice(index, 1);
 }

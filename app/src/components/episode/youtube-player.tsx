@@ -98,7 +98,7 @@ export function YouTubePlayer({
 
     return (
         <section className="video-panel w-full" aria-label={`${label} video player`}>
-            <div className="border-paper/35 bg-player tablet:border tablet:shadow-player relative aspect-video w-full overflow-hidden border-y">
+            <div className="border-paper/35 bg-player tablet:rounded-lg tablet:border tablet:shadow-player relative aspect-video w-full overflow-hidden border-y">
                 <div
                     ref={hostRef}
                     className="absolute inset-0 size-full [&>iframe]:size-full [&>iframe]:border-0"

@@ -1,11 +1,10 @@
 "use client";
 
 import { Clock3, Shield, Swords, Trophy } from "lucide-react";
-import { seasonFourTeams } from "./budget-data";
-import { getBattleStatus, type BattlePhase } from "./game-status-data";
-import type { TeamId } from "./state-claims";
+import { getBattleStatus, type BattlePhase } from "./battle-status-data";
+import { seasonFourTeams, type TeamId } from "./team-data";
 
-type GameStatusCardProps = {
+type BattleStatusCardProps = {
     episodeSlug: string;
     currentTime: number;
 };
@@ -39,10 +38,10 @@ function TeamRole({
                 <Icon className="size-4" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-                <p className="text-card-meta font-mono text-4xs font-bold tracking-wider uppercase">
+                <p className="text-card-meta font-heading text-xs leading-none font-bold uppercase">
                     {role}
                 </p>
-                <p className="mt-0.5 truncate font-heading text-sm font-bold">
+                <p className="mt-0.5 truncate font-display text-lg leading-none font-bold uppercase">
                     {teamDetails.name}
                 </p>
             </div>
@@ -50,7 +49,7 @@ function TeamRole({
     );
 }
 
-export function GameStatusCard({ episodeSlug, currentTime }: GameStatusCardProps) {
+export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardProps) {
     const battle = getBattleStatus(episodeSlug, currentTime);
 
     if (!battle) return null;
@@ -63,14 +62,14 @@ export function GameStatusCard({ episodeSlug, currentTime }: GameStatusCardProps
 
     return (
         <section
-            className="border-paper/25 bg-panel w-full overflow-hidden border"
-            aria-labelledby="game-status-title"
+            className="border-paper/25 bg-panel w-full overflow-hidden rounded-lg border"
+            aria-labelledby="battle-status-title"
             aria-live="polite"
         >
             <header className="border-paper/20 flex items-start justify-between gap-4 border-b px-5 py-5 sm:px-6">
                 <h2
-                    id="game-status-title"
-                    className="font-display self-center text-3xl leading-none font-black tracking-tight uppercase"
+                    id="battle-status-title"
+                    className="font-heading self-center text-3xl leading-none font-bold tracking-tight uppercase"
                 >
                     Battle for {battle.state}
                 </h2>
@@ -86,23 +85,23 @@ export function GameStatusCard({ episodeSlug, currentTime }: GameStatusCardProps
             </header>
 
             <div className="px-5 py-5 sm:px-6">
-                <div className="mb-5 flex items-center gap-2">
+                <div className="border-paper/20 bg-paper/[0.06] mb-5 flex w-fit items-center gap-2 rounded-full border px-3 py-2">
                     <span
-                        className={`size-2 rounded-full ${isConcluded ? "" : "animate-pulse bg-paper"}`}
+                        className={`size-2 translate-y-px rounded-full ${isConcluded ? "" : "animate-pulse bg-paper"}`}
                         style={winner ? { backgroundColor: winner.color } : undefined}
                     />
-                    <p className="font-mono text-3xs font-bold tracking-wider uppercase">
+                    <p className="font-heading text-sm leading-none font-bold uppercase">
                         {phaseLabels[battle.phase]}
                     </p>
                 </div>
 
                 {isCountdown ? (
-                    <p className="mb-5 font-heading text-xl font-black uppercase">
+                    <p className="mb-5 font-display text-xl leading-none font-bold uppercase">
                         30-minute countdown
                     </p>
                 ) : (
                     <div className="mb-5">
-                        <p className="font-heading text-xl leading-tight font-black uppercase">
+                        <p className="font-display text-xl leading-tight font-bold uppercase">
                             {battle.challenge}
                         </p>
                         <p className="text-card-meta mt-3 max-w-2xl text-sm leading-relaxed">

@@ -2,7 +2,15 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { Hexagon, Lock } from "lucide-react";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Map, MapGeoJSON, MapMarker, MarkerContent } from "@/components/ui/map";
+import { seasonFour } from "@/data/season-4";
+import { compareTimestamps } from "@/lib/timestamps";
 import {
     Collapsible,
     CollapsibleContent,
@@ -13,48 +21,18 @@ import {
     isAreaBonusVisible,
     type AreaBonusScore,
 } from "./area-bonus-data";
-import { seasonFourTeams } from "./budget-data";
 import { getActiveChallenge, getFailedChallenges } from "./challenge-data";
 import { HandDrawer } from "./hand-drawer";
 import {
+    getPreviousStateClaim,
     getStateClaims,
-    seasonFourEpisodeOrder,
     type StateClaim,
-    type TeamId,
 } from "./state-claims";
+import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
 const US_STATES_GEOJSON = "/seasons/season-4/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/seasons/season-4/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
-
-const teams: Record<TeamId, { name: string; color: string }> = {
-    "sam-brian": { name: "Sam & Brian", color: "#63A26B" },
-    "ben-adam": { name: "Ben & Adam", color: "#DC4742" },
-};
-
-const stateAbbreviations: Record<string, string> = {
-    Alaska: "AK",
-    Arizona: "AZ",
-    California: "CA",
-    Colorado: "CO",
-    Connecticut: "CT",
-    Delaware: "DE",
-    "District of Columbia": "DC",
-    Illinois: "IL",
-    Indiana: "IN",
-    Maryland: "MD",
-    Massachusetts: "MA",
-    Michigan: "MI",
-    Nevada: "NV",
-    "New Jersey": "NJ",
-    "New York": "NY",
-    Pennsylvania: "PA",
-    "Rhode Island": "RI",
-    Tennessee: "TN",
-    Texas: "TX",
-    Virginia: "VA",
-    Wyoming: "WY",
-};
 
 type ClaimsCardProps = {
     episodeSlug: string;
@@ -84,7 +62,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
             "rgba(0, 0, 0, 0)",
         ];
         for (const [state, claim] of claims) {
-            if (state !== "District of Columbia") expression.push(state, teams[claim.team].color);
+            if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].color);
         }
         expression.push("#233744");
         return expression as never;
@@ -98,9 +76,9 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
     ] as never;
 
     return (
-        <section className="border-paper/25 bg-panel flex min-h-0 w-full flex-col border" aria-labelledby="claims-title">
+        <section className="border-paper/25 bg-panel flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
             <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
-                <h2 id="claims-title" className="font-display text-3xl leading-none font-black tracking-tight uppercase">Scoreboard</h2>
+                <h2 id="claims-title" className="font-heading text-3xl leading-none font-bold tracking-tight uppercase">Scoreboard</h2>
             </header>
             <div className="bg-map-canvas relative h-64 min-h-64 overflow-hidden">
                 <Map
@@ -139,7 +117,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                             <MarkerContent>
                                 <span
                                     className="block size-2.5 rounded-full border-2 border-white shadow"
-                                    style={{ backgroundColor: teams[claims.get("District of Columbia")!.team].color }}
+                                    style={{ backgroundColor: seasonFourTeams[claims.get("District of Columbia")!.team].color }}
                                     aria-label="District of Columbia"
                                 />
                             </MarkerContent>
@@ -153,7 +131,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                 claimsByTeam={statesByTeam}
             />
             <div className="border-paper/20 grid flex-1 border-t md:grid-cols-2">
-                {(Object.keys(teams) as TeamId[]).map((team, index) => (
+                {seasonFourTeamIds.map((team, index) => (
                     <article
                         key={team}
                         className={`grid min-w-0 md:row-start-1 md:grid-rows-subgrid ${isFinalScore ? "grid-rows-[auto_auto] md:row-span-2" : "grid-rows-[auto_auto_auto] md:row-span-3"} ${index === 0 ? "border-paper/20 border-b md:border-r md:border-b-0" : ""}`}
@@ -192,15 +170,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
 }
 
 function compareClaims(a: StateClaim, b: StateClaim) {
-    const episodeDifference =
-        seasonFourEpisodeOrder.indexOf(
-            a.episode as (typeof seasonFourEpisodeOrder)[number],
-        ) -
-        seasonFourEpisodeOrder.indexOf(
-            b.episode as (typeof seasonFourEpisodeOrder)[number],
-        );
-
-    return episodeDifference || a.at - b.at;
+    return compareTimestamps(seasonFour, a, b);
 }
 
 function Score({
@@ -224,7 +194,7 @@ function Score({
             >
                 {isFinalScore && (
                     <div className="col-span-2 flex justify-center pt-3">
-                        <span className="border-amber-300/50 bg-amber-300/10 rounded-full border px-3 py-1 font-mono text-4xs font-bold tracking-widest text-amber-300 uppercase">
+                        <span className="border-amber-300/50 bg-amber-300/10 rounded-full border px-3 py-1 font-display text-xs leading-none font-bold text-amber-300 uppercase">
                             Final
                         </span>
                     </div>
@@ -254,30 +224,40 @@ function Score({
 
     return (
         <div className="border-paper/20 relative grid grid-cols-2 border-t" aria-label={`Score: Sam and Brian ${samBrian}, Ben and Adam ${benAdam}`}>
-            <div className="flex min-w-0 items-center justify-between gap-3 py-5 pr-4 pl-5 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8">
+            <div
+                className="flex min-w-0 items-center justify-between gap-3 py-5 pr-4 pl-5 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
+                style={{
+                    backgroundImage: `linear-gradient(to right, ${seasonFourTeams["sam-brian"].color}24, ${seasonFourTeams["sam-brian"].color}0a 68%, transparent)`,
+                }}
+            >
                 <div className="min-w-0">
                     <div className="mb-2 flex min-w-0 items-center gap-2.5">
-                        <span className="size-3 shrink-0" style={{ backgroundColor: teams["sam-brian"].color }} />
-                        <span className="text-3xs truncate font-mono font-bold tracking-wider uppercase sm:text-xs">
+                        <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams["sam-brian"].color }} />
+                        <span className="truncate font-display text-sm leading-none font-bold uppercase">
                             Sam &amp; Brian
                         </span>
                     </div>
                     <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team="sam-brian" />
                 </div>
-                <span className="font-display text-4xl leading-none font-black sm:text-5xl">
+                <span className="font-display text-4xl leading-none font-bold sm:text-5xl">
                     {samBrian}
                 </span>
             </div>
-            <div className="flex min-w-0 items-center justify-between gap-3 py-5 pr-5 pl-4 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8">
-                <span className="font-display text-4xl leading-none font-black sm:text-5xl">
+            <div
+                className="flex min-w-0 items-center justify-between gap-3 py-5 pr-5 pl-4 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
+                style={{
+                    backgroundImage: `linear-gradient(to left, ${seasonFourTeams["ben-adam"].color}24, ${seasonFourTeams["ben-adam"].color}0a 68%, transparent)`,
+                }}
+            >
+                <span className="font-display text-4xl leading-none font-bold sm:text-5xl">
                     {benAdam}
                 </span>
                 <div className="min-w-0 text-right">
                     <div className="mb-2 flex min-w-0 items-center justify-end gap-2.5">
-                        <span className="text-3xs truncate font-mono font-bold tracking-wider uppercase sm:text-xs">
+                        <span className="truncate font-display text-sm leading-none font-bold uppercase">
                             Ben &amp; Adam
                         </span>
-                        <span className="size-3 shrink-0" style={{ backgroundColor: teams["ben-adam"].color }} />
+                        <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams["ben-adam"].color }} />
                     </div>
                     <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team="ben-adam" />
                 </div>
@@ -301,17 +281,22 @@ function AreaBonusTeamScore({
     team: TeamId;
 }) {
     return (
-        <div className={`flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5 sm:py-5 ${reverse ? "pr-5 pl-4 sm:pr-8 sm:pl-6" : "pr-4 pl-5 sm:pr-6 sm:pl-8"}`}>
+        <div
+            className={`flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5 sm:py-5 ${reverse ? "pr-5 pl-4 sm:pr-8 sm:pl-6" : "pr-4 pl-5 sm:pr-6 sm:pl-8"}`}
+            style={{
+                backgroundImage: `linear-gradient(to ${reverse ? "left" : "right"}, ${seasonFourTeams[team].color}24, ${seasonFourTeams[team].color}0a 68%, transparent)`,
+            }}
+        >
             {reverse && <ScoreTotal isFinalScore={isFinalScore} score={score} />}
             <div className={`min-w-0 ${reverse ? "text-right" : ""}`}>
                 <div className={`mb-2 flex min-w-0 items-center gap-2.5 ${reverse ? "justify-end" : ""}`}>
-                    {!reverse && <span className="size-3 shrink-0" style={{ backgroundColor: teams[team].color }} />}
-                    <span className="text-3xs truncate font-mono font-bold tracking-wider uppercase sm:text-xs">
-                        {teams[team].name}
+                    {!reverse && <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams[team].color }} />}
+                    <span className="truncate font-display text-sm leading-none font-bold uppercase">
+                        {seasonFourTeams[team].name}
                     </span>
-                    {reverse && <span className="size-3 shrink-0" style={{ backgroundColor: teams[team].color }} />}
+                    {reverse && <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams[team].color }} />}
                 </div>
-                <p className="text-card-meta mb-2 font-mono text-3xs tracking-wider sm:text-xs">
+                <p className="text-card-meta mb-2 font-sans text-3xs tracking-wider sm:text-xs">
                     <span className="text-paper font-bold tabular-nums">{formatArea(score.area)}</span> sq mi
                 </p>
                 {!isFinalScore && (
@@ -332,10 +317,10 @@ function ScoreTotal({
 }) {
     return (
         <div className="w-20 shrink-0 text-center sm:w-24">
-            <span className="font-display block text-4xl leading-none font-black sm:text-5xl">
+            <span className="font-display block text-4xl leading-none font-bold sm:text-5xl">
                 {score.states + (isFinalScore ? score.bonus : 0)}
             </span>
-            <span className="mt-1.5 block min-h-3.5 whitespace-nowrap font-mono text-4xs font-bold tracking-wider text-amber-300 uppercase">
+            <span className="mt-1.5 block min-h-3.5 whitespace-nowrap font-heading text-xs leading-none font-bold text-amber-300 uppercase">
                 {Boolean(score.bonus) && `${isFinalScore ? "Incl. " : ""}+${score.bonus} Area Bonus`}
             </span>
         </div>
@@ -365,7 +350,11 @@ function formatArea(area: number) {
 }
 
 function isFinalScoreVisible(episodeSlug: string, currentTime: number) {
-    return episodeSlug === "finale" && currentTime >= FINAL_SCORE_REVEALED_AT;
+    return compareTimestamps(
+        seasonFour,
+        { episode: episodeSlug, at: currentTime },
+        { episode: "finale", at: FINAL_SCORE_REVEALED_AT },
+    ) >= 0;
 }
 
 type ClaimedStatesProps = {
@@ -379,66 +368,59 @@ function ClaimedStates({ claims, expandedState, onExpandedStateChange, team }: C
     return (
         <div>
             <h3
-                className="border-paper/20 text-paper border-b px-5 py-3 text-2xs font-mono font-bold tracking-widest uppercase sm:px-6"
-                style={{ backgroundColor: `${teams[team].color}12` }}
+                className="border-paper/20 text-paper border-b px-5 py-3 font-heading text-base leading-none font-bold uppercase sm:px-6"
+                style={{ backgroundColor: `${seasonFourTeams[team].color}12` }}
             >
                 States claimed
             </h3>
             <div className="px-5 py-4 sm:px-6 sm:py-5">
                 {claims.length ? (
-                    <ul className="text-card-meta text-xs leading-tight">
+                    <Accordion
+                        type="single"
+                        collapsible
+                        value={expandedState ?? ""}
+                        onValueChange={(value) => onExpandedStateChange(value || null)}
+                        className="text-card-meta text-xs leading-tight"
+                    >
                         {claims.map((claim) => {
                             const disclosureId = `${team}:${claim.state}`;
-                            const stateLabel = getStateLabel(claim.state);
+                            const previousClaim = claim.challenge.kind === "battle"
+                                ? getPreviousStateClaim(claim)
+                                : undefined;
+                            const isDefense = previousClaim?.team === claim.team;
 
                             return (
                                 <StateDisclosure
                                     key={claim.state}
                                     disclosureId={disclosureId}
                                     state={claim.state}
-                                    expandedState={expandedState}
-                                    onExpandedStateChange={onExpandedStateChange}
-                                    team={team}
-                                    detailsLabel="claim"
-                                    locked={Boolean(claim.battleWin)}
+                                    locked={claim.challenge.kind === "battle"}
                                 >
-                                    {claim.battleWin?.result !== "stolen" && (
-                                        <>
-                                            <div>
-                                                <dt className="text-card-meta mb-1 font-mono text-4xs font-bold tracking-wider">
-                                                    Challenge used
-                                                </dt>
-                                                <dd className="text-paper text-xs leading-snug font-semibold">
-                                                    {claim.challenge}
-                                                </dd>
-                                            </div>
-                                            <div className="border-paper/10 mt-2.5 border-t pt-2.5">
-                                                <dt className="sr-only">Claim details</dt>
-                                                <dd className="text-card-meta font-mono text-3xs tracking-wider">
-                                                    Claimed {stateAbbreviations[claim.state] ?? stateLabel} in {formatEpisodeShort(claim.episode)} at {formatTimestamp(claim.at)}
-                                                </dd>
-                                            </div>
-                                        </>
+                                    {isDefense && previousClaim && (
+                                        <DisclosureEvent
+                                            label="Claimed via challenge"
+                                            challenge={previousClaim.challenge.title}
+                                            episode={previousClaim.episode}
+                                            at={previousClaim.at}
+                                        />
                                     )}
-                                    {claim.battleWin && (
-                                        <div className={claim.battleWin.result === "held" ? "border-paper/10 -mx-3.5 mt-3 border-t border-dotted px-3.5 pt-3" : ""}>
-                                            <dt className="text-card-meta mb-1 font-mono text-4xs font-bold tracking-wider">
-                                                Battle won
-                                            </dt>
-                                            <dd className="text-paper text-xs leading-snug font-semibold">
-                                                {claim.battleWin.challenge}
-                                            </dd>
-                                            <dd className="text-card-meta border-paper/10 mt-2.5 border-t pt-2.5 font-mono text-3xs tracking-wider">
-                                                Won {stateAbbreviations[claim.state] ?? stateLabel} in {formatEpisodeShort(claim.battleWin.episode)} at {formatTimestamp(claim.battleWin.at)}
-                                            </dd>
-                                        </div>
-                                    )}
+                                    <DisclosureEvent
+                                        className={isDefense ? "border-paper/10 mt-3 border-t border-dotted pt-3" : undefined}
+                                        label={isDefense
+                                            ? "Defended in battle"
+                                            : claim.challenge.kind === "battle"
+                                                ? "Claimed via battle"
+                                                : "Claimed via challenge"}
+                                        challenge={claim.challenge.title}
+                                        episode={claim.episode}
+                                        at={claim.at}
+                                    />
                                 </StateDisclosure>
                             );
                         })}
-                    </ul>
+                    </Accordion>
                 ) : (
-                    <p className="text-card-meta py-2.5 text-xs">No states yet</p>
+                    <EmptyDisclosureRow>No states yet</EmptyDisclosureRow>
                 )}
             </div>
         </div>
@@ -447,58 +429,65 @@ function ClaimedStates({ claims, expandedState, onExpandedStateChange, team }: C
 
 type StateDisclosureProps = {
     children: ReactNode;
-    detailsLabel: string;
     disclosureId: string;
-    expandedState: string | null;
     locked?: boolean;
-    onExpandedStateChange: (state: string | null) => void;
     state: string;
-    team: TeamId;
 };
 
 function StateDisclosure({
     children,
-    detailsLabel,
     disclosureId,
-    expandedState,
     locked = false,
-    onExpandedStateChange,
     state,
-    team,
 }: StateDisclosureProps) {
-    const isExpanded = expandedState === disclosureId;
-
     return (
-        <li className="border-paper/10 border-b last:border-0">
-            <Collapsible
-                open={isExpanded}
-                onOpenChange={(open) => onExpandedStateChange(open ? disclosureId : null)}
-            >
-                <CollapsibleTrigger className="group flex w-full items-center justify-between gap-4 py-2.5 text-left transition-colors hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper">
-                    <span className="flex min-w-0 items-center gap-2">
-                        <span>{getStateLabel(state)}</span>
-                        {locked && (
-                            <Lock
-                                className="size-3.5 shrink-0"
-                                strokeWidth={2}
-                                aria-label="Locked after battle"
-                            />
-                        )}
-                    </span>
-                    <span
-                        className="text-4xs shrink-0 font-mono font-bold tracking-wider opacity-75 transition-opacity group-hover:opacity-100"
-                        style={{ color: teams[team].color }}
-                    >
-                        {isExpanded ? `Hide ${detailsLabel}` : `View ${detailsLabel}`}
-                    </span>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                    <dl className="border-paper/10 bg-paper/[0.025] mb-3 rounded-md border px-3.5 py-3">
-                        {children}
-                    </dl>
-                </CollapsibleContent>
-            </Collapsible>
-        </li>
+        <AccordionItem value={disclosureId} className="border-paper/10">
+            <AccordionTrigger className="gap-4 rounded-none py-2.5 text-xs font-normal hover:text-paper hover:no-underline focus-visible:border-paper focus-visible:ring-paper/30">
+                <span className="flex min-w-0 items-center gap-2">
+                    <span>{getStateLabel(state)}</span>
+                    {locked && (
+                        <Lock
+                            className="size-3.5 shrink-0"
+                            strokeWidth={2}
+                            aria-label="Locked after battle"
+                        />
+                    )}
+                </span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-3">
+                <dl className="border-paper/10 bg-paper/2.5 rounded-md border px-3.5 py-3">
+                    {children}
+                </dl>
+            </AccordionContent>
+        </AccordionItem>
+    );
+}
+
+function DisclosureEvent({
+    at,
+    challenge,
+    className,
+    episode,
+    label,
+}: {
+    at: number;
+    challenge: string;
+    className?: string;
+    episode: string;
+    label: string;
+}) {
+    return (
+        <div className={className}>
+            <dt className="text-card-meta mb-1 font-heading text-xs leading-none font-bold uppercase">
+                {label}
+            </dt>
+            <dd className="text-paper text-xs leading-snug font-semibold">
+                {challenge}
+            </dd>
+            <dd className="text-card-meta mt-1.5 font-sans text-3xs tracking-wider">
+                {formatEpisodeShort(episode)} · {formatTimestamp(at)}
+            </dd>
+        </div>
     );
 }
 
@@ -507,8 +496,8 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
 
     if (!challenge) {
         return (
-            <div className="border-paper/20 bg-paper/[0.04] flex min-h-16 items-center justify-between gap-4 rounded-xl border px-4 py-3">
-                <p className="text-card-meta text-xs">No active challenge</p>
+            <div className="border-paper/20 bg-paper/4 flex min-h-16 items-center justify-between gap-4 rounded-lg border px-4 py-3">
+                <p className="text-card-meta font-display text-lg leading-none font-bold uppercase">No active challenge</p>
                 <Hexagon
                     className="text-card-meta size-8 shrink-0"
                     strokeWidth={1.75}
@@ -521,23 +510,23 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
     return (
         <Collapsible
             key={`${challenge.episode}:${challenge.title}`}
-            className="border-paper/20 bg-paper/[0.04] rounded-xl border"
+            className="border-paper/20 bg-paper/4 rounded-lg border"
             style={{ borderColor: `${seasonFourTeams[team].color}70` }}
         >
-            <CollapsibleTrigger className="flex min-h-16 w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper">
+            <CollapsibleTrigger className="flex min-h-16 w-full items-center justify-between gap-4 rounded-lg px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper">
                 <div className="min-w-0">
                     {challenge.kind === "battle" && (
                         <div className="mb-1.5">
-                            <span className="border-paper/20 text-card-meta text-4xs border px-1.5 py-0.5 font-mono font-bold tracking-wider uppercase">
+                            <span className="border-paper/20 text-card-meta border px-1.5 py-0.5 font-display text-xs leading-none font-bold uppercase">
                                 Battle
                             </span>
                         </div>
                     )}
-                    <p className="font-heading text-sm leading-snug font-bold uppercase">
+                    <p className="font-display text-lg leading-snug font-bold uppercase">
                         {challenge.displayTitle ?? challenge.title}
                     </p>
                     {challenge.subtitle && (
-                        <p className="text-card-meta mt-1.5 font-mono text-4xs font-bold tracking-wider uppercase">
+                        <p className="text-card-meta mt-1.5 font-sans text-xs font-semibold uppercase">
                             {challenge.subtitle}
                         </p>
                     )}
@@ -567,82 +556,57 @@ function FailedChallenges({
     return (
         <div>
             <h3
-                className="border-paper/20 text-paper border-b px-5 py-3 text-2xs font-mono font-bold tracking-widest uppercase sm:px-6"
-                style={{ backgroundColor: `${teams[team].color}12` }}
+                className="border-paper/20 text-paper border-b px-5 py-3 font-heading text-base leading-none font-bold uppercase sm:px-6"
+                style={{ backgroundColor: `${seasonFourTeams[team].color}12` }}
             >
                 Failed challenges
             </h3>
             <div className="px-5 py-4 sm:px-6 sm:py-5">
                 {challenges.length ? (
-                    <ul className="text-card-meta text-xs leading-tight">
+                    <Accordion
+                        type="single"
+                        collapsible
+                        value={expandedState ?? ""}
+                        onValueChange={(value) => onExpandedStateChange(value || null)}
+                        className="text-card-meta text-xs leading-tight"
+                    >
                         {challenges.map((challenge) => {
                             const disclosureId = `${team}:failed:${challenge.episode}:${challenge.at}:${challenge.state}`;
-                            const stateLabel = getStateLabel(challenge.state);
-                            const stateShortLabel = stateAbbreviations[challenge.state] ?? stateLabel;
-                            const showOriginalClaim = challenge.kind === "battle" &&
-                                challenge.originalClaim.team === team &&
-                                Boolean(challenge.originalChallenge);
+                            const eventLabel = challenge.challenge.kind === "battle"
+                                ? challenge.originalClaim.team === team
+                                    ? "Lost in battle"
+                                    : "Failed claim in battle"
+                                : "Challenge failed";
 
                             return (
                                 <StateDisclosure
                                     key={disclosureId}
                                     disclosureId={disclosureId}
                                     state={challenge.state}
-                                    expandedState={expandedState}
-                                    onExpandedStateChange={onExpandedStateChange}
-                                    team={team}
-                                    detailsLabel="challenge"
                                 >
-                                    {showOriginalClaim && challenge.kind === "battle" && (
-                                        <>
-                                            <div>
-                                                <dt className="text-card-meta mb-1 font-mono text-4xs font-bold tracking-wider">
-                                                    Challenge used
-                                                </dt>
-                                                <dd className="text-paper text-xs leading-snug font-semibold">
-                                                    {challenge.originalChallenge}
-                                                </dd>
-                                            </div>
-                                            <div className="border-paper/10 mt-2.5 border-t pt-2.5">
-                                                <dt className="sr-only">Original claim details</dt>
-                                                <dd className="text-card-meta font-mono text-3xs tracking-wider">
-                                                    Claimed {stateShortLabel} in {formatEpisodeShort(challenge.originalClaim.episode)} at {formatTimestamp(challenge.originalClaim.at)}
-                                                </dd>
-                                            </div>
-                                        </>
-                                    )}
-                                    <div className={showOriginalClaim ? "border-paper/10 -mx-3.5 mt-3 border-t border-dotted px-3.5 pt-3" : ""}>
-                                        <dt className="text-card-meta mb-1 flex flex-wrap items-center gap-2 font-mono text-4xs font-bold tracking-wider">
-                                            <span>{challenge.kind === "battle" ? "Battle lost" : "Challenge failed"}</span>
-                                            {challenge.kind === "battle" && <BattleBadge />}
-                                        </dt>
-                                        <dd className="text-paper text-xs leading-snug font-semibold">
-                                            {challenge.title}
-                                        </dd>
-                                    </div>
-                                    <div className="border-paper/10 mt-2.5 border-t pt-2.5">
-                                        <dt className="sr-only">Failure details</dt>
-                                        <dd className="text-card-meta font-mono text-3xs tracking-wider">
-                                            Failed {stateShortLabel} in {formatEpisodeShort(challenge.episode)} at {formatTimestamp(challenge.at)}
-                                        </dd>
-                                    </div>
+                                    <DisclosureEvent
+                                        label={eventLabel}
+                                        challenge={challenge.challenge.title}
+                                        episode={challenge.episode}
+                                        at={challenge.at}
+                                    />
                                 </StateDisclosure>
                             );
                         })}
-                    </ul>
+                    </Accordion>
                 ) : (
-                    <p className="text-card-meta text-xs">No failed challenges</p>
+                    <EmptyDisclosureRow>No failed challenges</EmptyDisclosureRow>
                 )}
             </div>
         </div>
     );
 }
 
-function BattleBadge() {
+function EmptyDisclosureRow({ children }: { children: ReactNode }) {
     return (
-        <span className="border-paper/20 text-card-meta text-4xs border px-1.5 py-0.5 font-mono font-bold tracking-wider uppercase">
-            Battle
-        </span>
+        <p className="text-card-meta flex min-h-9 items-center font-display text-sm leading-none font-bold uppercase">
+            {children}
+        </p>
     );
 }
 
@@ -654,7 +618,7 @@ function formatTimestamp(seconds: number) {
 }
 
 function formatEpisodeShort(episode: string) {
-    if (episode === "finale") return "the Finale";
+    if (episode === "finale") return "Finale";
     return `Ep. ${episode.replace("episode-", "")}`;
 }
 

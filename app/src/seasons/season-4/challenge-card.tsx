@@ -2,33 +2,30 @@
 
 import { CircleOff, Swords, Target } from "lucide-react";
 import { getActiveChallenge } from "./challenge-data";
-import { seasonFourTeams } from "./budget-data";
-import type { TeamId } from "./state-claims";
+import { seasonFourTeamIds, seasonFourTeams } from "./team-data";
 
 type ChallengeCardProps = {
     episodeSlug: string;
     currentTime: number;
 };
 
-const teamOrder: TeamId[] = ["sam-brian", "ben-adam"];
-
 export function ChallengeCard({ episodeSlug, currentTime }: ChallengeCardProps) {
     return (
         <section
-            className="border-paper/25 bg-panel w-full self-start border"
+            className="border-paper/25 bg-panel w-full self-start overflow-hidden rounded-lg border"
             aria-labelledby="challenge-title"
         >
             <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
                 <h2
                     id="challenge-title"
-                    className="font-display text-3xl leading-none font-black tracking-tight uppercase"
+                    className="font-heading text-3xl leading-none font-bold tracking-tight uppercase"
                 >
                     Active challenges
                 </h2>
             </header>
 
             <div className="grid sm:grid-cols-2">
-                {teamOrder.map((team, index) => {
+                {seasonFourTeamIds.map((team, index) => {
                     const challenge = getActiveChallenge(
                         episodeSlug,
                         currentTime,
@@ -64,11 +61,11 @@ export function ChallengeCard({ episodeSlug, currentTime }: ChallengeCardProps) 
                                         className="size-2.5 shrink-0"
                                         style={{ backgroundColor: seasonFourTeams[team].color }}
                                     />
-                                    <h3 className="text-2xs font-mono font-bold tracking-wider uppercase">
+                                    <h3 className="font-heading text-base leading-none font-bold uppercase">
                                         {seasonFourTeams[team].name}
                                     </h3>
                                     {challenge?.kind === "battle" && (
-                                        <span className="border-paper/20 text-card-meta text-4xs border px-1.5 py-0.5 font-mono font-bold tracking-wider uppercase">
+                                        <span className="border-paper/20 text-card-meta border px-1.5 py-0.5 font-display text-xs leading-none font-bold uppercase">
                                             Battle
                                         </span>
                                     )}
@@ -76,8 +73,8 @@ export function ChallengeCard({ episodeSlug, currentTime }: ChallengeCardProps) 
                                 <p
                                     className={
                                         challenge
-                                            ? "font-heading text-lg leading-snug font-bold uppercase"
-                                            : "text-card-meta text-sm"
+                                            ? "font-display text-lg leading-snug font-bold uppercase"
+                                            : "text-card-meta font-display text-lg leading-snug font-bold uppercase"
                                     }
                                 >
                                     {challenge?.title ?? "No active challenge"}

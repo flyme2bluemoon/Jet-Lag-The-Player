@@ -27,9 +27,9 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
         <Link className="text-copy-muted hover:text-paper focus-visible:text-paper absolute top-10 left-0 z-2 flex items-center gap-2.5 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href="/" aria-label="Back to all seasons"><span className="text-signal text-lg" aria-hidden="true">←</span> All seasons</Link>
         <div className="relative z-1">
           <p className="text-signal mb-2 font-mono text-xs leading-none font-bold tracking-widest uppercase">Season {season.number}</p>
-          <h1 className="font-display max-w-120 text-[clamp(52px,14vw,78px)] leading-[.88] font-black tracking-tight uppercase md:max-w-none md:text-[clamp(50px,5.7vw,88px)]">{season.name}</h1>
+          <h1 className="font-display text-season-title leading-display-title max-w-120 font-black tracking-tight uppercase md:max-w-none md:text-season-title-md">{season.name}</h1>
         </div>
-        <div className="font-display absolute right-[-10px] bottom-5 select-none text-[150px] leading-[.68] font-black tracking-tighter text-transparent opacity-70 [-webkit-text-stroke:1px_rgba(244,240,233,.16)] md:static md:text-[clamp(130px,13vw,210px)] md:opacity-100" aria-hidden="true">{String(season.number).padStart(2, "0")}</div>
+        <div className="font-display text-season-number leading-season-number text-stroke-paper-subtle md:text-season-number-md absolute -right-2.5 bottom-5 select-none font-black tracking-tighter text-transparent opacity-70 md:static md:opacity-100" aria-hidden="true">{String(season.number).padStart(2, "0")}</div>
       </header>
 
       <section className="pt-8" aria-labelledby="episodes-title">
@@ -38,10 +38,10 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
           {season.episodes.map((episode, index) => (
             <Link className="border-paper/15 hover:border-signal/70 focus-visible:border-signal/70 group grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3.5 border-b py-3 transition-colors focus-visible:outline-none md:grid-cols-[clamp(180px,15.75vw,225px)_minmax(0,1fr)] md:gap-8 md:py-3.5" href={`/${season.slug}/${episode.slug}`} key={episode.video}>
               <div className="bg-surface relative aspect-video overflow-hidden rounded-lg md:rounded-xl">
-                <Image className="object-contain transition-[filter] duration-200 group-hover:saturate-[1.08] group-focus-visible:saturate-[1.08]" src={episode.image} alt={`Thumbnail for ${episode.label}`} fill sizes="(max-width: 800px) 105px, 225px" priority={index < 2} />
+                <Image className="object-contain transition-[filter] duration-200 group-hover:saturate-(--thumbnail-hover-saturation) group-focus-visible:saturate-(--thumbnail-hover-saturation)" src={episode.image} alt={`Thumbnail for ${episode.label}`} fill sizes="(max-width: 800px) 105px, 225px" priority={index < 2} />
               </div>
               <div className="relative min-w-0 md:py-2 md:pr-14">
-                <h2 className="text-sm leading-snug font-medium tracking-tight md:text-[clamp(19px,1.6vw,25px)]"><span className="text-meta font-normal">{episode.label}:</span> {episode.title}</h2>
+                <h2 className="text-sm leading-snug font-medium tracking-tight md:text-episode-list-title"><span className="text-meta font-normal">{episode.label}:</span> {episode.title}</h2>
                 <i className="border-signal after:border-signal absolute top-1/2 right-1 hidden h-3 w-7 translate-y-px border-t-2 opacity-0 transition after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2 after:content-[''] group-hover:translate-x-1 group-hover:opacity-100 group-focus-visible:translate-x-1 group-focus-visible:opacity-100 md:block" aria-hidden="true" />
               </div>
             </Link>

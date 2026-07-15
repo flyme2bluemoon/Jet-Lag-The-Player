@@ -43,11 +43,11 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
 
   return (
     <main className="page-texture max-w-page px-gutter tablet:pt-7 tablet:pb-16 mx-auto min-h-screen w-full overflow-hidden pt-4.5 pb-10">
-      <header className="border-paper/20 tablet:flex-row tablet:items-end tablet:justify-between tablet:gap-8 tablet:pt-8 flex flex-col items-stretch gap-6 border-b pt-7 pb-5.5">
+      <header className="border-paper/20 tablet:flex-row tablet:items-end tablet:justify-between tablet:gap-8 tablet:pt-3 tablet:pb-4 flex flex-col items-stretch gap-6 border-b pt-7 pb-5.5">
         <div>
-          <Link className="text-copy-muted hover:text-paper focus-visible:text-paper tablet:relative tablet:-top-5 mb-6 inline-flex items-center gap-2 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href={`/${season.slug}`}><span className="text-signal text-lg" aria-hidden="true">←</span> {season.name}</Link>
+          <Link className="text-copy-muted hover:text-paper focus-visible:text-paper tablet:mb-4 mb-6 inline-flex items-center gap-2 font-mono text-xs leading-none font-bold tracking-widest uppercase transition-colors focus-visible:outline-none" href={`/${season.slug}`}><span className="text-signal text-lg" aria-hidden="true">←</span> {season.name}</Link>
           <p className="text-signal mb-2 font-mono text-xs leading-none font-bold tracking-widest uppercase">Season {season.number}</p>
-          <h1 className="font-display tablet:text-[clamp(48px,6vw,84px)] text-5xl leading-[.88] font-black tracking-tight uppercase">{episode.label}</h1>
+          <h1 className="font-display leading-display-title tablet:text-episode-title-tablet text-5xl font-black tracking-tight uppercase">{episode.label}</h1>
         </div>
         <nav className="border-paper/40 bg-panel tablet:inline-flex tablet:w-auto grid min-h-11 w-full grid-cols-[1fr_1.15fr_1fr] items-stretch border" aria-label="Episode controls">
           {previousEpisode ? <Button asChild variant="ghost" className="text-control hover:text-paper focus-visible:text-paper tablet:min-w-40 tablet:px-4 tablet:text-xs h-auto min-w-0 gap-2 rounded-none border-0 bg-transparent px-2 font-mono text-0 leading-none font-bold tracking-widest uppercase shadow-none hover:bg-white/5 focus-visible:bg-white/5"><Link href={episodeHref(previousEpisode.slug)}><RewindIcon /> Previous episode</Link></Button> : <Button variant="ghost" className="text-control-disabled tablet:min-w-40 tablet:px-4 tablet:text-xs h-auto min-w-0 gap-2 rounded-none border-0 bg-transparent px-2 font-mono text-0 leading-none font-bold tracking-widest uppercase shadow-none disabled:cursor-not-allowed disabled:opacity-100" disabled><RewindIcon /> Previous episode</Button>}

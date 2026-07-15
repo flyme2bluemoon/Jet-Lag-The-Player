@@ -642,7 +642,7 @@ function buildRouteTooltipHTML(info: RouteHoverInfo): string {
       : `~${info.estimatedMinutes}m`;
   const arrow = info.isRoundTrip ? "&harr;" : "&rarr;";
 
-  return `<div class="pointer-events-none min-w-[180px] rounded-md border border-border bg-popover px-3.5 py-2.5 text-xs leading-relaxed text-popover-foreground shadow-md">
+  return `<div class="pointer-events-none min-w-45 rounded-md border border-border bg-popover px-3.5 py-2.5 text-xs leading-relaxed text-popover-foreground shadow-md">
   <p class="mb-1 text-xs font-semibold">${info.fromLabel} ${arrow} ${info.toLabel}</p>
   <div class="mt-1 border-t border-border pt-1.5">
     <div class="flex items-center justify-between gap-4"><span class="text-muted-foreground">Distance</span><span>${distance} km</span></div>

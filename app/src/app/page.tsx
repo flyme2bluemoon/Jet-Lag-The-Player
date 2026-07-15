@@ -18,7 +18,7 @@ function SeasonCard({ season }: { season: Season }) {
   return (
     <a className="border-paper/60 bg-panel hover:border-signal hover:shadow-card-hover focus-visible:border-signal focus-visible:shadow-card-hover group relative min-w-0 border transition duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none" href={pageHref ? `/${pageHref}` : season.playlist} target={isAvailable ? undefined : "_blank"} rel={isAvailable ? undefined : "noreferrer"} aria-label={`Season ${season.number}: ${season.name}${isAvailable ? "" : " — coming soon"}`}>
       <div className="border-paper/45 bg-surface relative aspect-video overflow-hidden border-b">
-        <Image className="object-cover transition-[transform,filter] duration-500 group-hover:scale-[1.035] group-hover:saturate-[1.08]" src={`/thumbnails/season-${season.number === 13.5 ? "13-5" : season.number}.${season.number === 17 ? "png" : "jpg"}`} alt={`YouTube playlist thumbnail for ${season.name}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1050px) 50vw, 33vw" loading={season.number <= 3 ? "eager" : undefined} />
+        <Image className="object-cover transition-[transform,filter] duration-500 group-hover:scale-(--season-card-hover-scale) group-hover:saturate-(--thumbnail-hover-saturation)" src={`/thumbnails/season-${season.number === 13.5 ? "13-5" : season.number}.${season.number === 17 ? "png" : "jpg"}`} alt={`YouTube playlist thumbnail for ${season.name}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1050px) 50vw, 33vw" loading={season.number <= 3 ? "eager" : undefined} />
       </div>
       <div className="tablet:min-h-32 flex min-h-28 flex-col px-4.5 pt-4 pb-4">
         <h2 className="wide:text-xl max-w-9/10 text-lg leading-tight font-bold tracking-tight text-balance">Season {season.number}: {season.name}</h2>
@@ -33,7 +33,7 @@ export default function Home() {
     <main className="page-texture min-h-screen overflow-hidden">
       <section className="max-w-page px-gutter tablet:min-h-125 tablet:grid-cols-[1.2fr_.8fr] tablet:items-center tablet:pt-18 wide:min-h-140 wide:grid-cols-[1.04fr_.96fr] relative mx-auto grid min-h-130 grid-cols-1 items-start pt-12 pb-14" id="top">
         <div className="z-2">
-          <h1 className="max-w-copy tablet:text-[clamp(66px,8.25vw,132px)] text-[clamp(56px,18vw,88px)] leading-[.84] font-black tracking-[-.045em] uppercase">Jet Lag:<br /><span className="whitespace-nowrap">The Player</span></h1>
+          <h1 className="max-w-copy text-page-hero tablet:text-page-hero-tablet leading-display tracking-display font-black uppercase">Jet Lag:<br /><span className="whitespace-nowrap">The Player</span></h1>
         </div>
         <div className="tablet:relative tablet:inset-auto tablet:h-90 tablet:opacity-100 wide:h-108 absolute -right-28 -bottom-18 left-[28%] h-84 min-w-0 opacity-75" aria-hidden="true">
           <RouteMap />

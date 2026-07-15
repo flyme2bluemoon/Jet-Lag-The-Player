@@ -5,6 +5,15 @@ export type StateClaim = {
     at: number;
     state: string;
     team: TeamId;
+    challenge: string;
+    battleWin?: BattleWin;
+};
+
+export type BattleWin = {
+    episode: string;
+    at: number;
+    challenge: string;
+    result: "held" | "stolen";
 };
 
 export const seasonFourEpisodeOrder = [
@@ -15,35 +24,64 @@ export const seasonFourEpisodeOrder = [
     "finale",
 ] as const;
 
+export const MARYLAND_BATTLE_RESOLVED_AT = 249.78;
+
 // Claim times are taken from the timestamped Season 4 episode transcripts.
 // A later event for the same state changes its owner (Maryland in episode 2).
 export const seasonFourStateClaims: StateClaim[] = [
-    { episode: "episode-1", at: 304.415, state: "New York", team: "ben-adam" },
-    { episode: "episode-1", at: 1375.284, state: "District of Columbia", team: "sam-brian" },
-    { episode: "episode-1", at: 1653.524, state: "Pennsylvania", team: "ben-adam" },
-    { episode: "episode-1", at: 1653.524, state: "New Jersey", team: "ben-adam" },
-    { episode: "episode-1", at: 2021.7, state: "Maryland", team: "sam-brian" },
-    { episode: "episode-1", at: 2309.38, state: "Virginia", team: "sam-brian" },
-    { episode: "episode-1", at: 2334.36, state: "Delaware", team: "ben-adam" },
+    { episode: "episode-1", at: 304.415, state: "New York", team: "ben-adam", challenge: "Praise the ugliest building" },
+    { episode: "episode-1", at: 1343, state: "District of Columbia", team: "sam-brian", challenge: "Visit every Spirit Halloween" },
+    { episode: "episode-1", at: 1618, state: "Pennsylvania", team: "ben-adam", challenge: "Sell something from one pawn shop to another" },
+    { episode: "episode-1", at: 1618, state: "New Jersey", team: "ben-adam", challenge: "Sell something from one pawn shop to another" },
+    { episode: "episode-1", at: 1988, state: "Maryland", team: "sam-brian", challenge: "File a Geodetic Mark Recovery Form" },
+    { episode: "episode-1", at: 2314, state: "Virginia", team: "sam-brian", challenge: "Photograph your partner from far away" },
+    { episode: "episode-1", at: 2340, state: "Delaware", team: "ben-adam", challenge: "High five at the highest point" },
 
-    { episode: "episode-2", at: 249.78, state: "Maryland", team: "ben-adam" },
-    { episode: "episode-2", at: 1066.375, state: "Connecticut", team: "ben-adam" },
-    { episode: "episode-2", at: 1286.84, state: "Massachusetts", team: "sam-brian" },
-    { episode: "episode-2", at: 1540.425, state: "Rhode Island", team: "ben-adam" },
+    { episode: "episode-2", at: MARYLAND_BATTLE_RESOLVED_AT, state: "Maryland", team: "ben-adam", challenge: "Find the most foreign license plate" },
+    { episode: "episode-2", at: 985, state: "Connecticut", team: "ben-adam", challenge: "Respect the weirdest roadside attraction" },
+    { episode: "episode-2", at: 1247, state: "Massachusetts", team: "sam-brian", challenge: "Win a prize from a claw machine" },
+    { episode: "episode-2", at: 1548, state: "Rhode Island", team: "ben-adam", challenge: "Get Drunk, Again" },
 
-    { episode: "episode-3", at: 593.295, state: "Tennessee", team: "sam-brian" },
-    { episode: "episode-3", at: 1021.094, state: "Illinois", team: "ben-adam" },
-    { episode: "episode-3", at: 1573.755, state: "Indiana", team: "ben-adam" },
-    { episode: "episode-3", at: 2079.943, state: "Texas", team: "sam-brian" },
+    { episode: "episode-3", at: 564, state: "Tennessee", team: "sam-brian", challenge: "Spend $100 at Buc-ee's" },
+    { episode: "episode-3", at: 1024, state: "Illinois", team: "ben-adam", challenge: "Take a Chevy to a levee and eat pie" },
+    { episode: "episode-3", at: 1491, state: "Indiana", team: "ben-adam", challenge: "Criticize the most beautiful place" },
+    { episode: "episode-3", at: 2005, state: "Texas", team: "sam-brian", challenge: "Eat at In-N-Out" },
 
-    { episode: "episode-4", at: 371.604, state: "Michigan", team: "ben-adam" },
-    { episode: "episode-4", at: 909.135, state: "California", team: "sam-brian" },
-    { episode: "episode-4", at: 1621.995, state: "Nevada", team: "ben-adam" },
+    { episode: "episode-4", at: 377, state: "Michigan", team: "ben-adam", challenge: "Break a law from Crime Spree" },
+    { episode: "episode-4", at: 895, state: "California", team: "sam-brian", challenge: "Find a four leaf clover as a leprechaun" },
+    { episode: "episode-4", at: 1587, state: "Nevada", team: "ben-adam", challenge: "Forge great American art" },
 
-    { episode: "finale", at: 339.3, state: "Arizona", team: "sam-brian" },
-    { episode: "finale", at: 1904.22, state: "Colorado", team: "sam-brian" },
-    { episode: "finale", at: 2200.245, state: "Alaska", team: "ben-adam" },
-    { episode: "finale", at: 2405.685, state: "Wyoming", team: "sam-brian" },
+    { episode: "finale", at: 266, state: "Arizona", team: "sam-brian", challenge: "Eat soup in a helicopter" },
+    { episode: "finale", at: 1779, state: "Colorado", team: "sam-brian", challenge: "Get a hole in one in mini golf" },
+    { episode: "finale", at: 2204, state: "Alaska", team: "ben-adam", challenge: "Spell “HELP” in rocks on an island" },
+    { episode: "finale", at: 2409, state: "Wyoming", team: "sam-brian", challenge: "Ineffectively advertise Jet Lag: The Game" },
+];
+
+const seasonFourBattleWins: Array<BattleWin & { state: string; team: TeamId }> = [
+    {
+        episode: "episode-2",
+        at: MARYLAND_BATTLE_RESOLVED_AT,
+        state: "Maryland",
+        team: "ben-adam",
+        challenge: "Find the most foreign license plate",
+        result: "stolen",
+    },
+    {
+        episode: "episode-3",
+        at: 92.384,
+        state: "Massachusetts",
+        team: "sam-brian",
+        challenge: "Photograph the most birds",
+        result: "held",
+    },
+    {
+        episode: "finale",
+        at: 1076.061,
+        state: "Nevada",
+        team: "ben-adam",
+        challenge: "Draw George Washington",
+        result: "held",
+    },
 ];
 
 export function getStateOwners(episode: string, currentTime: number) {
@@ -67,4 +105,41 @@ export function getStateOwners(episode: string, currentTime: number) {
     }
 
     return owners;
+}
+
+export function getStateClaims(episode: string, currentTime: number) {
+    const episodeIndex = seasonFourEpisodeOrder.indexOf(
+        episode as (typeof seasonFourEpisodeOrder)[number],
+    );
+    const claims = new Map<string, StateClaim>();
+
+    if (episodeIndex === -1) return claims;
+
+    for (const claim of seasonFourStateClaims) {
+        const claimEpisodeIndex = seasonFourEpisodeOrder.indexOf(
+            claim.episode as (typeof seasonFourEpisodeOrder)[number],
+        );
+        if (
+            claimEpisodeIndex < episodeIndex ||
+            (claimEpisodeIndex === episodeIndex && claim.at <= currentTime)
+        ) {
+            claims.set(claim.state, claim);
+        }
+    }
+
+    for (const battleWin of seasonFourBattleWins) {
+        const battleEpisodeIndex = seasonFourEpisodeOrder.indexOf(
+            battleWin.episode as (typeof seasonFourEpisodeOrder)[number],
+        );
+        const isVisible =
+            battleEpisodeIndex < episodeIndex ||
+            (battleEpisodeIndex === episodeIndex && battleWin.at <= currentTime);
+        const claim = claims.get(battleWin.state);
+
+        if (isVisible && claim?.team === battleWin.team) {
+            claims.set(battleWin.state, { ...claim, battleWin });
+        }
+    }
+
+    return claims;
 }

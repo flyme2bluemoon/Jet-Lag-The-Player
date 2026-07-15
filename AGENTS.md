@@ -32,6 +32,11 @@ There are 18 full length seasons and a special Hide and Seek Across NYC mini sea
 |     17 | Taiwan Rail Rush              | Sam/Michael                         | Ben/Adam                           |           |
 |     18 | Stateside Scramble            | Sam/Amy                             | Ben/Adam                           |           |
 
+#### Season specific notes
+
+- Season 4: Battle 4 America
+    - Information on challenges can be found here: https://jetlag.fandom.com/wiki/Battle_4_America/Challenges
+
 ## Dashboards
 
 - Each season has a custom dashboard.

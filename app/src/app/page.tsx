@@ -65,11 +65,6 @@ export default function Home() {
         <div className="tablet:grid-cols-2 tablet:gap-6 wide:grid-cols-3 min-[80rem]:grid-cols-4 min-[96rem]:grid-cols-5 grid grid-cols-1 gap-5">{seasons.map((season) => <SeasonCard key={season.number} season={season} />)}</div>
       </section>
 
-      <footer className="max-w-page border-paper/15 px-gutter tablet:h-64 relative mx-auto flex h-48 items-end justify-between overflow-hidden border-t py-10">
-        <div className="border-paper/40 after:border-paper/25 relative z-1 grid size-28 -rotate-6 place-content-center rounded-full border text-center after:absolute after:inset-2 after:rounded-full after:border after:border-dashed after:content-['']"><span className="font-display text-4xl leading-none font-bold">18½</span><small className="font-heading text-xs leading-tight font-bold uppercase">seasons<br />one world</small></div>
-        <RouteMap className="top-auto right-[15%] bottom-[-28%] left-[15%] h-[120%] w-[70%] opacity-70" />
-        <p className="text-footer-copy z-1 font-display text-base leading-none font-bold uppercase">Jet Lag: The Player</p>
-      </footer>
     </main>
   );
 }

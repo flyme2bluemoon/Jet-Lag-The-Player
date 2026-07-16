@@ -8,7 +8,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Map, MapGeoJSON, MapMarker, MarkerContent } from "@/components/ui/map";
+import { Map, MapGeoJSON, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
 import { seasonFour } from "@/data/season-4";
 import { compareTimestamps } from "@/lib/timestamps";
 import {
@@ -34,6 +34,19 @@ const US_STATES_GEOJSON = "/seasons/season-4/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/seasons/season-4/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
 
+const SCOREBOARD_MAP_COLORS = {
+    light: {
+        canada: "#ddd9d1",
+        unclaimed: "#c9cac6",
+        stateLine: "#f4f0e9",
+    },
+    dark: {
+        canada: "#0b1a22",
+        unclaimed: "#233744",
+        stateLine: "#071722",
+    },
+} as const;
+
 type ClaimsCardProps = {
     episodeSlug: string;
     currentTime: number;
@@ -54,27 +67,6 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
         return result;
     }, [claims]);
 
-    const fillColor = useMemo(() => {
-        const expression: unknown[] = [
-            "match",
-            ["get", "name"],
-            "Puerto Rico",
-            "rgba(0, 0, 0, 0)",
-        ];
-        for (const [state, claim] of claims) {
-            if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].color);
-        }
-        expression.push("#233744");
-        return expression as never;
-    }, [claims]);
-
-    const stateLineColor = [
-        "case",
-        ["==", ["get", "name"], "Puerto Rico"],
-        "rgba(0, 0, 0, 0)",
-        "#071722",
-    ] as never;
-
     return (
         <section className="border-paper/25 bg-panel flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
             <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
@@ -83,7 +75,6 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
             <div className="bg-map-canvas relative h-64 min-h-64 overflow-hidden">
                 <Map
                     blank
-                    theme="dark"
                     center={[-116, 48]}
                     zoom={1.55}
                     minZoom={1.25}
@@ -92,37 +83,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                     dragRotate={false}
                     touchPitch={false}
                 >
-                    <MapGeoJSON
-                        id="season-four-canada"
-                        data={CANADA_GEOJSON}
-                        fillPaint={{
-                            "fill-color": [
-                                "case",
-                                ["==", ["get", "ADM0_A3"], "CAN"],
-                                "#0b1a22",
-                                "rgba(0, 0, 0, 0)",
-                            ],
-                            "fill-opacity": 1,
-                        }}
-                        linePaint={false}
-                    />
-                    <MapGeoJSON
-                        id="season-four-states"
-                        data={US_STATES_GEOJSON}
-                        fillPaint={{ "fill-color": fillColor, "fill-opacity": 0.96 }}
-                        linePaint={{ "line-color": stateLineColor, "line-width": 1 }}
-                    />
-                    {claims.get("District of Columbia") && (
-                        <MapMarker longitude={-77.0369} latitude={38.9072}>
-                            <MarkerContent>
-                                <span
-                                    className="block size-2.5 rounded-full border-2 border-white shadow"
-                                    style={{ backgroundColor: seasonFourTeams[claims.get("District of Columbia")!.team].color }}
-                                    aria-label="District of Columbia"
-                                />
-                            </MarkerContent>
-                        </MapMarker>
-                    )}
+                    <ScoreboardMapLayers claims={claims} />
                 </Map>
             </div>
             <Score
@@ -166,6 +127,70 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                 ))}
             </div>
         </section>
+    );
+}
+
+function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClaim> }) {
+    const { resolvedTheme } = useMap();
+    const colors = SCOREBOARD_MAP_COLORS[resolvedTheme];
+    const fillColor = useMemo(() => {
+        const expression: unknown[] = [
+            "match",
+            ["get", "name"],
+            "Puerto Rico",
+            "rgba(0, 0, 0, 0)",
+        ];
+        for (const [state, claim] of claims) {
+            if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].color);
+        }
+        expression.push(colors.unclaimed);
+        return expression as never;
+    }, [claims, colors.unclaimed]);
+    const stateLineColor = [
+        "case",
+        ["==", ["get", "name"], "Puerto Rico"],
+        "rgba(0, 0, 0, 0)",
+        colors.stateLine,
+    ] as never;
+    const districtClaim = claims.get("District of Columbia");
+
+    return (
+        <>
+            <MapGeoJSON
+                id="season-four-canada"
+                data={CANADA_GEOJSON}
+                fillPaint={{
+                    "fill-color": [
+                        "case",
+                        ["==", ["get", "ADM0_A3"], "CAN"],
+                        colors.canada,
+                        "rgba(0, 0, 0, 0)",
+                    ],
+                    "fill-opacity": 1,
+                }}
+                linePaint={false}
+            />
+            <MapGeoJSON
+                id="season-four-states"
+                data={US_STATES_GEOJSON}
+                fillPaint={{ "fill-color": fillColor, "fill-opacity": 0.96 }}
+                linePaint={{ "line-color": stateLineColor, "line-width": 1 }}
+            />
+            {districtClaim && (
+                <MapMarker longitude={-77.0369} latitude={38.9072}>
+                    <MarkerContent>
+                        <span
+                            className="block size-2.5 rounded-full border-2 shadow"
+                            style={{
+                                backgroundColor: seasonFourTeams[districtClaim.team].color,
+                                borderColor: colors.stateLine,
+                            }}
+                            aria-label="District of Columbia"
+                        />
+                    </MarkerContent>
+                </MapMarker>
+            )}
+        </>
     );
 }
 

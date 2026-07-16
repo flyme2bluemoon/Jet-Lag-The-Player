@@ -123,7 +123,7 @@ function MobileHistory<Item extends HistoryItem>({
                     <Tabs.Trigger
                         key={team}
                         value={team}
-                        className="text-card-meta hover:text-paper data-[state=active]:text-paper data-[state=active]:bg-paper/8 flex min-w-0 items-center justify-center gap-2 px-4 py-3 font-heading text-base leading-none font-bold uppercase whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
+                        className="bg-paper/8 text-card-meta hover:text-paper data-[state=active]:bg-panel data-[state=active]:text-paper dark:bg-transparent dark:data-[state=active]:bg-paper/8 flex min-w-0 items-center justify-center gap-2 px-4 py-3 font-heading text-base leading-none font-bold uppercase whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
                     >
                         <span
                             className="size-2.5 shrink-0"

@@ -122,13 +122,13 @@ function HandCard({ card }: { card: ChallengeCard }) {
     const hasAbilities = card.doubleClaim || card.powerUpTokens;
 
     return (
-        <article className="bg-paper text-ink flex min-h-60 flex-col overflow-hidden rounded-lg shadow-lg">
+        <article className="bg-challenge-card-paper text-challenge-card-ink flex min-h-60 flex-col overflow-hidden rounded-lg shadow-lg">
             <div
                 className="flex min-h-11 items-center justify-end gap-1.5 bg-neutral-900 px-3 py-2 text-white"
                 aria-label={hasAbilities ? "Special abilities" : "No special abilities"}
             >
                 {card.doubleClaim && (
-                    <span className="border-paper/70 rounded border-2 px-1.5 py-0.5 font-display text-base leading-none tracking-tight">
+                    <span className="rounded border-2 border-white/70 px-1.5 py-0.5 font-display text-base leading-none tracking-tight">
                         2×
                         <span className="sr-only"> Claims two states</span>
                     </span>
@@ -145,8 +145,8 @@ function HandCard({ card }: { card: ChallengeCard }) {
                 <h3 className="font-heading text-[1.1875rem] leading-tight font-bold tracking-tight uppercase">
                     {card.title}
                 </h3>
-                <div className="bg-ink/15 my-3 h-px" />
-                <p className="text-xs leading-relaxed text-ink/75">
+                <div className="bg-challenge-card-ink/15 my-3 h-px" />
+                <p className="text-challenge-card-ink/75 text-xs leading-relaxed">
                     {card.description}
                 </p>
             </div>

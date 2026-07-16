@@ -5,30 +5,87 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --ink: #061724;
-    --paper: #f4f0e9;
+    --ink: #f4f0e9;
+    --paper: #102431;
     --red: #fb302d;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --panel: #fffaf2;
+    --surface: #e3ded5;
+    --player: #020a0f;
+    --select: #fffaf2;
+    --select-active: #d5e0e3;
+    --select-hover: #e4ebec;
+    --map-line: #667985;
+    --copy-muted: #596b75;
+    --meta: #697981;
+    --card-meta: #52656f;
+    --control: #354c58;
+    --control-disabled: #98a3a8;
+    --footer-copy: #586b75;
+    --map-canvas: #e6e3dc;
+    --budget-credit: #397848;
+    --budget-debit: #ad3e39;
+    --texture-line: rgb(6 23 36 / 4%);
+    --background: #f4f0e9;
+    --foreground: #102431;
+    --card: #fffaf2;
+    --card-foreground: #102431;
+    --popover: #fffaf2;
+    --popover-foreground: #102431;
+    --primary: #102431;
+    --primary-foreground: #f4f0e9;
+    --secondary: #e3ded5;
+    --secondary-foreground: #102431;
+    --muted: #e3ded5;
+    --muted-foreground: #596b75;
+    --accent: #d5e0e3;
+    --accent-foreground: #102431;
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --border: rgb(16 36 49 / 22%);
+    --input: rgb(16 36 49 / 25%);
+    --ring: #fb302d;
     --radius: 0.625rem;
     --season-card-hover-scale: 1.035;
     --thumbnail-hover-saturation: 1.08;
+}
+
+.dark {
+    --ink: #061724;
+    --paper: #f4f0e9;
+    --panel: #071b29;
+    --surface: #0d2636;
+    --player: #020a0f;
+    --select: #0c2433;
+    --select-active: #18384a;
+    --select-hover: #245269;
+    --map-line: #74828a;
+    --copy-muted: #b7c1c7;
+    --meta: #9da7ad;
+    --card-meta: #aeb8be;
+    --control: #c4ccd0;
+    --control-disabled: #59666e;
+    --footer-copy: #8c9aa2;
+    --map-canvas: #071722;
+    --budget-credit: #8bc897;
+    --budget-debit: #d9827f;
+    --texture-line: rgb(255 255 255 / 1.2%);
+    --background: #061724;
+    --foreground: #f4f0e9;
+    --card: #071b29;
+    --card-foreground: #f4f0e9;
+    --popover: #071b29;
+    --popover-foreground: #f4f0e9;
+    --primary: #f4f0e9;
+    --primary-foreground: #061724;
+    --secondary: #0d2636;
+    --secondary-foreground: #f4f0e9;
+    --muted: #0d2636;
+    --muted-foreground: #b7c1c7;
+    --accent: #18384a;
+    --accent-foreground: #f4f0e9;
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: rgb(244 240 233 / 20%);
+    --input: rgb(244 240 233 / 25%);
+    --ring: #fb302d;
 }
 
 /* The passport artwork stays in CSS because its overlapping grid areas and
@@ -372,27 +429,29 @@
 }
 
 @theme inline {
-    --color-ink: #061724;
-    --color-paper: #f4f0e9;
-    --color-signal: #fb302d;
-    --color-panel: #071b29;
-    --color-surface: #0d2636;
-    --color-player: #020a0f;
-    --color-select: #0c2433;
-    --color-select-active: #18384a;
-    --color-select-hover: #245269;
-    --color-map-line: #74828a;
-    --color-copy-muted: #b7c1c7;
-    --color-meta: #9da7ad;
-    --color-card-meta: #aeb8be;
-    --color-control: #c4ccd0;
-    --color-control-disabled: #59666e;
-    --color-footer-copy: #8c9aa2;
-    --color-map-canvas: #071722;
+    --color-ink: var(--ink);
+    --color-paper: var(--paper);
+    --color-signal: var(--red);
+    --color-panel: var(--panel);
+    --color-surface: var(--surface);
+    --color-player: var(--player);
+    --color-select: var(--select);
+    --color-select-active: var(--select-active);
+    --color-select-hover: var(--select-hover);
+    --color-map-line: var(--map-line);
+    --color-copy-muted: var(--copy-muted);
+    --color-meta: var(--meta);
+    --color-card-meta: var(--card-meta);
+    --color-control: var(--control);
+    --color-control-disabled: var(--control-disabled);
+    --color-footer-copy: var(--footer-copy);
+    --color-map-canvas: var(--map-canvas);
+    --color-challenge-card-paper: #f4f0e9;
+    --color-challenge-card-ink: #061724;
     /*--color-green-team-primary: #63a26b;
   --color-red-team-primary: #dc4742;*/
-    --color-budget-credit: #8bc897;
-    --color-budget-debit: #d9827f;
+    --color-budget-credit: var(--budget-credit);
+    --color-budget-debit: var(--budget-debit);
     --container-page: 100rem;
     --container-copy: 48rem;
     --spacing-gutter: clamp(1.375rem, 5vw, 5rem);
@@ -476,7 +535,7 @@
 
 @utility page-texture {
     background-image: linear-gradient(
-        rgb(255 255 255 / 1.2%) 1px,
+        var(--texture-line) 1px,
         transparent 1px
     );
     background-size: 100% 0.375rem;

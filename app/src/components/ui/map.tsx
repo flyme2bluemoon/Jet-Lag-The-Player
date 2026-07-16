@@ -73,6 +73,7 @@ function getDocumentTheme(): Theme | null {
   if (typeof document === "undefined") return null;
   if (document.documentElement.classList.contains("dark")) return "dark";
   if (document.documentElement.classList.contains("light")) return "light";
+  if (document.documentElement.dataset.theme) return "light";
   return null;
 }
 

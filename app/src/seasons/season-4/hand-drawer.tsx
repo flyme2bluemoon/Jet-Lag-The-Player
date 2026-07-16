@@ -105,7 +105,7 @@ function CardSkeleton() {
             className="border-paper/10 bg-paper/5 min-h-60 overflow-hidden rounded-lg border"
             aria-hidden="true"
         >
-            <Skeleton className="h-11 w-full rounded-none bg-neutral-800" />
+            <Skeleton className="bg-jet-lag-navy-blue h-11 w-full rounded-none" />
             <div className="space-y-3 p-3.5">
                 <Skeleton className="h-3 w-4/5 bg-paper/15" />
                 <Skeleton className="h-3 w-3/5 bg-paper/15" />
@@ -124,11 +124,11 @@ function HandCard({ card }: { card: ChallengeCard }) {
     return (
         <article className="bg-challenge-card-paper text-challenge-card-ink flex min-h-60 flex-col overflow-hidden rounded-lg shadow-lg">
             <div
-                className="flex min-h-11 items-center justify-end gap-1.5 bg-neutral-900 px-3 py-2 text-white"
+                className="bg-jet-lag-navy-blue text-challenge-card-paper flex min-h-11 items-center justify-end gap-1.5 px-3 py-2"
                 aria-label={hasAbilities ? "Special abilities" : "No special abilities"}
             >
                 {card.doubleClaim && (
-                    <span className="rounded border-2 border-white/70 px-1.5 py-0.5 font-display text-base leading-none tracking-tight">
+                    <span className="border-challenge-card-paper/70 rounded border-2 px-1.5 py-0.5 font-display text-base leading-none tracking-tight">
                         2×
                         <span className="sr-only"> Claims two states</span>
                     </span>

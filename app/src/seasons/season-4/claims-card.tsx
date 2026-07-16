@@ -34,6 +34,9 @@ const US_STATES_GEOJSON = "/seasons/season-4/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/seasons/season-4/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
 
+// MapLibre paint expressions cannot resolve CSS variables. These literals are
+// intentionally scoped to the bespoke light and dark scoreboard basemaps.
+const MAPLIBRE_TRANSPARENT = "rgba(0, 0, 0, 0)";
 const SCOREBOARD_MAP_COLORS = {
     light: {
         canada: "#ddd9d1",
@@ -138,10 +141,10 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
             "match",
             ["get", "name"],
             "Puerto Rico",
-            "rgba(0, 0, 0, 0)",
+            MAPLIBRE_TRANSPARENT,
         ];
         for (const [state, claim] of claims) {
-            if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].color);
+            if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].mapColor);
         }
         expression.push(colors.unclaimed);
         return expression as never;
@@ -149,7 +152,7 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
     const stateLineColor = [
         "case",
         ["==", ["get", "name"], "Puerto Rico"],
-        "rgba(0, 0, 0, 0)",
+        MAPLIBRE_TRANSPARENT,
         colors.stateLine,
     ] as never;
     const districtClaim = claims.get("District of Columbia");
@@ -164,7 +167,7 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
                         "case",
                         ["==", ["get", "ADM0_A3"], "CAN"],
                         colors.canada,
-                        "rgba(0, 0, 0, 0)",
+                        MAPLIBRE_TRANSPARENT,
                     ],
                     "fill-opacity": 1,
                 }}
@@ -219,7 +222,7 @@ function Score({
             >
                 {isFinalScore && (
                     <div className="col-span-2 flex justify-center pt-3">
-                        <span className="border-amber-300/50 bg-amber-300/10 rounded-full border px-3 py-1 font-display text-xs leading-none font-bold text-amber-300 uppercase">
+                        <span className="border-jet-lag-yellow/50 bg-jet-lag-yellow/10 text-jet-lag-yellow rounded-full border px-3 py-1 font-display text-xs leading-none font-bold uppercase">
                             Final
                         </span>
                     </div>
@@ -252,7 +255,7 @@ function Score({
             <div
                 className="flex min-w-0 items-center justify-between gap-3 py-5 pr-4 pl-5 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
                 style={{
-                    backgroundImage: `linear-gradient(to right, ${seasonFourTeams["sam-brian"].color}24, ${seasonFourTeams["sam-brian"].color}0a 68%, transparent)`,
+                    backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${seasonFourTeams["sam-brian"].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams["sam-brian"].color} 4%, transparent) 68%, transparent)`,
                 }}
             >
                 <div className="min-w-0">
@@ -271,7 +274,7 @@ function Score({
             <div
                 className="flex min-w-0 items-center justify-between gap-3 py-5 pr-5 pl-4 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
                 style={{
-                    backgroundImage: `linear-gradient(to left, ${seasonFourTeams["ben-adam"].color}24, ${seasonFourTeams["ben-adam"].color}0a 68%, transparent)`,
+                    backgroundImage: `linear-gradient(to left, color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 4%, transparent) 68%, transparent)`,
                 }}
             >
                 <span className="font-display text-4xl leading-none font-bold sm:text-5xl">
@@ -309,7 +312,7 @@ function AreaBonusTeamScore({
         <div
             className={`flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5 sm:py-5 ${reverse ? "pr-5 pl-4 sm:pr-8 sm:pl-6" : "pr-4 pl-5 sm:pr-6 sm:pl-8"}`}
             style={{
-                backgroundImage: `linear-gradient(to ${reverse ? "left" : "right"}, ${seasonFourTeams[team].color}24, ${seasonFourTeams[team].color}0a 68%, transparent)`,
+                backgroundImage: `linear-gradient(to ${reverse ? "left" : "right"}, color-mix(in srgb, ${seasonFourTeams[team].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams[team].color} 4%, transparent) 68%, transparent)`,
             }}
         >
             {reverse && <ScoreTotal isFinalScore={isFinalScore} score={score} />}
@@ -345,7 +348,7 @@ function ScoreTotal({
             <span className="font-display block text-4xl leading-none font-bold sm:text-5xl">
                 {score.states + (isFinalScore ? score.bonus : 0)}
             </span>
-            <span className="mt-1.5 block min-h-3.5 whitespace-nowrap font-heading text-xs leading-none font-bold text-amber-300 uppercase">
+            <span className="text-jet-lag-yellow mt-1.5 block min-h-3.5 whitespace-nowrap font-heading text-xs leading-none font-bold uppercase">
                 {Boolean(score.bonus) && `${isFinalScore ? "Incl. " : ""}+${score.bonus} Area Bonus`}
             </span>
         </div>
@@ -394,7 +397,7 @@ function ClaimedStates({ claims, expandedState, onExpandedStateChange, team }: C
         <div>
             <h3
                 className="border-paper/20 text-paper border-b px-5 py-3 font-heading text-base leading-none font-bold uppercase sm:px-6"
-                style={{ backgroundColor: `${seasonFourTeams[team].color}12` }}
+                style={{ backgroundColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 7%, transparent)` }}
             >
                 States claimed
             </h3>
@@ -536,7 +539,7 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
         <Collapsible
             key={`${challenge.episode}:${challenge.title}`}
             className="border-paper/20 bg-paper/4 rounded-lg border"
-            style={{ borderColor: `${seasonFourTeams[team].color}70` }}
+            style={{ borderColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 44%, transparent)` }}
         >
             <CollapsibleTrigger className="flex min-h-16 w-full items-center justify-between gap-4 rounded-lg px-4 py-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper">
                 <div className="min-w-0">
@@ -582,7 +585,7 @@ function FailedChallenges({
         <div>
             <h3
                 className="border-paper/20 text-paper border-b px-5 py-3 font-heading text-base leading-none font-bold uppercase sm:px-6"
-                style={{ backgroundColor: `${seasonFourTeams[team].color}12` }}
+                style={{ backgroundColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 7%, transparent)` }}
             >
                 Failed challenges
             </h3>

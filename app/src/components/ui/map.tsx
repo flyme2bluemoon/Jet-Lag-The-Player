@@ -26,6 +26,17 @@ const defaultStyles = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
+// MapLibre paint values are parsed outside CSS and cannot resolve Tailwind
+// theme variables. Keep these literal fallbacks aligned with globals.css.
+const MAPLIBRE_COLORS = {
+  transparent: "rgba(0, 0, 0, 0)",
+  contrast: "#F4F0E9",
+  jetLagBlue: "#204DAC",
+  jetLagGreen: "#63A06A",
+  jetLagRed: "#D94641",
+  jetLagYellow: "#F5C25A",
+} as const;
+
 // A tile-less, dependency-free style with a transparent background. Use it for
 // data visualizations (choropleths, world arcs, dot maps) where you draw your
 // own layers and don't need a street basemap. The easiest way to opt in is the
@@ -39,7 +50,7 @@ const blankMapStyle: MapLibreGL.StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "rgba(0, 0, 0, 0)" },
+      paint: { "background-color": MAPLIBRE_COLORS.transparent },
     },
   ],
 };
@@ -573,7 +584,7 @@ function MapMarker({
 }
 
 type MarkerContentProps = {
-  /** Custom marker content. Defaults to a blue dot if not provided */
+  /** Custom marker content. Defaults to a Jet Lag blue dot if not provided */
   children?: ReactNode;
   /** Additional CSS classes for the marker container */
   className?: string;
@@ -592,7 +603,7 @@ function MarkerContent({ children, className }: MarkerContentProps) {
 
 function DefaultMarkerIcon() {
   return (
-    <div className="relative h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
+    <div className="bg-jet-lag-blue border-challenge-card-paper relative h-4 w-4 rounded-full border-2 shadow-lg" />
   );
 }
 
@@ -985,8 +996,8 @@ function CompassButton({ onClick }: { onClick: () => void }) {
         className="size-5 transition-transform duration-200"
         style={{ transformStyle: "preserve-3d" }}
       >
-        <path d="M12 2L16 12H12V2Z" className="fill-red-500" />
-        <path d="M12 2L8 12H12V2Z" className="fill-red-300" />
+        <path d="M12 2L16 12H12V2Z" className="fill-jet-lag-red" />
+        <path d="M12 2L8 12H12V2Z" className="fill-jet-lag-red/45" />
         <path d="M12 22L16 12H12V22Z" className="fill-muted-foreground/60" />
         <path d="M12 22L8 12H12V22Z" className="fill-muted-foreground/30" />
       </svg>
@@ -1092,7 +1103,7 @@ type MapRouteProps = {
   id?: string;
   /** Array of [longitude, latitude] coordinate pairs defining the route */
   coordinates: [number, number][];
-  /** Line color as CSS color value (default: "#4285F4") */
+  /** Line color as CSS color value (default: Jet Lag blue) */
   color?: string;
   /** Line width in pixels (default: 3) */
   width?: number;
@@ -1113,7 +1124,7 @@ type MapRouteProps = {
 function MapRoute({
   id: propId,
   coordinates,
-  color = "#4285F4",
+  color = MAPLIBRE_COLORS.jetLagBlue,
   width = 3,
   opacity = 0.8,
   dashArray,
@@ -1567,7 +1578,7 @@ type MapArcProps<T extends MapArcDatum = MapArcDatum> = {
   samples?: number;
   /**
    * MapLibre paint properties for the arc layer. Merged on top of sensible
-   * defaults (`line-color: #4285F4`, `line-width: 2`, `line-opacity: 0.85`).
+   * defaults (`line-color: #204DAC`, `line-width: 2`, `line-opacity: 0.85`).
    * Any value can be a MapLibre expression for per-feature styling, every
    * field on each arc datum (besides `from`/`to`) is exposed via `["get", ...]`.
    */
@@ -1600,7 +1611,7 @@ const ARC_HIT_MIN_WIDTH = 12;
 const ARC_HIT_PADDING = 6;
 
 const DEFAULT_ARC_PAINT: MapArcLinePaint = {
-  "line-color": "#4285F4",
+  "line-color": MAPLIBRE_COLORS.jetLagBlue,
   "line-width": 2,
   "line-opacity": 0.85,
 };
@@ -1724,7 +1735,7 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
         source: sourceId,
         layout: DEFAULT_ARC_LAYOUT,
         paint: {
-          "line-color": "rgba(0, 0, 0, 0)",
+          "line-color": MAPLIBRE_COLORS.transparent,
           "line-width": hitWidth,
           "line-opacity": 1,
         },
@@ -1874,11 +1885,11 @@ type MapClusterLayerProps<
   clusterMaxZoom?: number;
   /** Radius of each cluster when clustering points in pixels (default: 50) */
   clusterRadius?: number;
-  /** Colors for cluster circles: [small, medium, large] based on point count (default: ["#22c55e", "#eab308", "#ef4444"]) */
+  /** Colors for cluster circles: [small, medium, large] based on point count (defaults to Jet Lag green, yellow, and red) */
   clusterColors?: [string, string, string];
   /** Point count thresholds for color/size steps: [medium, large] (default: [100, 750]) */
   clusterThresholds?: [number, number];
-  /** Color for unclustered individual points (default: "#3b82f6") */
+  /** Color for unclustered individual points (defaults to Jet Lag blue) */
   pointColor?: string;
   /** Callback when an unclustered point is clicked */
   onPointClick?: (
@@ -1894,9 +1905,9 @@ type MapClusterLayerProps<
 };
 
 const DEFAULT_CLUSTER_COLORS: [string, string, string] = [
-  "#22c55e",
-  "#eab308",
-  "#ef4444",
+  MAPLIBRE_COLORS.jetLagGreen,
+  MAPLIBRE_COLORS.jetLagYellow,
+  MAPLIBRE_COLORS.jetLagRed,
 ];
 const DEFAULT_CLUSTER_THRESHOLDS: [number, number] = [100, 750];
 
@@ -1908,7 +1919,7 @@ function MapClusterLayer<
   clusterRadius = 50,
   clusterColors = DEFAULT_CLUSTER_COLORS,
   clusterThresholds = DEFAULT_CLUSTER_THRESHOLDS,
-  pointColor = "#3b82f6",
+  pointColor = MAPLIBRE_COLORS.jetLagBlue,
   onPointClick,
   onClusterClick,
 }: MapClusterLayerProps<P>) {
@@ -1964,7 +1975,7 @@ function MapClusterLayer<
           40,
         ],
         "circle-stroke-width": 1,
-        "circle-stroke-color": "#fff",
+        "circle-stroke-color": MAPLIBRE_COLORS.contrast,
         "circle-opacity": 0.85,
       },
     });
@@ -1981,7 +1992,7 @@ function MapClusterLayer<
         "text-size": 12,
       },
       paint: {
-        "text-color": "#fff",
+        "text-color": MAPLIBRE_COLORS.contrast,
       },
     });
 
@@ -1995,7 +2006,7 @@ function MapClusterLayer<
         "circle-color": pointColor,
         "circle-radius": 5,
         "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
+        "circle-stroke-color": MAPLIBRE_COLORS.contrast,
       },
     });
 

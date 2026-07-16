@@ -7,7 +7,6 @@
 :root {
     --ink: #f4f0e9;
     --paper: #102431;
-    --red: #fb302d;
     --panel: #fffaf2;
     --surface: #e3ded5;
     --player: #020a0f;
@@ -22,9 +21,21 @@
     --control-disabled: #98a3a8;
     --footer-copy: #586b75;
     --map-canvas: #e6e3dc;
-    --budget-credit: #397848;
-    --budget-debit: #ad3e39;
-    --texture-line: rgb(6 23 36 / 4%);
+    --budget-credit: color-mix(
+        in oklch,
+        var(--color-jet-lag-green) 72%,
+        black
+    );
+    --budget-debit: color-mix(
+        in oklch,
+        var(--color-jet-lag-red) 78%,
+        black
+    );
+    --texture-line: color-mix(
+        in srgb,
+        var(--color-foreground) 4%,
+        transparent
+    );
     --background: #f4f0e9;
     --foreground: #102431;
     --card: #fffaf2;
@@ -39,10 +50,18 @@
     --muted-foreground: #596b75;
     --accent: #d5e0e3;
     --accent-foreground: #102431;
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: rgb(16 36 49 / 22%);
-    --input: rgb(16 36 49 / 25%);
-    --ring: #fb302d;
+    --destructive: var(--color-jet-lag-red);
+    --border: color-mix(
+        in srgb,
+        var(--color-foreground) 22%,
+        transparent
+    );
+    --input: color-mix(
+        in srgb,
+        var(--color-foreground) 25%,
+        transparent
+    );
+    --ring: var(--color-jet-lag-red);
     --radius: 0.625rem;
     --season-card-hover-scale: 1.035;
     --thumbnail-hover-saturation: 1.08;
@@ -65,9 +84,21 @@
     --control-disabled: #59666e;
     --footer-copy: #8c9aa2;
     --map-canvas: #071722;
-    --budget-credit: #8bc897;
-    --budget-debit: #d9827f;
-    --texture-line: rgb(255 255 255 / 1.2%);
+    --budget-credit: color-mix(
+        in oklch,
+        var(--color-jet-lag-green) 70%,
+        white
+    );
+    --budget-debit: color-mix(
+        in oklch,
+        var(--color-jet-lag-red) 72%,
+        white
+    );
+    --texture-line: color-mix(
+        in srgb,
+        var(--color-foreground) 1.2%,
+        transparent
+    );
     --background: #061724;
     --foreground: #f4f0e9;
     --card: #071b29;
@@ -82,10 +113,18 @@
     --muted-foreground: #b7c1c7;
     --accent: #18384a;
     --accent-foreground: #f4f0e9;
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: rgb(244 240 233 / 20%);
-    --input: rgb(244 240 233 / 25%);
-    --ring: #fb302d;
+    --destructive: var(--color-jet-lag-red);
+    --border: color-mix(
+        in srgb,
+        var(--color-foreground) 20%,
+        transparent
+    );
+    --input: color-mix(
+        in srgb,
+        var(--color-foreground) 25%,
+        transparent
+    );
+    --ring: var(--color-jet-lag-red);
 }
 
 /* The passport artwork stays in CSS because its overlapping grid areas and
@@ -106,7 +145,14 @@
     text-align: center;
     line-height: 1;
     opacity: 0.72;
-    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.03));
+    filter: drop-shadow(
+        0 1px 0
+            color-mix(
+                in srgb,
+                var(--color-challenge-card-paper) 3%,
+                transparent
+            )
+    );
 }
 .passport-stamp::before {
     content: "";
@@ -144,7 +190,7 @@
     height: 126px;
     right: 1%;
     top: 7%;
-    color: #7f9bb4;
+    color: var(--color-passport-usa);
     border: 3px double currentColor;
     border-radius: 50%;
     transform: rotate(7deg);
@@ -178,7 +224,7 @@
     font-size: 13px;
 }
 .stamp-usa strong {
-    color: #bd7774;
+    color: var(--color-passport-date);
     font-size: 17px;
 }
 .stamp-usa b,
@@ -192,7 +238,7 @@
     left: 5%;
     top: 41%;
     overflow: hidden;
-    color: #b8817b;
+    color: var(--color-passport-schengen);
     border: 3px solid currentColor;
     border-radius: 0;
     transform: rotate(-7deg);
@@ -219,7 +265,7 @@
 .stamp-schengen strong {
     grid-area: 2/1/3/4;
     align-self: center;
-    color: #cf635c;
+    color: var(--color-passport-date-strong);
     font-size: 17px;
 }
 .stamp-schengen b {
@@ -255,7 +301,7 @@
     right: 29%;
     bottom: -4%;
     padding: 9px;
-    color: #5a9cb6;
+    color: var(--color-passport-japan);
     border: 3px solid currentColor;
     border-radius: 0;
     transform: rotate(5deg);
@@ -314,7 +360,7 @@
     height: 118px;
     right: 0;
     bottom: 8%;
-    color: #8b8b9e;
+    color: var(--color-passport-uk);
     border: 3px double currentColor;
     border-radius: 18px;
     transform: rotate(-5deg);
@@ -431,7 +477,20 @@
 @theme inline {
     --color-ink: var(--ink);
     --color-paper: var(--paper);
-    --color-signal: var(--red);
+    --color-jet-lag-yellow: #f5c25a;
+    --color-jet-lag-red: #d94641;
+    --color-jet-lag-green: #63a06a;
+    --color-jet-lag-blue: #204dac;
+    --color-jet-lag-navy-blue: #242f3f;
+    --color-jet-lag-curse-purple: #411771;
+    --color-jet-lag-orange: #d17849;
+    --color-passport-usa: #7f9bb4;
+    --color-passport-date: #bd7774;
+    --color-passport-schengen: #b8817b;
+    --color-passport-date-strong: #cf635c;
+    --color-passport-japan: #5a9cb6;
+    --color-passport-uk: #8b8b9e;
+    --color-signal: var(--color-jet-lag-red);
     --color-panel: var(--panel);
     --color-surface: var(--surface);
     --color-player: var(--player);
@@ -448,8 +507,6 @@
     --color-map-canvas: var(--map-canvas);
     --color-challenge-card-paper: #f4f0e9;
     --color-challenge-card-ink: #061724;
-    /*--color-green-team-primary: #63a26b;
-  --color-red-team-primary: #dc4742;*/
     --color-budget-credit: var(--budget-credit);
     --color-budget-debit: var(--budget-debit);
     --container-page: 100rem;
@@ -476,8 +533,23 @@
     --tracking-display: -0.045em;
     --tracking-overline: 0.18em;
     --tracking-section-label: 0.16em;
-    --shadow-card-hover: 0.5rem 0.5rem 0 rgb(251 48 45 / 17%);
-    --shadow-player: 0.75rem 0.75rem 0 rgb(251 48 45 / 8%);
+    --shadow-card-hover: 0.5rem 0.5rem 0
+        color-mix(in srgb, var(--color-jet-lag-red) 17%, transparent);
+    --shadow-player: 0.75rem 0.75rem 0
+        color-mix(in srgb, var(--color-jet-lag-red) 8%, transparent);
+    --shadow-team-icon:
+        inset 0 0 0 3px
+            color-mix(
+                in srgb,
+                var(--color-challenge-card-paper) 6%,
+                transparent
+            ),
+        0 0 1.25rem
+            color-mix(
+                in srgb,
+                var(--color-challenge-card-ink) 16%,
+                transparent
+            );
     --font-heading: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
     --font-sans: "Rubik", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "Geist Mono", ui-monospace, monospace;

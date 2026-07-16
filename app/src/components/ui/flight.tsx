@@ -78,10 +78,12 @@ function useFlightMapTheme(): FlightMapTheme {
   return theme;
 }
 
+// MapLibre paint values cannot resolve CSS custom properties, so these mirror
+// the corresponding Tailwind theme colors as literal fallbacks.
 /** Default arc stroke on light basemap when `color` is omitted */
-const FLIGHT_ROUTE_COLOR_LIGHT = "#0a0a0a";
+const FLIGHT_ROUTE_COLOR_LIGHT = "#242F3F";
 /** Default arc stroke on dark basemap when `color` is omitted */
-const FLIGHT_ROUTE_COLOR_DARK = "#e8e8e8";
+const FLIGHT_ROUTE_COLOR_DARK = "#F5C25A";
 
 function normalizeAirportRefKey(ref: AirportRef): string {
   if (typeof ref === "string") {
@@ -390,10 +392,10 @@ type FlightAirportProps = {
    * Custom marker content. When provided, replaces the default black dot marker.
    * Accepts any ReactNode — use mapcn's marker patterns:
    *
-   * - Colored dot: `<div className="size-4 rounded-full bg-red-500 border-2 border-white shadow-lg" />`
-   * - Icon in circle: `<div className="bg-emerald-500 rounded-full p-1.5 shadow-lg"><Plane className="size-3 text-white" /></div>`
-   * - Numbered: `<div className="size-5 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-semibold">1</div>`
-   * - Pulsing: `<div className="relative flex items-center justify-center"><div className="absolute size-6 rounded-full bg-cyan-500/20 animate-ping" /><div className="size-4 rounded-full bg-cyan-500 border-2 border-white shadow-lg" /></div>`
+   * - Colored dot: `<div className="bg-jet-lag-red border-challenge-card-paper size-4 rounded-full border-2 shadow-lg" />`
+   * - Icon in circle: `<div className="bg-jet-lag-green rounded-full p-1.5 shadow-lg"><Plane className="text-challenge-card-paper size-3" /></div>`
+   * - Numbered: `<div className="bg-jet-lag-blue border-challenge-card-paper text-challenge-card-paper size-5 rounded-full border-2 shadow-lg flex items-center justify-center text-xs font-semibold">1</div>`
+   * - Pulsing: `<div className="relative flex items-center justify-center"><div className="bg-jet-lag-yellow/20 absolute size-6 rounded-full animate-ping" /><div className="bg-jet-lag-yellow border-challenge-card-paper size-4 rounded-full border-2 shadow-lg" /></div>`
    *
    * When omitted, uses a theme-aware dot (h-4 w-4) for contrast on light/dark maps.
    */
@@ -464,8 +466,8 @@ function FlightAirport({
             className={cn(
               "relative h-4 w-4 rounded-full border-2 shadow-lg",
               flightMapTheme === "dark"
-                ? "border-neutral-700 bg-neutral-100"
-                : "border-white bg-neutral-950",
+                ? "border-jet-lag-navy-blue bg-jet-lag-yellow"
+                : "border-challenge-card-paper bg-jet-lag-navy-blue",
             )}
           />
         )}
@@ -474,8 +476,8 @@ function FlightAirport({
             position={labelPosition}
             className={cn(
               flightMapTheme === "dark"
-                ? "text-neutral-100"
-                : "text-neutral-950",
+                ? "text-jet-lag-yellow"
+                : "text-jet-lag-navy-blue",
               labelClassName,
             )}
           >
@@ -1364,8 +1366,8 @@ function FlightMultiRoute({
                 className={cn(
                   "relative h-2.5 w-2.5 rounded-full border-2 shadow-lg",
                   flightMapTheme === "dark"
-                    ? "border-neutral-700 bg-neutral-100"
-                    : "border-white bg-neutral-950",
+                    ? "border-jet-lag-navy-blue bg-jet-lag-yellow"
+                    : "border-challenge-card-paper bg-jet-lag-navy-blue",
                 )}
               />
             ) : (
@@ -1695,7 +1697,7 @@ function FlightAnimationMarker({
         createPortal(
           <div
             className={cn(
-              "flex items-center justify-center text-white drop-shadow-lg",
+              "text-challenge-card-paper flex items-center justify-center drop-shadow-lg",
               iconClassName,
             )}
             style={{ width: iconSize, height: iconSize }}
@@ -1991,7 +1993,7 @@ function FlightMultiLegAnimationMarker({
         createPortal(
           <div
             className={cn(
-              "flex items-center justify-center text-white drop-shadow-lg",
+              "text-challenge-card-paper flex items-center justify-center drop-shadow-lg",
               iconClassName,
             )}
             style={{ width: iconSize, height: iconSize }}

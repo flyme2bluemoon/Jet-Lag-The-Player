@@ -44,7 +44,7 @@ function PowerupToken({ color, size = "small" }: { color: string; size?: "small"
                 strokeWidth={1.75}
             />
             <Star
-                className={size === "large" ? "relative size-6 fill-white text-white" : "relative size-3.5 fill-white text-white"}
+                className={size === "large" ? "fill-challenge-card-paper text-challenge-card-paper relative size-6" : "fill-challenge-card-paper text-challenge-card-paper relative size-3.5"}
                 strokeWidth={2.5}
             />
         </span>
@@ -79,7 +79,7 @@ function PowerupHistoryContent({
                 <span
                     className="grid size-8 place-items-center rounded-full"
                     style={{
-                        backgroundColor: `${teamColor}26`,
+                        backgroundColor: `color-mix(in srgb, ${teamColor} 15%, transparent)`,
                         color: teamColor,
                     }}
                 >

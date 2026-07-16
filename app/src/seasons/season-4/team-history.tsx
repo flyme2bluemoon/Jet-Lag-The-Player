@@ -78,7 +78,7 @@ function DesktopHistory<Item extends HistoryItem>({
                     <h4
                         className="border-paper/20 bg-panel sticky top-0 z-10 flex items-center gap-2.5 border-b px-5 py-3 font-heading text-base leading-none font-bold uppercase sm:px-6"
                         style={{
-                            backgroundImage: `linear-gradient(${seasonFourTeams[team].color}12, ${seasonFourTeams[team].color}12)`,
+                            backgroundImage: `linear-gradient(color-mix(in srgb, ${seasonFourTeams[team].color} 7%, transparent), color-mix(in srgb, ${seasonFourTeams[team].color} 7%, transparent))`,
                             color: seasonFourTeams[team].color,
                         }}
                     >

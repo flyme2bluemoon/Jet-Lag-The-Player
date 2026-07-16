@@ -72,7 +72,7 @@ function TransactionContent({
                 <span
                     className="grid size-9 place-items-center rounded-full"
                     style={{
-                        backgroundColor: `${teamColor}26`,
+                        backgroundColor: `color-mix(in srgb, ${teamColor} 15%, transparent)`,
                         color: teamColor,
                     }}
                 >
@@ -107,14 +107,14 @@ export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
             )}
             renderTeamIcon={(team) => (
                 <span
-                    className="grid size-14 shrink-0 place-items-center rounded-full border shadow-[inset_0_0_0_3px_rgb(255_255_255/0.06),0_0_1.25rem_rgb(0_0_0/0.16)]"
+                    className="shadow-team-icon grid size-14 shrink-0 place-items-center rounded-full border"
                     style={{
-                        backgroundColor: `${seasonFourTeams[team].color}bb`,
+                        backgroundColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 73%, transparent)`,
                         borderColor: seasonFourTeams[team].color,
                     }}
                     aria-hidden="true"
                 >
-                    <Banknote className="size-6 text-white" />
+                    <Banknote className="text-challenge-card-paper size-6" />
                 </span>
             )}
             summaryLabel="Team travel budget totals"

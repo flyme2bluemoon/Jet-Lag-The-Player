@@ -82,7 +82,7 @@ export function TeamLedgerCard<Item extends LedgerItem>({
                             key={team}
                             className={`flex min-h-32 min-w-0 items-center gap-3 px-5 py-5 sm:gap-4 sm:px-6 ${index === 0 ? "border-paper/20 border-b @min-[36rem]:border-r @min-[36rem]:border-b-0" : ""}`}
                             style={{
-                                backgroundImage: `linear-gradient(110deg, ${seasonFourTeams[team].color}24, ${seasonFourTeams[team].color}0a)`,
+                                backgroundImage: `linear-gradient(110deg, color-mix(in srgb, ${seasonFourTeams[team].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams[team].color} 4%, transparent))`,
                             }}
                             aria-label={`${seasonFourTeams[team].name}: ${balanceLabel}`}
                         >

@@ -46,7 +46,7 @@ export function ChallengeCard({ episodeSlug, currentTime }: ChallengeCardProps) 
                                 className="grid size-11 shrink-0 place-items-center rounded-full"
                                 style={{
                                     backgroundColor: challenge
-                                        ? `${seasonFourTeams[team].color}26`
+                                        ? `color-mix(in srgb, ${seasonFourTeams[team].color} 15%, transparent)`
                                         : "color-mix(in srgb, var(--color-paper) 8%, transparent)",
                                     color: challenge
                                         ? seasonFourTeams[team].color

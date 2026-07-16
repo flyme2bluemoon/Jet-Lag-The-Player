@@ -31,7 +31,7 @@ function TeamRole({
             <span
                 className="grid size-9 shrink-0 place-items-center rounded-full"
                 style={{
-                    backgroundColor: `${teamDetails.color}26`,
+                    backgroundColor: `color-mix(in srgb, ${teamDetails.color} 15%, transparent)`,
                     color: teamDetails.color,
                 }}
             >
@@ -76,7 +76,7 @@ export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardP
                 <span
                     className="bg-paper/10 text-paper grid size-11 shrink-0 place-items-center rounded-full"
                     style={winner ? {
-                        backgroundColor: `${winner.color}26`,
+                        backgroundColor: `color-mix(in srgb, ${winner.color} 15%, transparent)`,
                         color: winner.color,
                     } : undefined}
                 >

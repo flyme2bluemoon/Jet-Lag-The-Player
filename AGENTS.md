@@ -1,43 +1,110 @@
 # Jet Lag: The Player
 
-## About the game
+## Game reference
 
-Jet Lag: The Game is a travel game show where in each season teams or individuals compete in a game while traveling some part of the world.
+Jet Lag: The Game is a travel game show in which teams or individual players compete while traveling through a region.
 
-### Seasons
+There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use the teams below when creating season graphics. The colors refer to the color palette below. In individual games, “team” and “player” may be used interchangeably.
 
-There are 18 full length seasons and a special Hide and Seek Across NYC mini season. Each team has a primary and one or more secondary colors to be used in graphics to denote that team. Some games only have two teams and thus the third column is empty. In individual games (e.g., Tag, Hide & Seek), player and team may be used interchangably.
+| Season | Game                          | Team 1                      | Team 2                   | Team 3      |
+| -----: | ----------------------------- | --------------------------- | ------------------------ | ----------- |
+|      1 | Connect Four Across America   | Sam & Brian                 | Ben & Adam               |             |
+|      2 | Circumnavigation              | Sam & Joseph                | Ben & Adam               |             |
+|      3 | Tag Eur It                    | Sam                         | Adam                     | Ben         |
+|      4 | Battle 4 America              | Sam & Brian (jet-lag-green) | Ben & Adam (jet-lag-red) |             |
+|      5 | Race To The End Of The World  | Sam & Toby                  | Ben & Adam               |             |
+|      6 | Capture The Flag Across Japan | Sam & Scotty                | Ben & Adam               |             |
+|      7 | Tag Eur It 2                  | Sam                         | Adam                     | Ben         |
+|      8 | Arctic Escape                 | Sam & Michelle              | Ben & Adam               |             |
+|      9 | Hide + Seek                   | Sam                         | Adam                     | Ben         |
+|     10 | AU$TRALIA                     | Sam & Toby                  | Ben & Adam               |             |
+|     11 | Tag Eur It 3                  | Sam                         | Adam                     | Ben         |
+|     12 | Hide + Seek: Japan            | Sam                         | Adam                     | Ben         |
+|     13 | Schengen Showdown             | Sam & Tom                   | Ben & Adam               |             |
+|   13.5 | Hide and Seek Across NYC      | Sam & Amy                   | Adam & Ben               |             |
+|     14 | SnaKe                         | Sam                         | Adam                     | Ben         |
+|     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian |
+|     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben         |
+|     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |             |
+|     18 | Stateside Scramble            | Sam & Amy                   | Ben & Adam               |             |
 
-| Season | Game                          | Team 1                              | Team 2                             | Team 3    |
-| -----: | ----------------------------- | ----------------------------------- | ---------------------------------- | --------- |
-|      1 | Connect Four Across America   | Sam/Brian                           | Ben/Adam                           |           |
-|      2 | Circumnavigation              | Sam/Joseph                          | Ben/Adam                           |           |
-|      3 | Tag Eur It                    | Sam                                 | Adam                               | Ben       |
-|      4 | Battle 4 America              | Sam/Brian (#63A26B/#3E8C5A/#C9DECE) | Ben/Adam (#DC4742/#941D13/#EFB9BD) |           |
-|      5 | Race To The End Of The World  | Sam/Toby                            | Ben/Adam                           |           |
-|      6 | Capture The Flag Across Japan | Sam/Scotty                          | Ben/Adam                           |           |
-|      7 | Tag Eur It 2                  | Sam                                 | Adam                               | Ben       |
-|      8 | Arctic Escape                 | Sam/Michelle                        | Ben/Adam                           |           |
-|      9 | Hide + Seek                   | Sam                                 | Adam                               | Ben       |
-|     10 | AU$TRALIA                     | Sam/Toby                            | Ben/Adam                           |           |
-|     11 | Tag Eur It 3                  | Sam                                 | Adam                               | Ben       |
-|     12 | Hide + Seek: Japan            | Sam                                 | Adam                               | Ben       |
-|     13 | Schengen Showdown             | Sam/Tom                             | Ben/Adam                           |           |
-|   13.5 | Hide and Seek Across NYC      | Sam/Amy                             | Adam/Ben                           |           |
-|     14 | SnaKe                         | Sam                                 | Adam                               | Ben       |
-|     15 | Tag: All Stars                | Sam/Toby                            | Michelle/Adam                      | Ben/Brian |
-|     16 | Hide & Seek: U.K.             | Sam                                 | Adam                               | Ben       |
-|     17 | Taiwan Rail Rush              | Sam/Michael                         | Ben/Adam                           |           |
-|     18 | Stateside Scramble            | Sam/Amy                             | Ben/Adam                           |           |
+For Season 4 challenge data, use the [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
 
-#### Season specific notes
+## Repository layout
 
-- Season 4: Battle 4 America
-    - Information on challenges can be found here: https://jetlag.fandom.com/wiki/Battle_4_America/Challenges
+- `app/` is the web application: a Next.js 16, React 19, TypeScript, and Tailwind CSS project. Run its package scripts from this directory with pnpm (`pnpm dev`, `pnpm lint`, `pnpm build`, and `pnpm start`).
+- `transcript_downloader/` is a standalone Python utility that downloads English YouTube caption tracks for the listed seasons. It never downloads video or audio; it saves WebVTT captions, readable text transcripts, and YouTube metadata under `transcript_downloader/transcripts/`, which is generated and gitignored. See `transcript_downloader/README.md` for usage and options. Run it from that directory using its existing `.venv` virtual environment; install dependencies through that environment only when needed.
 
-## Dashboards
+## Playwright browser checks
 
-- Each season has a custom dashboard.
-- Use Barlow Condensed (`font-heading`/`font-display`) for short headings, large numbers, and display text; use Rubik (`font-sans`) for prose, descriptions, and longer headings or titles; use monospace only for passport stamps.
-- When creating new cards, make sure this card is synced with the timestamp of the YouTube video by using the YouTube IFrame Player API.
-- Most cards will be the same for all episodes in a dashboard but it may be possible that a card should only be shown for certain episodes.
+Use the bundled Playwright CLI wrapper for browser automation. Do not run it from the repository or `app/`: the CLI writes `.playwright-cli/` artifacts to its working directory. Instead, run it from a temporary directory while targeting the local application:
+
+```sh
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
+mkdir -p /tmp/jet-lag-playwright
+cd /tmp/jet-lag-playwright
+"$PWCLI" open http://localhost:3000
+"$PWCLI" snapshot
+```
+
+Use a fresh snapshot before interacting with element references, re-snapshot after navigation or major UI changes, and close the browser session when finished with `"$PWCLI" close`. Keep any screenshots, PDFs, and traces in `/tmp/jet-lag-playwright`; do not add test artifacts to the repository.
+
+## Dashboard conventions
+
+- Each season has a custom dashboard. Keep its UI and data in `app/src/seasons/season-<n>/`.
+- Use Tailwind utilities rather than raw CSS. Prefer theme variables to one-off values.
+- Use `font-sans` (Rubik) by default, especially for body copy, descriptions, longer titles, and dense or wrapping data.
+- Use `font-heading` (Barlow Condensed) for short, bold, uppercase structural labels: pages, sections, cards, tabs, and controls.
+- Use `font-display` (Barlow Condensed) for prominent or live data: large scores, compact status text, overlines, badges, and short navigation labels.
+- Do not use `font-mono` by default. Reserve it for a deliberate semantic treatment, such as a passport stamp or code-like content.
+- New cards must be synchronized to the YouTube video timestamp through the YouTube IFrame Player API. Cards may be limited to selected episodes when the season requires it.
+
+## Season setup and shared helpers
+
+When adding a reusable helper function or component, document its purpose, import path, and key usage constraints in this section so future work can discover and use it consistently.
+
+To add a season:
+
+1. Add episode metadata in `app/src/data/season-<n>.ts`.
+2. Register it in `app/src/data/season-pages.ts`.
+3. Add its branch to `EpisodeDashboard` in `app/src/components/episode/episode-dashboard.tsx`.
+
+Routes, static params, episode navigation, and page metadata are then provided automatically.
+
+- Use `cn(...classes)` from `@/lib/utils` whenever a component accepts a `className` override.
+- Use `DashboardGrid` from `@/components/episode/dashboard-grid` for responsive dashboard layouts. It is single-column on small screens and uses 12 columns at `lg`; set season-specific tracks and spans with `className`.
+- `YouTubePlayer` from `@/components/episode/youtube-player` owns the IFrame Player API lifecycle. Keep `currentTime` state in the season dashboard, update it through `onTimeChange` (every 250 ms), and pass it to time-aware cards. Never create one player per card.
+- Use `compareTimestamps(season, left, right)` from `@/lib/timestamps` for visibility windows, sorting, and event-derived state across episodes. It compares `{ episode, at }` using `season.episodes` order and throws for an unknown episode.
+- Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
+
+### Maps and travel visuals
+
+- `@/components/ui/map` provides MapLibre components: `Map`, `MapGeoJSON`, `MapArc`, `MapRoute`, `MapMarker`, marker popups/tooltips/labels, `MapControls`, and `MapClusterLayer`. Render map children inside `Map`. Use `<Map blank>` for a transparent, tile-free visualization; otherwise use the theme-aware Carto basemap.
+- `@/components/ui/flight` provides travel-timeline helpers: `FlightAirport`, `FlightRoute`, `FlightRoutes`, `FlightMultiRoute`, `generateArcGeometry`, and `generateArcCoordinates`. Airport references accept IATA codes or `[longitude, latitude]` tuples. Use `resolveAirport` when coordinates are required and `getAirportInfo` for optional lookup.
+
+### Time-based data
+
+Store factual events as typed records with `episode` and `at`. Sort and filter them with `compareTimestamps`, and expose focused query functions such as `getVisible…(episodeSlug, currentTime)`. Season 4 examples include `state-claims.ts`, `budget-data.ts`, `battle-status-data.ts`, and `hand-data.ts`; reuse the pattern, not that season’s teams, claims, or card rules.
+
+## Palette
+
+| Token                  | Hex       |
+| ---------------------- | --------- |
+| `jet-lag-yellow`       | `#F5C25A` |
+| `jet-lag-red`          | `#D94641` |
+| `jet-lag-green`        | `#63A06A` |
+| `jet-lag-blue`         | `#204DAC` |
+| `jet-lag-navy-blue`    | `#242F3F` |
+| `jet-lag-curse-purple` | `#411771` |
+| `jet-lag-orange`       | `#D17849` |
+
+## Color system
+
+- Define reusable application colors as Tailwind theme variables in the `@theme inline` block in `app/src/app/globals.css`. Consume them through generated utilities such as `bg-jet-lag-red`, `text-paper`, and `border-card`, rather than raw hex, RGB, or stock Tailwind palette classes.
+- Prefer semantic theme colors for foundational UI: `background`/`foreground` for the page, `card`/`card-foreground` and `panel`/`paper` for surfaces, `muted` and metadata tokens for secondary content, and `border`, `input`, and `ring` for controls. Keep the existing light and dark page background and foreground values unchanged.
+- Use the `jet-lag-*` palette tokens for brand accents, teams, status graphics, maps, and travel visuals. Apply transparency with Tailwind opacity modifiers or `color-mix()` based on a theme variable instead of introducing a second hard-coded shade.
+- Avoid `white`, `black`, and Tailwind's stock color families when an existing semantic or Jet Lag token communicates the same role. Fixed high-contrast artwork may use `challenge-card-paper` and `challenge-card-ink`.
+- Dynamic inline styles are acceptable when a runtime value selects a team color, but the value must originate from a Tailwind theme variable such as `var(--color-jet-lag-green)`. Do not append hex alpha suffixes to CSS variables; use `color-mix()`.
+- Raw color literals are exceptions for APIs that cannot resolve CSS custom properties, such as MapLibre paint expressions or constrained third-party options. Keep those values centralized, document why the exception exists, and mirror the corresponding theme color exactly when applicable.
+- Bespoke illustration colors may be one-off, but repeated artwork colors should still receive narrowly named theme variables so the artwork remains auditable and consistent.

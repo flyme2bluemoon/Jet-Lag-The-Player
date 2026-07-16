@@ -1,4 +1,5 @@
 import { seasonFour } from "./season-4";
+import { seasonEighteen } from "./season-18";
 
 export type Episode = {
   slug: string;
@@ -16,7 +17,7 @@ export type SeasonPage = {
   episodes: readonly Episode[];
 };
 
-export const seasonPages: readonly SeasonPage[] = [seasonFour];
+export const seasonPages: readonly SeasonPage[] = [seasonFour, seasonEighteen];
 
 export function getSeasonPage(slug: string) {
   return seasonPages.find((season) => season.slug === slug);

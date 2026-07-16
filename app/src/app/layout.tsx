@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Geist_Mono, Rubik } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeInitializer } from "@/components/theme-initializer";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -24,31 +25,6 @@ export const metadata: Metadata = {
   description: "Choose a season and play Jet Lag: The Game.",
 };
 
-const themeScript = `
-  (() => {
-    const getPreference = () => {
-      try {
-        const stored = localStorage.getItem("jetlag-theme");
-        return stored === "light" || stored === "dark" ? stored : "system";
-      } catch (_) {
-        return "system";
-      }
-    };
-    const applyTheme = (preference) => {
-      const isDark = preference === "dark" ||
-        (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-      document.documentElement.classList.toggle("dark", isDark);
-      document.documentElement.dataset.theme = preference;
-      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-    };
-
-    applyTheme(getPreference());
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-      if (getPreference() === "system") applyTheme("system");
-    });
-  })();
-`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -61,8 +37,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${barlowCondensed.variable} ${rubik.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body className="bg-ink text-paper flex min-h-full flex-col">
+        <ThemeInitializer />
         <div className="flex-1">{children}</div>
         <SiteFooter />
       </body>

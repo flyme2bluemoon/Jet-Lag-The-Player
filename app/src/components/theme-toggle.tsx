@@ -2,38 +2,18 @@
 
 import { useSyncExternalStore } from "react";
 import { Laptop, Moon, Sun } from "lucide-react";
-
-type ThemePreference = "system" | "light" | "dark";
+import {
+  getThemePreference,
+  setThemePreference,
+  subscribeToTheme,
+  type ThemePreference,
+} from "@/lib/theme";
 
 const options = [
   { value: "system", label: "System", icon: Laptop },
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
 ] satisfies { value: ThemePreference; label: string; icon: typeof Laptop }[];
-
-const THEME_CHANGE_EVENT = "jet-lag-theme-change";
-
-function getThemePreference(): ThemePreference {
-  if (typeof document === "undefined") return "system";
-  const preference = document.documentElement.dataset.theme;
-  return preference === "light" || preference === "dark" ? preference : "system";
-}
-
-function subscribeToTheme(callback: () => void) {
-  window.addEventListener(THEME_CHANGE_EVENT, callback);
-  return () => window.removeEventListener(THEME_CHANGE_EVENT, callback);
-}
-
-function setThemePreference(preference: ThemePreference) {
-  const isDark = preference === "dark" ||
-    (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  try { localStorage.setItem("jetlag-theme", preference); } catch {}
-  document.documentElement.classList.toggle("dark", isDark);
-  document.documentElement.dataset.theme = preference;
-  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-  window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
-}
 
 export function ThemeToggle() {
   const preference = useSyncExternalStore(

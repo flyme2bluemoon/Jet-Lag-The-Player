@@ -21,7 +21,7 @@ export function EpisodeSwitcher({ seasonSlug, episodes, currentSlug }: EpisodeSw
         </SelectTrigger>
         <SelectContent position="popper" side="bottom" align="start" sideOffset={1} className="bg-select text-paper border-paper/30 episode-select-content w-(--radix-select-trigger-width) rounded-lg p-0 shadow-xl">
           {episodes.map((episode) => (
-            <SelectItem className="bg-select text-paper border-paper/10 focus:bg-select-hover focus:text-paper! focus:**:text-paper! data-highlighted:bg-select-hover data-[state=checked]:bg-select-active data-[state=checked]:focus:bg-select-hover data-[state=checked]:data-highlighted:bg-select-hover [&>span:first-child]:hidden rounded-none border-b px-4 py-3 pr-4 font-display text-base leading-none font-bold last:border-b-0" value={episode.slug} key={episode.slug}>
+            <SelectItem className="bg-select text-paper border-paper/10 focus:bg-select-hover focus:text-paper! focus:**:text-paper! data-highlighted:bg-select-hover data-[state=checked]:bg-select-active data-[state=checked]:focus:bg-select-hover data-[state=checked]:data-highlighted:bg-select-hover [&>span:first-child]:hidden rounded-none border-b px-4 py-3 pr-4 font-display text-base leading-none font-bold last:border-b-0" value={episode.slug} key={episode.slug} disabled={!episode.video}>
               {episode.label}
             </SelectItem>
           ))}

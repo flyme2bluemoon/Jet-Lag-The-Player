@@ -9,16 +9,21 @@ import { EpisodeSwitcher } from "./episode-switcher";
 
 type EpisodePageProps = { params: Promise<{ season: string; episode: string }> };
 
+export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return seasonPages.flatMap((season) => season.episodes.map((episode) => ({ season: season.slug, episode: episode.slug })));
+  return seasonPages.flatMap((season) =>
+    season.episodes
+      .filter((episode) => episode.video)
+      .map((episode) => ({ season: season.slug, episode: episode.slug })),
+  );
 }
 
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const route = await params;
   const season = getSeasonPage(route.season);
   const episode = season?.episodes.find((item) => item.slug === route.episode);
-  return episode && season
+  return episode?.video && season
     ? { title: `${episode.label} | Season ${season.number}: ${season.name}`, description: episode.title }
     : {};
 }
@@ -27,12 +32,13 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
   const route = await params;
   const season = getSeasonPage(route.season);
   if (!season) notFound();
-  const episodeIndex = season.episodes.findIndex((item) => item.slug === route.episode);
-  if (episodeIndex === -1) notFound();
+  const episode = season.episodes.find((item) => item.slug === route.episode);
+  if (!episode?.video) notFound();
 
-  const episode = season.episodes[episodeIndex];
-  const previousEpisode = season.episodes[episodeIndex - 1];
-  const nextEpisode = season.episodes[episodeIndex + 1];
+  const releasedEpisodes = season.episodes.filter((item) => item.video);
+  const episodeIndex = releasedEpisodes.findIndex((item) => item.slug === episode.slug);
+  const previousEpisode = releasedEpisodes[episodeIndex - 1];
+  const nextEpisode = releasedEpisodes[episodeIndex + 1];
   const episodeHref = (slug: string) => `/${season.slug}/${slug}`;
 
   return (

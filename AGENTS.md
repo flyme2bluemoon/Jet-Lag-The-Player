@@ -26,7 +26,7 @@ There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use t
 |     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian |
 |     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben         |
 |     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |             |
-|     18 | Stateside Scramble            | Sam & Amy                   | Ben & Adam               |             |
+|     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |             |
 
 For Season 4 challenge data, use the [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
 

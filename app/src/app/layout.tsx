@@ -28,7 +28,7 @@ const themeScript = `
   (() => {
     const getPreference = () => {
       try {
-        const stored = localStorage.getItem("theme");
+        const stored = localStorage.getItem("jetlag-theme");
         return stored === "light" || stored === "dark" ? stored : "system";
       } catch (_) {
         return "system";

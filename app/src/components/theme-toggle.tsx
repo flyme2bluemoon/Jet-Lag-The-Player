@@ -28,7 +28,7 @@ function setThemePreference(preference: ThemePreference) {
   const isDark = preference === "dark" ||
     (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  try { localStorage.setItem("theme", preference); } catch {}
+  try { localStorage.setItem("jetlag-theme", preference); } catch {}
   document.documentElement.classList.toggle("dark", isDark);
   document.documentElement.dataset.theme = preference;
   document.documentElement.style.colorScheme = isDark ? "dark" : "light";

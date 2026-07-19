@@ -29,6 +29,7 @@ There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use t
 |     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |             |
 
 For Season 4 challenge data, use the [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
+For Season 18 challenge data, use the [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
 
 ## Repository layout
 
@@ -74,13 +75,15 @@ Routes, static params, episode navigation, and page metadata are then provided a
 
 - Use `cn(...classes)` from `@/lib/utils` whenever a component accepts a `className` override.
 - Use `DashboardGrid` from `@/components/episode/dashboard-grid` for responsive dashboard layouts. It is single-column on small screens and uses 12 columns at `lg`; set season-specific tracks and spans with `className`.
+- Use `TeamLedgerCard` from `@/components/episode/team-ledger-card` for timestamped balances shared by multiple teams. Supply the season, ordered team IDs, team names/colors, visible ledger items, and season-specific balance/history renderers; items without a `team` apply to every team.
+- Use `TeamLedgerHistoryItem` and `AnimatedBudgetAmount` from `@/components/episode/` to preserve the shared ledger history row and animated currency treatment.
 - `YouTubePlayer` from `@/components/episode/youtube-player` owns the IFrame Player API lifecycle. Keep `currentTime` state in the season dashboard, update it through `onTimeChange` (every 250 ms), and pass it to time-aware cards. Never create one player per card.
 - Use `compareTimestamps(season, left, right)` from `@/lib/timestamps` for visibility windows, sorting, and event-derived state across episodes. It compares `{ episode, at }` using `season.episodes` order and throws for an unknown episode.
 - Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
 
 ### Maps and travel visuals
 
-- `@/components/ui/map` provides MapLibre components: `Map`, `MapGeoJSON`, `MapArc`, `MapRoute`, `MapMarker`, marker popups/tooltips/labels, `MapControls`, and `MapClusterLayer`. Render map children inside `Map`. Use `<Map blank>` for a transparent, tile-free visualization; otherwise use the theme-aware Carto basemap.
+- `@/components/ui/map` provides MapLibre components: `Map`, `MapGeoJSON`, `MapArc`, `MapRoute`, `MapMarker`, marker popups/tooltips/labels, `MapControls`, and `MapClusterLayer`. Render map children inside `Map`. Use `<Map blank>` for a transparent, tile-free visualization; otherwise use the theme-aware Carto basemap. Set `MapMarker`'s optional `positionTransitionDuration` to interpolate coordinate updates; it defaults to immediate movement and respects reduced-motion preferences.
 - `@/components/ui/flight` provides travel-timeline helpers: `FlightAirport`, `FlightRoute`, `FlightRoutes`, `FlightMultiRoute`, `generateArcGeometry`, and `generateArcCoordinates`. Airport references accept IATA codes or `[longitude, latitude]` tuples. Use `resolveAirport` when coordinates are required and `getAirportInfo` for optional lookup.
 
 ### Time-based data

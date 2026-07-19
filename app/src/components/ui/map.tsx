@@ -17,7 +17,15 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Locate,
+  Maximize,
+  RotateCcw,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -432,6 +440,8 @@ type MapMarkerProps = {
   longitude: number;
   /** Latitude coordinate for marker position */
   latitude: number;
+  /** Milliseconds used to interpolate coordinate updates. Respects reduced motion. */
+  positionTransitionDuration?: number;
   /** Marker subcomponents (MarkerContent, MarkerPopup, MarkerTooltip, MarkerLabel) */
   children: ReactNode;
   /** Callback when marker is clicked */
@@ -451,6 +461,7 @@ type MapMarkerProps = {
 function MapMarker({
   longitude,
   latitude,
+  positionTransitionDuration = 0,
   children,
   onClick,
   onMouseEnter,
@@ -539,8 +550,38 @@ function MapMarker({
 
   useEffect(() => {
     const current = marker.getLngLat();
+    let animationFrame: number | null = null;
+
     if (current.lng !== longitude || current.lat !== latitude) {
-      marker.setLngLat([longitude, latitude]);
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      if (positionTransitionDuration <= 0 || prefersReducedMotion) {
+        marker.setLngLat([longitude, latitude]);
+      } else {
+        const startedAt = performance.now();
+        const longitudeDelta = longitude - current.lng;
+        const latitudeDelta = latitude - current.lat;
+
+        const updatePosition = (now: number) => {
+          const progress = Math.min(
+            1,
+            (now - startedAt) / positionTransitionDuration,
+          );
+
+          marker.setLngLat([
+            current.lng + longitudeDelta * progress,
+            current.lat + latitudeDelta * progress,
+          ]);
+
+          if (progress < 1) {
+            animationFrame = requestAnimationFrame(updatePosition);
+          }
+        };
+
+        animationFrame = requestAnimationFrame(updatePosition);
+      }
     }
 
     if (marker.isDraggable() !== draggable) {
@@ -565,10 +606,17 @@ function MapMarker({
     if (marker.getPitchAlignment() !== (pitchAlignment ?? "auto")) {
       marker.setPitchAlignment(pitchAlignment ?? "auto");
     }
+
+    return () => {
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
   }, [
     marker,
     longitude,
     latitude,
+    positionTransitionDuration,
     draggable,
     offset,
     rotation,
@@ -798,6 +846,11 @@ type MapControlsProps = {
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   /** Show zoom in/out buttons (default: true) */
   showZoom?: boolean;
+  /** Initial camera position used by the reset-view button. Omit to hide it. */
+  resetView?: {
+    center: [number, number];
+    zoom: number;
+  };
   /** Show compass button to reset bearing (default: false) */
   showCompass?: boolean;
   /** Show locate button to find user's location (default: false) */
@@ -858,6 +911,7 @@ function ControlButton({
 function MapControls({
   position = "bottom-right",
   showZoom = true,
+  resetView,
   showCompass = false,
   showLocate = false,
   showFullscreen = false,
@@ -874,6 +928,18 @@ function MapControls({
   const handleZoomOut = useCallback(() => {
     map?.zoomTo(map.getZoom() - 1, { duration: 300 });
   }, [map]);
+
+  const handleResetView = useCallback(() => {
+    if (!map || !resetView) return;
+
+    map.easeTo({
+      center: resetView.center,
+      zoom: resetView.zoom,
+      bearing: 0,
+      pitch: 0,
+      duration: 600,
+    });
+  }, [map, resetView]);
 
   const handleResetBearing = useCallback(() => {
     map?.resetNorthPitch({ duration: 300 });
@@ -925,10 +991,15 @@ function MapControls({
       {showZoom && (
         <ControlGroup>
           <ControlButton onClick={handleZoomIn} label="Zoom in">
-            <Plus className="size-4" />
+            <ZoomIn className="size-4" />
           </ControlButton>
+          {resetView && (
+            <ControlButton onClick={handleResetView} label="Reset map view">
+              <RotateCcw className="size-4" />
+            </ControlButton>
+          )}
           <ControlButton onClick={handleZoomOut} label="Zoom out">
-            <Minus className="size-4" />
+            <ZoomOut className="size-4" />
           </ControlButton>
         </ControlGroup>
       )}
@@ -1111,6 +1182,8 @@ type MapRouteProps = {
   opacity?: number;
   /** Dash pattern [dash length, gap length] for dashed lines */
   dashArray?: [number, number];
+  /** Shape applied to each line or dash endpoint (default: round) */
+  lineCap?: "butt" | "round" | "square";
   /** Callback when the route line is clicked */
   onClick?: () => void;
   /** Callback when mouse enters the route line */
@@ -1128,6 +1201,7 @@ function MapRoute({
   width = 3,
   opacity = 0.8,
   dashArray,
+  lineCap = "round",
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -1156,7 +1230,7 @@ function MapRoute({
       id: layerId,
       type: "line",
       source: sourceId,
-      layout: { "line-join": "round", "line-cap": "round" },
+      layout: { "line-join": "round", "line-cap": lineCap },
       paint: {
         "line-color": color,
         "line-width": width,
@@ -1198,6 +1272,12 @@ function MapRoute({
     map.setPaintProperty(layerId, "line-opacity", opacity);
     map.setPaintProperty(layerId, "line-dasharray", dashArray);
   }, [isLoaded, map, layerId, color, width, opacity, dashArray]);
+
+  useEffect(() => {
+    if (!isLoaded || !map || !map.getLayer(layerId)) return;
+
+    map.setLayoutProperty(layerId, "line-cap", lineCap);
+  }, [isLoaded, map, layerId, lineCap]);
 
   // Handle click and hover events
   useEffect(() => {

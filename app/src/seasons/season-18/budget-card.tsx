@@ -1,29 +1,21 @@
 "use client";
 
-import {
-    Banknote,
-    BanknoteArrowDown,
-    BanknoteArrowUp,
-    Bike,
-    Car,
-    CarTaxiFront,
-    Plane,
-    Scooter,
-    TrainFront,
-    TramFront,
-    type LucideIcon,
-} from "lucide-react";
+import { Banknote, Car, CarTaxiFront, Plane, type LucideIcon } from "lucide-react";
 import { useMemo } from "react";
-import {
-    getVisibleTravelBudgetCredits,
-    type TransportMode,
-    type TravelBudgetCredit,
-} from "./budget-data";
 import { AnimatedBudgetAmount } from "@/components/episode/animated-budget-amount";
 import { TeamLedgerCard } from "@/components/episode/team-ledger-card";
 import { TeamLedgerHistoryItem } from "@/components/episode/team-ledger-history-item";
-import { seasonFour } from "@/data/season-4";
-import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
+import { seasonEighteen } from "@/data/season-18";
+import {
+    getVisibleBudgetTransactions,
+    type BudgetTransaction,
+    type TransportMode,
+} from "./budget-data";
+import {
+    seasonEighteenTeamIds,
+    seasonEighteenTeams,
+    type TeamId,
+} from "./team-data";
 
 type BudgetCardProps = {
     episodeSlug: string;
@@ -31,13 +23,9 @@ type BudgetCardProps = {
 };
 
 const transportModeIcons: Record<TransportMode, LucideIcon> = {
-    metro: TramFront,
-    "intercity-rail": TrainFront,
-    rideshare: CarTaxiFront,
-    car: Car,
     flight: Plane,
-    "bike-share": Bike,
-    "scooter-share": Scooter,
+    "rental-car": Car,
+    rideshare: CarTaxiFront,
 };
 
 function TransactionContent({
@@ -45,25 +33,20 @@ function TransactionContent({
     transaction,
 }: {
     team: TeamId;
-    transaction: TravelBudgetCredit;
+    transaction: BudgetTransaction;
 }) {
     const isCredit = transaction.amount > 0;
-    const teamColor = seasonFourTeams[team].color;
+    const teamColor = seasonEighteenTeams[team].color;
     const Icon = transaction.transportMode
         ? transportModeIcons[transaction.transportMode]
-        : isCredit
-          ? BanknoteArrowUp
-          : BanknoteArrowDown;
+        : Banknote;
 
     return (
         <TeamLedgerHistoryItem
             amount={(
                 <>
-                    {transaction.amount > 0 ? "+$" : "−$"}
-                    {Math.abs(transaction.amount).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}
+                    {isCredit ? "+$" : "−$"}
+                    {Math.abs(transaction.amount).toLocaleString("en-US")}
                 </>
             )}
             at={transaction.at}
@@ -86,20 +69,22 @@ function TransactionContent({
 }
 
 export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
-    const visibleTravelCredits = useMemo(
-        () => getVisibleTravelBudgetCredits(episodeSlug, currentTime),
+    const visibleTransactions = useMemo(
+        () => getVisibleBudgetTransactions(episodeSlug, currentTime),
         [currentTime, episodeSlug],
     );
 
     return (
         <TeamLedgerCard
             emptyLabel="No transactions yet"
-            formatBalanceLabel={(balance) => `$${balance.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            })}`}
+            formatBalanceLabel={(balance) =>
+                `$${balance.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                })}`
+            }
             historyTitle="Transaction History"
-            items={visibleTravelCredits}
+            items={visibleTransactions}
             renderBalance={(balance) => (
                 <>$<AnimatedBudgetAmount value={balance} /></>
             )}
@@ -110,19 +95,19 @@ export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
                 <span
                     className="shadow-team-icon grid size-14 shrink-0 place-items-center rounded-full border"
                     style={{
-                        backgroundColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 73%, transparent)`,
-                        borderColor: seasonFourTeams[team].color,
+                        backgroundColor: `color-mix(in srgb, ${seasonEighteenTeams[team].color} 73%, transparent)`,
+                        borderColor: seasonEighteenTeams[team].color,
                     }}
                     aria-hidden="true"
                 >
                     <Banknote className="text-challenge-card-paper size-6" />
                 </span>
             )}
-            season={seasonFour}
-            summaryLabel="Team travel budget totals"
-            teamIds={seasonFourTeamIds}
-            teams={seasonFourTeams}
-            title="Travel budgets"
+            season={seasonEighteen}
+            summaryLabel="Team budget totals"
+            teamIds={seasonEighteenTeamIds}
+            teams={seasonEighteenTeams}
+            title="Team Budgets"
         />
     );
 }

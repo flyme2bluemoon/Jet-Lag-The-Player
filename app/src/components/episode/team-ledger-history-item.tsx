@@ -1,24 +1,22 @@
 import type { ReactNode } from "react";
-import { seasonFourEpisodeOrder } from "./state-claims";
 
 type TeamLedgerHistoryItemProps = {
     amount: ReactNode;
     amountLabel?: string;
     at: number;
     description: ReactNode;
-    episode: (typeof seasonFourEpisodeOrder)[number];
+    episode: string;
     icon: ReactNode;
     isCredit: boolean;
     wrapDescription?: boolean;
 };
 
-const episodeLabels: Record<(typeof seasonFourEpisodeOrder)[number], string> = {
-    "episode-1": "EP 1",
-    "episode-2": "EP 2",
-    "episode-3": "EP 3",
-    "episode-4": "EP 4",
-    finale: "FINALE",
-};
+function formatEpisodeLabel(episode: string) {
+    if (episode === "finale") return "FINALE";
+
+    const episodeNumber = episode.match(/^episode-(\d+)$/)?.[1];
+    return episodeNumber ? `EP ${episodeNumber}` : episode.toUpperCase();
+}
 
 function formatTimestamp(seconds: number) {
     const minutes = Math.floor(seconds / 60);
@@ -48,7 +46,7 @@ export function TeamLedgerHistoryItem({
                     {description}
                 </p>
                 <p className="text-card-meta text-4xs mt-0.5 font-sans font-bold tracking-wider uppercase">
-                    {episodeLabels[episode]} · {formatTimestamp(at)}
+                    {formatEpisodeLabel(episode)} · {formatTimestamp(at)}
                 </p>
             </div>
             <span

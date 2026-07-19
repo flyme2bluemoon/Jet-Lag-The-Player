@@ -4,6 +4,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes ledger-history-entry-in {
+    from {
+        grid-template-rows: 0fr;
+        opacity: 0;
+    }
+    to {
+        grid-template-rows: 1fr;
+        opacity: 1;
+    }
+}
+
+.ledger-history-entry--new {
+    animation: ledger-history-entry-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ledger-history-entry--new {
+        animation: none;
+    }
+}
+
 :root {
     --ink: #f4f0e9;
     --paper: #102431;

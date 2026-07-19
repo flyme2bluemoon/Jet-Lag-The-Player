@@ -1,21 +1,26 @@
 "use client";
 
-import { type ReactNode, useId } from "react";
-import { seasonFour } from "@/data/season-4";
+import { type CSSProperties, type ReactNode, useId } from "react";
 import { compareTimestamps } from "@/lib/timestamps";
-import { seasonFourEpisodeOrder } from "./state-claims";
-import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
-import { TeamHistory } from "./team-history";
+import { type LedgerTeam, TeamHistory } from "./team-history";
 
-type LedgerItem = {
+type SeasonWithEpisodes = {
+    slug?: string;
+    episodes: readonly { slug: string }[];
+};
+
+type LedgerItem<TeamId extends string> = {
     id: string;
-    episode: (typeof seasonFourEpisodeOrder)[number];
+    episode: string;
     at: number;
     amount: number;
     team?: TeamId;
 };
 
-type TeamLedgerCardProps<Item extends LedgerItem> = {
+type TeamLedgerCardProps<
+    TeamId extends string,
+    Item extends LedgerItem<TeamId>,
+> = {
     emptyLabel: string;
     formatBalanceLabel: (balance: number) => string;
     historyTitle: string;
@@ -23,11 +28,17 @@ type TeamLedgerCardProps<Item extends LedgerItem> = {
     renderBalance: (balance: number) => ReactNode;
     renderHistoryItem: (item: Item, team: TeamId) => ReactNode;
     renderTeamIcon: (team: TeamId) => ReactNode;
+    season: SeasonWithEpisodes;
     summaryLabel: string;
+    teamIds: readonly TeamId[];
+    teams: Record<TeamId, LedgerTeam>;
     title: string;
 };
 
-export function TeamLedgerCard<Item extends LedgerItem>({
+export function TeamLedgerCard<
+    TeamId extends string,
+    Item extends LedgerItem<TeamId>,
+>({
     emptyLabel,
     formatBalanceLabel,
     historyTitle,
@@ -35,21 +46,24 @@ export function TeamLedgerCard<Item extends LedgerItem>({
     renderBalance,
     renderHistoryItem,
     renderTeamIcon,
+    season,
     summaryLabel,
+    teamIds,
+    teams,
     title,
-}: TeamLedgerCardProps<Item>) {
+}: TeamLedgerCardProps<TeamId, Item>) {
     const titleId = useId();
     const sortedItems = items.toSorted(
-        (left, right) => compareTimestamps(seasonFour, right, left),
+        (left, right) => compareTimestamps(season, right, left),
     );
     const histories = Object.fromEntries(
-        seasonFourTeamIds.map((team) => [
+        teamIds.map((team) => [
             team,
             sortedItems.filter((item) => !item.team || item.team === team),
         ]),
     ) as Record<TeamId, Item[]>;
     const balances = Object.fromEntries(
-        seasonFourTeamIds.map((team) => [
+        teamIds.map((team) => [
             team,
             histories[team].reduce((total, item) => total + item.amount, 0),
         ]),
@@ -70,29 +84,30 @@ export function TeamLedgerCard<Item extends LedgerItem>({
             </header>
 
             <div
-                className="grid grid-cols-1 @min-[36rem]:grid-cols-2"
+                className="grid grid-cols-1 @min-[36rem]:grid-cols-[repeat(var(--team-count),minmax(0,1fr))]"
+                style={{ "--team-count": teamIds.length } as CSSProperties}
                 aria-label={summaryLabel}
             >
-                {seasonFourTeamIds.map((team, index) => {
+                {teamIds.map((team, index) => {
                     const balance = balances[team];
                     const balanceLabel = formatBalanceLabel(balance);
 
                     return (
                         <article
                             key={team}
-                            className={`flex min-h-32 min-w-0 items-center gap-3 px-5 py-5 sm:gap-4 sm:px-6 ${index === 0 ? "border-paper/20 border-b @min-[36rem]:border-r @min-[36rem]:border-b-0" : ""}`}
+                            className={`flex min-h-32 min-w-0 items-center gap-3 px-5 py-5 sm:gap-4 sm:px-6 ${index < teamIds.length - 1 ? "border-paper/20 border-b @min-[36rem]:border-r @min-[36rem]:border-b-0" : ""}`}
                             style={{
-                                backgroundImage: `linear-gradient(110deg, color-mix(in srgb, ${seasonFourTeams[team].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams[team].color} 4%, transparent))`,
+                                backgroundImage: `linear-gradient(110deg, color-mix(in srgb, ${teams[team].color} 14%, transparent), color-mix(in srgb, ${teams[team].color} 4%, transparent))`,
                             }}
-                            aria-label={`${seasonFourTeams[team].name}: ${balanceLabel}`}
+                            aria-label={`${teams[team].name}: ${balanceLabel}`}
                         >
                             {renderTeamIcon(team)}
                             <div className="min-w-0">
                                 <h3
                                     className="truncate font-heading text-base leading-none font-bold uppercase sm:text-lg"
-                                    style={{ color: seasonFourTeams[team].color }}
+                                    style={{ color: teams[team].color }}
                                 >
-                                    {seasonFourTeams[team].name}
+                                    {teams[team].name}
                                 </h3>
                                 <p
                                     className="mt-2 font-display text-4xl leading-none font-bold tracking-tight tabular-nums @min-[52rem]:text-5xl"
@@ -110,6 +125,8 @@ export function TeamLedgerCard<Item extends LedgerItem>({
                 emptyLabel={emptyLabel}
                 histories={histories}
                 renderItem={renderHistoryItem}
+                teamIds={teamIds}
+                teams={teams}
                 title={historyTitle}
             />
         </section>

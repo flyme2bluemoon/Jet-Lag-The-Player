@@ -353,7 +353,7 @@ export const airports: Record<string, AirportInfo> = {
   COS: { code: "COS", name: "City of Colorado Springs Municipal Airport", city: "Colorado Springs", country: "United States of America", latitude: 38.8058, longitude: -104.701 },
   CVG: { code: "CVG", name: "Cincinnati Northern Kentucky International Airport", city: "Cincinnati / Covington", country: "United States of America", latitude: 39.0488, longitude: -84.6678 },
   DAL: { code: "DAL", name: "Dallas Love Field", city: "Dallas", country: "United States of America", latitude: 32.8448, longitude: -96.8477 },
-  DCA: { code: "DCA", name: "Ronald Reagan Washington National Airport", city: "Washington", country: "United States of America", latitude: 38.8521, longitude: -77.0377 },
+  DCA: { code: "DCA", name: "Reagan National Airport", city: "Washington", country: "United States of America", latitude: 38.8521, longitude: -77.0377 },
   DEN: { code: "DEN", name: "Denver International Airport", city: "Denver", country: "United States of America", latitude: 39.86, longitude: -104.6738 },
   DFW: { code: "DFW", name: "Dallas Fort Worth International Airport", city: "Dallas-Fort Worth", country: "United States of America", latitude: 32.8968, longitude: -97.038 },
   DSM: { code: "DSM", name: "Des Moines International Airport", city: "Des Moines", country: "United States of America", latitude: 41.534, longitude: -93.6567 },

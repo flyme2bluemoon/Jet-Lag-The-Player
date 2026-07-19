@@ -10,13 +10,14 @@ import {
     type LucideIcon,
 } from "lucide-react";
 import { useMemo } from "react";
+import { TeamLedgerCard } from "@/components/episode/team-ledger-card";
+import { TeamLedgerHistoryItem } from "@/components/episode/team-ledger-history-item";
+import { seasonFour } from "@/data/season-4";
 import {
     getVisiblePowerupTransactions,
     type PowerupTransaction,
 } from "./budget-data";
-import { seasonFourTeams, type TeamId } from "./team-data";
-import { TeamLedgerCard } from "./team-ledger-card";
-import { TeamLedgerHistoryItem } from "./team-ledger-history-item";
+import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
 type PowerupsCardProps = {
     episodeSlug: string;
@@ -113,7 +114,10 @@ export function PowerupsCard({ episodeSlug, currentTime }: PowerupsCardProps) {
             renderTeamIcon={(team) => (
                 <PowerupToken color={seasonFourTeams[team].color} size="large" />
             )}
+            season={seasonFour}
             summaryLabel="Powerup token balances"
+            teamIds={seasonFourTeamIds}
+            teams={seasonFourTeams}
             title="Powerups"
         />
     );

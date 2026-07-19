@@ -22,9 +22,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const route = await params;
   const season = getSeasonPage(route.season);
-  const episode = season?.episodes.find((item) => item.slug === route.episode);
+  const episodeNumber = season?.episodes.findIndex((item) => item.slug === route.episode) ?? -1;
+  const episode = season?.episodes[episodeNumber];
   return episode?.video && season
-    ? { title: `${episode.label} | Season ${season.number}: ${season.name}`, description: episode.title }
+    ? { title: `S${season.number}E${episodeNumber + 1} ${episode.title} | Jet Lag: The Player`, description: episode.title }
     : {};
 }
 

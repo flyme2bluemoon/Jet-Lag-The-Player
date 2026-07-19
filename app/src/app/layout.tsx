@@ -3,6 +3,7 @@ import { Barlow_Condensed, Geist_Mono, Rubik } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/next';
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -41,6 +42,7 @@ export default function RootLayout({
         <ThemeInitializer />
         <div className="flex-1">{children}</div>
         <SiteFooter />
+        <Analytics />
       </body>
     </html>
   );

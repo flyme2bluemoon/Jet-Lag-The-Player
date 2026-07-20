@@ -1,5 +1,5 @@
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps } from "@/lib/timestamps";
+import { compareTimestamps, isTimestampInRange } from "@/lib/timestamps";
 import { seasonFourCards, type ChallengeCard } from "./hand-data";
 import type { TeamId } from "./team-data";
 
@@ -90,9 +90,12 @@ export function getBattleStatus(
 
     const currentTimestamp = { episode: episodeSlug, at: currentTime };
     const battle = seasonFourBattles.find(
-        (candidate) =>
-            compareTimestamps(seasonFour, currentTimestamp, candidate.declared) >= 0 &&
-            compareTimestamps(seasonFour, currentTimestamp, candidate.hidden) < 0,
+        (candidate) => isTimestampInRange(
+            seasonFour,
+            currentTimestamp,
+            candidate.declared,
+            candidate.hidden,
+        ),
     );
 
     if (!battle) return undefined;

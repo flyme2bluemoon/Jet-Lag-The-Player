@@ -63,36 +63,33 @@ export const seasonFourStateClaims: StateClaim[] = [
     ...battleStateClaims,
 ].sort((left, right) => compareTimestamps(seasonFour, left, right));
 
-export function getStateOwners(episode: string, currentTime: number) {
-    const owners = new Map<string, TeamId>();
+const stateClaimsSnapshotCache = new Map<
+    number,
+    ReadonlyMap<string, StateClaim>
+>();
+const emptyStateClaims = new Map<string, StateClaim>();
 
+export function getStateClaims(
+    episode: string,
+    currentTime: number,
+): ReadonlyMap<string, StateClaim> {
     if (!seasonFourEpisodeOrder.includes(
         episode as (typeof seasonFourEpisodeOrder)[number],
     )) {
-        return owners;
+        return emptyStateClaims;
     }
 
     const currentTimestamp = { episode, at: currentTime };
+    const revision = seasonFourStateClaims.reduce(
+        (count, claim) => count + Number(
+            compareTimestamps(seasonFour, claim, currentTimestamp) <= 0,
+        ),
+        0,
+    );
+    const cachedClaims = stateClaimsSnapshotCache.get(revision);
+    if (cachedClaims) return cachedClaims;
 
-    for (const claim of seasonFourStateClaims) {
-        if (compareTimestamps(seasonFour, claim, currentTimestamp) <= 0) {
-            owners.set(claim.state, claim.team);
-        }
-    }
-
-    return owners;
-}
-
-export function getStateClaims(episode: string, currentTime: number) {
     const claims = new Map<string, StateClaim>();
-
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return claims;
-    }
-
-    const currentTimestamp = { episode, at: currentTime };
 
     for (const claim of seasonFourStateClaims) {
         if (compareTimestamps(seasonFour, claim, currentTimestamp) <= 0) {
@@ -100,6 +97,7 @@ export function getStateClaims(episode: string, currentTime: number) {
         }
     }
 
+    stateClaimsSnapshotCache.set(revision, claims);
     return claims;
 }
 

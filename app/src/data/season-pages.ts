@@ -17,7 +17,10 @@ export type SeasonPage = {
   episodes: readonly Episode[];
 };
 
-export const seasonPages: readonly SeasonPage[] = [seasonFour, seasonEighteen];
+export const seasonPages = [seasonFour, seasonEighteen] as const satisfies readonly SeasonPage[];
+
+export type SeasonSlug = (typeof seasonPages)[number]["slug"];
+export type EpisodeSlug = (typeof seasonPages)[number]["episodes"][number]["slug"];
 
 export function getSeasonPage(slug: string) {
   return seasonPages.find((season) => season.slug === slug);

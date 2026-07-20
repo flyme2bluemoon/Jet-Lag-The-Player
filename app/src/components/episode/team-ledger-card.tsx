@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useId } from "react";
+import { type CSSProperties, type ReactNode, useId, useMemo } from "react";
 import { compareTimestamps } from "@/lib/timestamps";
 import { type LedgerTeam, TeamHistory } from "./team-history";
 
@@ -53,21 +53,28 @@ export function TeamLedgerCard<
     title,
 }: TeamLedgerCardProps<TeamId, Item>) {
     const titleId = useId();
-    const sortedItems = items.toSorted(
-        (left, right) => compareTimestamps(season, right, left),
-    );
-    const histories = Object.fromEntries(
-        teamIds.map((team) => [
-            team,
-            sortedItems.filter((item) => !item.team || item.team === team),
-        ]),
-    ) as Record<TeamId, Item[]>;
-    const balances = Object.fromEntries(
-        teamIds.map((team) => [
-            team,
-            histories[team].reduce((total, item) => total + item.amount, 0),
-        ]),
-    ) as Record<TeamId, number>;
+    const { balances, histories } = useMemo(() => {
+        const sortedItems = items.toSorted(
+            (left, right) => compareTimestamps(season, right, left),
+        );
+        const nextHistories = Object.fromEntries(
+            teamIds.map((team) => [
+                team,
+                sortedItems.filter((item) => !item.team || item.team === team),
+            ]),
+        ) as Record<TeamId, Item[]>;
+        const nextBalances = Object.fromEntries(
+            teamIds.map((team) => [
+                team,
+                nextHistories[team].reduce(
+                    (total, item) => total + item.amount,
+                    0,
+                ),
+            ]),
+        ) as Record<TeamId, number>;
+
+        return { balances: nextBalances, histories: nextHistories };
+    }, [items, season, teamIds]);
 
     return (
         <section

@@ -75,20 +75,24 @@ Routes, static params, episode navigation, and page metadata are then provided a
 
 - Use `cn(...classes)` from `@/lib/utils` whenever a component accepts a `className` override.
 - Use `DashboardGrid` from `@/components/episode/dashboard-grid` for responsive dashboard layouts. It is single-column on small screens and uses 12 columns at `lg`; set season-specific tracks and spans with `className`.
+- Use `TeamDefinition`, `TailwindThemeColor`, and `MapHexColor` from `@/components/episode/types` for team display data. UI colors must be Tailwind theme-variable references; the separate hex value is only for APIs such as MapLibre that cannot resolve CSS custom properties.
 - Use `TeamLedgerCard` from `@/components/episode/team-ledger-card` for timestamped balances shared by multiple teams. Supply the season, ordered team IDs, team names/colors, visible ledger items, and season-specific balance/history renderers; items without a `team` apply to every team.
-- Use `TeamLedgerHistoryItem` and `AnimatedBudgetAmount` from `@/components/episode/` to preserve the shared ledger history row and animated currency treatment.
+- Use `TeamLedgerHistoryItem` from `@/components/episode/team-ledger-history-item` for shared ledger history rows. Use `AnimatedNumber` from `@/components/episode/animated-number` for reduced-motion-aware numeric transitions; supply a `formatValue` callback and appropriate accessibility attributes. Use `formatBudgetAmount` from `@/lib/formatters` for two-decimal budget formatting.
 - `YouTubePlayer` from `@/components/episode/youtube-player` owns the IFrame Player API lifecycle. Keep `currentTime` state in the season dashboard, update it through `onTimeChange` (every 250 ms), and pass it to time-aware cards. Never create one player per card.
 - Use `compareTimestamps(season, left, right)` from `@/lib/timestamps` for visibility windows, sorting, and event-derived state across episodes. It compares `{ episode, at }` using `season.episodes` order and throws for an unknown episode.
+- Use `isTimestampInRange(season, current, start, end)` from `@/lib/timestamps` for half-open visibility windows where the start is included and the end is excluded.
+- Use `formatEpisodeLabel(episode)` and `formatTimestamp(seconds)` from `@/lib/timestamps` for compact episode metadata such as `Ep. 1 · 4:05`; episode values should be standard `episode-<n>` slugs or `finale`.
 - Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
 
 ### Maps and travel visuals
 
 - `@/components/ui/map` provides MapLibre components: `Map`, `MapGeoJSON`, `MapArc`, `MapRoute`, `MapMarker`, marker popups/tooltips/labels, `MapControls`, and `MapClusterLayer`. Render map children inside `Map`. Use `<Map blank>` for a transparent, tile-free visualization; otherwise use the theme-aware Carto basemap. Set `MapMarker`'s optional `positionTransitionDuration` to interpolate coordinate updates; it defaults to immediate movement and respects reduced-motion preferences.
+- `@/components/ui/map-colors` is the single source for raw MapLibre color literals. Reuse its typed palette and theme maps whenever an API cannot resolve Tailwind CSS variables; do not repeat those hex values in season files.
 - `@/components/ui/flight` provides travel-timeline helpers: `FlightAirport`, `FlightRoute`, `FlightRoutes`, `FlightMultiRoute`, `generateArcGeometry`, and `generateArcCoordinates`. Airport references accept IATA codes or `[longitude, latitude]` tuples. Use `resolveAirport` when coordinates are required and `getAirportInfo` for optional lookup.
 
 ### Time-based data
 
-Store factual events as typed records with `episode` and `at`. Sort and filter them with `compareTimestamps`, and expose focused query functions such as `getVisible…(episodeSlug, currentTime)`. Season 4 examples include `state-claims.ts`, `budget-data.ts`, `battle-status-data.ts`, and `hand-data.ts`; reuse the pattern, not that season’s teams, claims, or card rules.
+Store factual events as typed records with `episode` and `at`. Sort and filter them with `compareTimestamps`, and expose focused query functions such as `getVisible…(episodeSlug, currentTime)`. Across all season dashboards, event-derived query functions must return stable cached object, array, and `Map` references while the visible event revision is unchanged; rebuild results only when playback crosses a source-data event boundary so React memoization and imperative consumers such as MapLibre can skip redundant work. Season 4 examples include `state-claims.ts`, `budget-data.ts`, `battle-status-data.ts`, and `hand-data.ts`; reuse the pattern, not that season’s teams, claims, or card rules.
 
 ## Palette
 

@@ -571,6 +571,30 @@ export const seasonFourPowerupTransactions: PowerupTransaction[] = [
     ...seasonFourPowerupRewards,
 ].toSorted((left, right) => compareTimestamps(seasonFour, left, right));
 
+const visiblePowerupTransactionsCache = new Map<
+    number,
+    PowerupTransaction[]
+>();
+const visibleTravelBudgetCreditsCache = new Map<
+    number,
+    TravelBudgetCredit[]
+>();
+
+function getVisibleItemCount(
+    items: readonly { episode: string; at: number }[],
+    episode: string,
+    currentTime: number,
+) {
+    const currentTimestamp = { episode, at: currentTime };
+
+    return items.reduce(
+        (count, item) => count + Number(
+            compareTimestamps(seasonFour, item, currentTimestamp) <= 0,
+        ),
+        0,
+    );
+}
+
 export function getVisiblePowerupTransactions(
     episode: string,
     currentTime: number,
@@ -581,12 +605,21 @@ export function getVisiblePowerupTransactions(
         return [];
     }
 
-    const currentTimestamp = { episode, at: currentTime };
+    const visibleCount = getVisibleItemCount(
+        seasonFourPowerupTransactions,
+        episode,
+        currentTime,
+    );
+    const cachedTransactions = visiblePowerupTransactionsCache.get(visibleCount);
+    if (cachedTransactions) return cachedTransactions;
 
-    return seasonFourPowerupTransactions.filter(
+    const currentTimestamp = { episode, at: currentTime };
+    const visibleTransactions = seasonFourPowerupTransactions.filter(
         (transaction) =>
             compareTimestamps(seasonFour, transaction, currentTimestamp) <= 0,
     );
+    visiblePowerupTransactionsCache.set(visibleCount, visibleTransactions);
+    return visibleTransactions;
 }
 
 export function getVisibleTravelBudgetCredits(
@@ -599,9 +632,18 @@ export function getVisibleTravelBudgetCredits(
         return [];
     }
 
-    const currentTimestamp = { episode, at: currentTime };
+    const visibleCount = getVisibleItemCount(
+        seasonFourTravelBudgetCredits,
+        episode,
+        currentTime,
+    );
+    const cachedCredits = visibleTravelBudgetCreditsCache.get(visibleCount);
+    if (cachedCredits) return cachedCredits;
 
-    return seasonFourTravelBudgetCredits.filter(
+    const currentTimestamp = { episode, at: currentTime };
+    const visibleCredits = seasonFourTravelBudgetCredits.filter(
         (credit) => compareTimestamps(seasonFour, credit, currentTimestamp) <= 0,
     );
+    visibleTravelBudgetCreditsCache.set(visibleCount, visibleCredits);
+    return visibleCredits;
 }

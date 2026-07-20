@@ -19,10 +19,11 @@ import {
     type TransportMode,
     type TravelBudgetCredit,
 } from "./budget-data";
-import { AnimatedBudgetAmount } from "@/components/episode/animated-budget-amount";
+import { AnimatedNumber } from "@/components/episode/animated-number";
 import { TeamLedgerCard } from "@/components/episode/team-ledger-card";
 import { TeamLedgerHistoryItem } from "@/components/episode/team-ledger-history-item";
 import { seasonFour } from "@/data/season-4";
+import { formatBudgetAmount } from "@/lib/formatters";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
 type BudgetCardProps = {
@@ -60,10 +61,7 @@ function TransactionContent({
             amount={(
                 <>
                     {transaction.amount > 0 ? "+$" : "−$"}
-                    {Math.abs(transaction.amount).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    })}
+                    {formatBudgetAmount(Math.abs(transaction.amount))}
                 </>
             )}
             at={transaction.at}
@@ -94,14 +92,18 @@ export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
     return (
         <TeamLedgerCard
             emptyLabel="No transactions yet"
-            formatBalanceLabel={(balance) => `$${balance.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            })}`}
+            formatBalanceLabel={(balance) => `$${formatBudgetAmount(balance)}`}
             historyTitle="Transaction History"
             items={visibleTravelCredits}
             renderBalance={(balance) => (
-                <>$<AnimatedBudgetAmount value={balance} /></>
+                <>
+                    $
+                    <AnimatedNumber
+                        value={balance}
+                        formatValue={formatBudgetAmount}
+                        aria-hidden="true"
+                    />
+                </>
             )}
             renderHistoryItem={(transaction, team) => (
                 <TransactionContent team={team} transaction={transaction} />

@@ -1,5 +1,9 @@
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps, type EpisodeTimestamp } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    isTimestampInRange,
+    type EpisodeTimestamp,
+} from "@/lib/timestamps";
 import { seasonFourBattles } from "./battle-status-data";
 import { seasonFourCards, type ChallengeCard } from "./hand-data";
 import {
@@ -152,16 +156,12 @@ export function getActiveChallenge(
     const window = seasonFourChallengeWindows.find(
         (candidate) =>
             candidate.team === team &&
-            compareTimestamps(
+            isTimestampInRange(
                 seasonFour,
+                currentTimestamp,
                 { episode: candidate.episode, at: candidate.start },
-                currentTimestamp,
-            ) <= 0 &&
-            compareTimestamps(
-                seasonFour,
-                currentTimestamp,
                 candidate.end,
-            ) < 0,
+            ),
     );
 
     if (!window) return undefined;

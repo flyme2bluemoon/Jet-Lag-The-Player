@@ -9,6 +9,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useId,
   useImperativeHandle,
   useMemo,
@@ -28,22 +29,15 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import {
+  MAPLIBRE_COLORS,
+  MAPLIBRE_GEOJSON_DEFAULT_COLORS,
+} from "./map-colors";
 
 const defaultStyles = {
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
-
-// MapLibre paint values are parsed outside CSS and cannot resolve Tailwind
-// theme variables. Keep these literal fallbacks aligned with globals.css.
-const MAPLIBRE_COLORS = {
-  transparent: "rgba(0, 0, 0, 0)",
-  contrast: "#F4F0E9",
-  jetLagBlue: "#204DAC",
-  jetLagGreen: "#63A06A",
-  jetLagRed: "#D94641",
-  jetLagYellow: "#F5C25A",
-} as const;
 
 // A tile-less, dependency-free style with a transparent background. Use it for
 // data visualizations (choropleths, world arcs, dot maps) where you draw your
@@ -261,9 +255,9 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   const resolvedTheme = useResolvedTheme(themeProp);
 
   const isControlled = viewport !== undefined && onViewportChange !== undefined;
-
-  const onViewportChangeRef = useRef(onViewportChange);
-  onViewportChangeRef.current = onViewportChange;
+  const emitViewportChange = useEffectEvent((nextViewport: MapViewport) => {
+    onViewportChange?.(nextViewport);
+  });
 
   const mapStyles = useMemo(() => {
     // Explicit styles win. Otherwise `blank` opts into the transparent
@@ -326,7 +320,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     // Viewport change handler - skip if triggered by internal update
     const handleMove = () => {
       if (internalUpdateRef.current) return;
-      onViewportChangeRef.current?.(getViewport(map));
+      emitViewportChange(getViewport(map));
     };
 
     map.on("load", loadHandler);
@@ -473,66 +467,57 @@ function MapMarker({
   ...markerOptions
 }: MapMarkerProps) {
   const { map } = useMap();
+  const emitClick = useEffectEvent((event: MouseEvent) => onClick?.(event));
+  const emitMouseEnter = useEffectEvent((event: MouseEvent) => onMouseEnter?.(event));
+  const emitMouseLeave = useEffectEvent((event: MouseEvent) => onMouseLeave?.(event));
+  const emitDragStart = useEffectEvent((lngLat: { lng: number; lat: number }) => onDragStart?.(lngLat));
+  const emitDrag = useEffectEvent((lngLat: { lng: number; lat: number }) => onDrag?.(lngLat));
+  const emitDragEnd = useEffectEvent((lngLat: { lng: number; lat: number }) => onDragEnd?.(lngLat));
 
-  const callbacksRef = useRef({
-    onClick,
-    onMouseEnter,
-    onMouseLeave,
-    onDragStart,
-    onDrag,
-    onDragEnd,
-  });
-  callbacksRef.current = {
-    onClick,
-    onMouseEnter,
-    onMouseLeave,
-    onDragStart,
-    onDrag,
-    onDragEnd,
-  };
-
-  const marker = useMemo(() => {
-    const markerInstance = new MapLibreGL.Marker({
+  const [marker] = useState(() =>
+    new MapLibreGL.Marker({
       ...markerOptions,
       element: document.createElement("div"),
       draggable,
-    }).setLngLat([longitude, latitude]);
+    }).setLngLat([longitude, latitude]),
+  );
 
-    const handleClick = (e: MouseEvent) => callbacksRef.current.onClick?.(e);
-    const handleMouseEnter = (e: MouseEvent) =>
-      callbacksRef.current.onMouseEnter?.(e);
-    const handleMouseLeave = (e: MouseEvent) =>
-      callbacksRef.current.onMouseLeave?.(e);
+  useEffect(() => {
+    const element = marker.getElement();
+    const handleClick = (event: MouseEvent) => emitClick(event);
+    const handleMouseEnter = (event: MouseEvent) => emitMouseEnter(event);
+    const handleMouseLeave = (event: MouseEvent) => emitMouseLeave(event);
 
-    markerInstance.getElement()?.addEventListener("click", handleClick);
-    markerInstance
-      .getElement()
-      ?.addEventListener("mouseenter", handleMouseEnter);
-    markerInstance
-      .getElement()
-      ?.addEventListener("mouseleave", handleMouseLeave);
+    element.addEventListener("click", handleClick);
+    element.addEventListener("mouseenter", handleMouseEnter);
+    element.addEventListener("mouseleave", handleMouseLeave);
 
     const handleDragStart = () => {
-      const lngLat = markerInstance.getLngLat();
-      callbacksRef.current.onDragStart?.({ lng: lngLat.lng, lat: lngLat.lat });
+      const lngLat = marker.getLngLat();
+      emitDragStart({ lng: lngLat.lng, lat: lngLat.lat });
     };
     const handleDrag = () => {
-      const lngLat = markerInstance.getLngLat();
-      callbacksRef.current.onDrag?.({ lng: lngLat.lng, lat: lngLat.lat });
+      const lngLat = marker.getLngLat();
+      emitDrag({ lng: lngLat.lng, lat: lngLat.lat });
     };
     const handleDragEnd = () => {
-      const lngLat = markerInstance.getLngLat();
-      callbacksRef.current.onDragEnd?.({ lng: lngLat.lng, lat: lngLat.lat });
+      const lngLat = marker.getLngLat();
+      emitDragEnd({ lng: lngLat.lng, lat: lngLat.lat });
     };
 
-    markerInstance.on("dragstart", handleDragStart);
-    markerInstance.on("drag", handleDrag);
-    markerInstance.on("dragend", handleDragEnd);
+    marker.on("dragstart", handleDragStart);
+    marker.on("drag", handleDrag);
+    marker.on("dragend", handleDragEnd);
 
-    return markerInstance;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      element.removeEventListener("click", handleClick);
+      element.removeEventListener("mouseenter", handleMouseEnter);
+      element.removeEventListener("mouseleave", handleMouseLeave);
+      marker.off("dragstart", handleDragStart);
+      marker.off("drag", handleDrag);
+      marker.off("dragend", handleDragEnd);
+    };
+  }, [marker]);
 
   useEffect(() => {
     if (!map) return;
@@ -542,9 +527,7 @@ function MapMarker({
     return () => {
       marker.remove();
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map]);
+  }, [map, marker]);
 
   const { offset, rotation, rotationAlignment, pitchAlignment } = markerOptions;
 
@@ -1101,8 +1084,7 @@ function MapPopup({
   ...popupOptions
 }: MapPopupProps) {
   const { map } = useMap();
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  const emitClose = useEffectEvent(() => onClose?.());
   const container = useMemo(() => document.createElement("div"), []);
   const { offset, maxWidth } = popupOptions;
 
@@ -1122,7 +1104,7 @@ function MapPopup({
   useEffect(() => {
     if (!map) return;
 
-    const onCloseProp = () => onCloseRef.current?.();
+    const onCloseProp = () => emitClose();
 
     popup.on("close", onCloseProp);
 
@@ -1183,7 +1165,7 @@ type MapRouteProps = {
   /** Dash pattern [dash length, gap length] for dashed lines */
   dashArray?: [number, number];
   /** Shape applied to each line or dash endpoint (default: round) */
-  lineCap?: "butt" | "round" | "square";
+  lineCap?: "butt" | "round";
   /** Callback when the route line is clicked */
   onClick?: () => void;
   /** Callback when mouse enters the route line */
@@ -1327,6 +1309,9 @@ type MapGeoJSONData<
 
 type MapFillPaint = NonNullable<MapLibreGL.FillLayerSpecification["paint"]>;
 type MapLinePaint = NonNullable<MapLibreGL.LineLayerSpecification["paint"]>;
+type MapFillColor = NonNullable<MapFillPaint["fill-color"]>;
+type MapFillOpacity = NonNullable<MapFillPaint["fill-opacity"]>;
+type MapLineColor = NonNullable<MapLinePaint["line-color"]>;
 
 /** A rendered feature with strongly-typed `properties`. */
 type MapGeoJSONFeature<
@@ -1391,11 +1376,6 @@ type MapGeoJSONProps<
 // with a fixed near-surface line for thin separators. Colors are hardcoded (not
 // theme tokens), tuned for a typical light/dark surface. Override via
 // `fillPaint` / `linePaint`.
-const GEOJSON_DEFAULT_COLORS = {
-  light: { fill: "#d4d4d4", line: "#ffffff" },
-  dark: { fill: "#404040", line: "#171717" },
-} satisfies Record<Theme, { fill: string; line: string }>;
-
 /**
  * Renders arbitrary GeoJSON as fill + outline layers on the map. Composes like
  * `MapRoute` / `MapArc` — drop it inside `<Map>` (typically with `blank`) for
@@ -1423,7 +1403,7 @@ function MapGeoJSON<
   const fillLayerId = `geojson-fill-${id}`;
   const lineLayerId = `geojson-line-${id}`;
 
-  const defaults = GEOJSON_DEFAULT_COLORS[resolvedTheme];
+  const defaults = MAPLIBRE_GEOJSON_DEFAULT_COLORS[resolvedTheme];
 
   const showFill = fillPaint !== false;
   const showLine = linePaint !== false;
@@ -1444,8 +1424,8 @@ function MapGeoJSON<
     }),
     [defaults.line, linePaint],
   );
-  const latestRef = useRef({ onClick, onHover });
-  latestRef.current = { onClick, onHover };
+  const emitClick = useEffectEvent((event: MapGeoJSONEvent<P>) => onClick?.(event));
+  const emitHover = useEffectEvent((event: MapGeoJSONEvent<P> | null) => onHover?.(event));
 
   // Add source on mount.
   useEffect(() => {
@@ -1475,7 +1455,7 @@ function MapGeoJSON<
     const source = map.getSource(sourceId) as
       | MapLibreGL.GeoJSONSource
       | undefined;
-    source?.setData(data as never);
+    source?.setData(data);
   }, [isLoaded, map, data, sourceId]);
 
   // Sync layers and paint when visibility or styling changes.
@@ -1515,20 +1495,12 @@ function MapGeoJSON<
 
     if (showFill && map.getLayer(fillLayerId)) {
       for (const [key, value] of Object.entries(mergedFillPaint)) {
-        map.setPaintProperty(
-          fillLayerId,
-          key as keyof MapFillPaint,
-          value as never,
-        );
+        map.setPaintProperty(fillLayerId, key, value);
       }
     }
     if (showLine && map.getLayer(lineLayerId)) {
       for (const [key, value] of Object.entries(mergedLinePaint)) {
-        map.setPaintProperty(
-          lineLayerId,
-          key as keyof MapLinePaint,
-          value as never,
-        );
+        map.setPaintProperty(lineLayerId, key, value);
       }
     }
   }, [
@@ -1573,7 +1545,7 @@ function MapGeoJSON<
       const featureId = feature.id;
       if (featureId === hoveredId) return;
       setHover(featureId ?? null);
-      latestRef.current.onHover?.({
+      emitHover({
         feature: feature as unknown as MapGeoJSONFeature<P>,
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
@@ -1584,13 +1556,13 @@ function MapGeoJSON<
     const handleMouseLeave = () => {
       setHover(null);
       map.getCanvas().style.cursor = "";
-      latestRef.current.onHover?.(null);
+      emitHover(null);
     };
 
     const handleClick = (e: MapLibreGL.MapLayerMouseEvent) => {
       const feature = e.features?.[0];
       if (!feature) return;
-      latestRef.current.onClick?.({
+      emitClick({
         feature: feature as unknown as MapGeoJSONFeature<P>,
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
@@ -1795,8 +1767,13 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
     [data, curvature, samples],
   );
 
-  const latestRef = useRef({ data, onClick, onHover });
-  latestRef.current = { data, onClick, onHover };
+  const findArc = useEffectEvent((featureId: string | number | undefined) =>
+    featureId == null
+      ? undefined
+      : data.find((arc) => String(arc.id) === String(featureId)),
+  );
+  const emitClick = useEffectEvent((event: MapArcEvent<T>) => onClick?.(event));
+  const emitHover = useEffectEvent((event: MapArcEvent<T> | null) => onHover?.(event));
 
   // Add source and layers on mount.
   useEffect(() => {
@@ -1859,18 +1836,10 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
   useEffect(() => {
     if (!isLoaded || !map || !map.getLayer(layerId)) return;
     for (const [key, value] of Object.entries(mergedPaint)) {
-      map.setPaintProperty(
-        layerId,
-        key as keyof MapArcLinePaint,
-        value as never,
-      );
+      map.setPaintProperty(layerId, key, value);
     }
     for (const [key, value] of Object.entries(mergedLayout)) {
-      map.setLayoutProperty(
-        layerId,
-        key as keyof MapArcLineLayout,
-        value as never,
-      );
+      map.setLayoutProperty(layerId, key, value);
     }
     if (map.getLayer(hitLayerId)) {
       map.setPaintProperty(hitLayerId, "line-width", hitWidth);
@@ -1898,13 +1867,6 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
       }
     };
 
-    const findArc = (featureId: string | number | undefined) =>
-      featureId == null
-        ? undefined
-        : latestRef.current.data.find(
-            (arc) => String(arc.id) === String(featureId),
-          );
-
     const handleMouseMove = (e: MapLibreGL.MapLayerMouseEvent) => {
       const featureId = e.features?.[0]?.id as string | number | undefined;
       if (featureId == null || featureId === hoveredId) return;
@@ -1914,8 +1876,8 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
 
       const arc = findArc(featureId);
       if (arc) {
-        latestRef.current.onHover?.({
-          arc: arc as T,
+        emitHover({
+          arc,
           longitude: e.lngLat.lng,
           latitude: e.lngLat.lat,
           originalEvent: e,
@@ -1926,14 +1888,14 @@ function MapArc<T extends MapArcDatum = MapArcDatum>({
     const handleMouseLeave = () => {
       setHover(null);
       map.getCanvas().style.cursor = "";
-      latestRef.current.onHover?.(null);
+      emitHover(null);
     };
 
     const handleClick = (e: MapLibreGL.MapLayerMouseEvent) => {
       const arc = findArc(e.features?.[0]?.id as string | number | undefined);
       if (!arc) return;
-      latestRef.current.onClick?.({
-        arc: arc as T,
+      emitClick({
+        arc,
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
         originalEvent: e,
@@ -2282,4 +2244,13 @@ export {
   MapClusterLayer,
 };
 
-export type { MapRef, MapViewport, MapArcDatum, MapArcEvent, MapGeoJSONEvent };
+export type {
+  MapRef,
+  MapViewport,
+  MapArcDatum,
+  MapArcEvent,
+  MapGeoJSONEvent,
+  MapFillColor,
+  MapFillOpacity,
+  MapLineColor,
+};

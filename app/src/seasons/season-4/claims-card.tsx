@@ -8,9 +8,25 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Map, MapGeoJSON, MapMarker, MarkerContent, useMap } from "@/components/ui/map";
+import {
+    Map,
+    MapGeoJSON,
+    MapMarker,
+    MarkerContent,
+    useMap,
+    type MapFillColor,
+    type MapLineColor,
+} from "@/components/ui/map";
+import {
+    MAPLIBRE_COLORS,
+    MAPLIBRE_SCOREBOARD_COLORS,
+} from "@/components/ui/map-colors";
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    formatEpisodeLabel,
+    formatTimestamp,
+} from "@/lib/timestamps";
 import {
     Collapsible,
     CollapsibleContent,
@@ -30,25 +46,10 @@ import {
 } from "./state-claims";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
-const US_STATES_GEOJSON = "/seasons/season-4/geojson/us-states.geojson";
-const CANADA_GEOJSON = "/seasons/season-4/geojson/canada.geojson";
+const US_STATES_GEOJSON = "/geojson/us-states.geojson";
+const CANADA_GEOJSON = "/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
 
-// MapLibre paint expressions cannot resolve CSS variables. These literals are
-// intentionally scoped to the bespoke light and dark scoreboard basemaps.
-const MAPLIBRE_TRANSPARENT = "rgba(0, 0, 0, 0)";
-const SCOREBOARD_MAP_COLORS = {
-    light: {
-        canada: "#ddd9d1",
-        unclaimed: "#c9cac6",
-        stateLine: "#f4f0e9",
-    },
-    dark: {
-        canada: "#0b1a22",
-        unclaimed: "#233744",
-        stateLine: "#071722",
-    },
-} as const;
 
 type ClaimsCardProps = {
     episodeSlug: string;
@@ -135,26 +136,26 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
 
 function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClaim> }) {
     const { resolvedTheme } = useMap();
-    const colors = SCOREBOARD_MAP_COLORS[resolvedTheme];
+    const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const fillColor = useMemo(() => {
         const expression: unknown[] = [
             "match",
             ["get", "name"],
             "Puerto Rico",
-            MAPLIBRE_TRANSPARENT,
+            MAPLIBRE_COLORS.transparent,
         ];
         for (const [state, claim] of claims) {
             if (state !== "District of Columbia") expression.push(state, seasonFourTeams[claim.team].mapColor);
         }
-        expression.push(colors.unclaimed);
-        return expression as never;
-    }, [claims, colors.unclaimed]);
+        expression.push(colors.unclaimedRegion);
+        return expression as MapFillColor;
+    }, [claims, colors.unclaimedRegion]);
     const stateLineColor = [
         "case",
         ["==", ["get", "name"], "Puerto Rico"],
-        MAPLIBRE_TRANSPARENT,
-        colors.stateLine,
-    ] as never;
+        MAPLIBRE_COLORS.transparent,
+        colors.line,
+    ] as MapLineColor;
     const districtClaim = claims.get("District of Columbia");
 
     return (
@@ -166,8 +167,8 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
                     "fill-color": [
                         "case",
                         ["==", ["get", "ADM0_A3"], "CAN"],
-                        colors.canada,
-                        MAPLIBRE_TRANSPARENT,
+                        colors.unavailableRegion,
+                        MAPLIBRE_COLORS.transparent,
                     ],
                     "fill-opacity": 1,
                 }}
@@ -186,7 +187,7 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
                             className="block size-2.5 rounded-full border-2 shadow"
                             style={{
                                 backgroundColor: seasonFourTeams[districtClaim.team].color,
-                                borderColor: colors.stateLine,
+                                borderColor: colors.line,
                             }}
                             aria-label="District of Columbia"
                         />
@@ -513,7 +514,7 @@ function DisclosureEvent({
                 {challenge}
             </dd>
             <dd className="text-card-meta mt-1.5 font-sans text-3xs tracking-wider">
-                {formatEpisodeShort(episode)} · {formatTimestamp(at)}
+                {formatEpisodeLabel(episode)} · {formatTimestamp(at)}
             </dd>
         </div>
     );
@@ -636,18 +637,6 @@ function EmptyDisclosureRow({ children }: { children: ReactNode }) {
             {children}
         </p>
     );
-}
-
-function formatTimestamp(seconds: number) {
-    const roundedSeconds = Math.floor(seconds);
-    const minutes = Math.floor(roundedSeconds / 60);
-    const remainingSeconds = roundedSeconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
-
-function formatEpisodeShort(episode: string) {
-    if (episode === "finale") return "Finale";
-    return `Ep. ${episode.replace("episode-", "")}`;
 }
 
 function getStateLabel(state: string) {

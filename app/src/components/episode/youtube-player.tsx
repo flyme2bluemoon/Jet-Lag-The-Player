@@ -7,13 +7,23 @@ type YouTubePlayerInstance = {
     getCurrentTime: () => number;
 };
 
+type YouTubePlayerStateChangeEvent = {
+    data: number;
+};
+
+const YOUTUBE_PLAYER_STATE_PLAYING = 1;
+const TIME_UPDATE_INTERVAL_MS = 250;
+
 type YouTubeNamespace = {
     Player: new (
         element: HTMLElement,
         options: {
             videoId: string;
             playerVars: Record<string, number | string>;
-            events: { onReady: () => void };
+            events: {
+                onReady: () => void;
+                onStateChange: (event: YouTubePlayerStateChangeEvent) => void;
+            };
         },
     ) => YouTubePlayerInstance;
 };
@@ -44,6 +54,38 @@ export function YouTubePlayer({
         let player: YouTubePlayerInstance | null = null;
         let timer: ReturnType<typeof setInterval> | null = null;
         let cancelled = false;
+        let isPlaying = false;
+
+        const stopTimer = () => {
+            if (!timer) return;
+            clearInterval(timer);
+            timer = null;
+        };
+
+        const emitCurrentTime = () => {
+            if (!player || !onTimeChange) return;
+            const nextTime = player.getCurrentTime();
+            if (Number.isFinite(nextTime)) onTimeChange(nextTime);
+        };
+
+        const startTimer = () => {
+            stopTimer();
+            emitCurrentTime();
+
+            if (!isPlaying || document.hidden || !onTimeChange) return;
+            timer = setInterval(emitCurrentTime, TIME_UPDATE_INTERVAL_MS);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopTimer();
+                return;
+            }
+
+            if (isPlaying) startTimer();
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
         const createPlayer = () => {
             if (cancelled || !hostRef.current || !window.YT) return;
@@ -60,13 +102,15 @@ export function YouTubePlayer({
                     rel: 0,
                 },
                 events: {
-                    onReady: () => {
-                        if (!onTimeChange) return;
-                        timer = setInterval(() => {
-                            if (!player) return;
-                            const nextTime = player.getCurrentTime();
-                            if (Number.isFinite(nextTime)) onTimeChange(nextTime);
-                        }, 250);
+                    onReady: emitCurrentTime,
+                    onStateChange: (event) => {
+                        isPlaying = event.data === YOUTUBE_PLAYER_STATE_PLAYING;
+                        if (isPlaying) {
+                            startTimer();
+                        } else {
+                            emitCurrentTime();
+                            stopTimer();
+                        }
                     },
                 },
             });
@@ -91,7 +135,11 @@ export function YouTubePlayer({
 
         return () => {
             cancelled = true;
-            if (timer) clearInterval(timer);
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+            );
+            stopTimer();
             player?.destroy();
         };
     }, [onTimeChange, videoId]);

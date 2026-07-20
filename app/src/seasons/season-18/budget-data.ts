@@ -250,6 +250,11 @@ const seasonEighteenBudgetTransactions: BudgetTransaction[] = [
     },
 ];
 
+const visibleBudgetTransactionsCache = new Map<
+    number,
+    BudgetTransaction[]
+>();
+
 export function getVisibleBudgetTransactions(
     episode: string,
     currentTime: number,
@@ -259,9 +264,23 @@ export function getVisibleBudgetTransactions(
     }
 
     const currentTimestamp = { episode, at: currentTime };
+    const visibleCount = seasonEighteenBudgetTransactions.reduce(
+        (count, transaction) => count + Number(
+            compareTimestamps(
+                seasonEighteen,
+                transaction,
+                currentTimestamp,
+            ) <= 0,
+        ),
+        0,
+    );
+    const cachedTransactions = visibleBudgetTransactionsCache.get(visibleCount);
+    if (cachedTransactions) return cachedTransactions;
 
-    return seasonEighteenBudgetTransactions.filter(
+    const visibleTransactions = seasonEighteenBudgetTransactions.filter(
         (transaction) =>
             compareTimestamps(seasonEighteen, transaction, currentTimestamp) <= 0,
     );
+    visibleBudgetTransactionsCache.set(visibleCount, visibleTransactions);
+    return visibleTransactions;
 }

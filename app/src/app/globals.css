@@ -4,27 +4,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@keyframes ledger-history-entry-in {
-    from {
-        grid-template-rows: 0fr;
-        opacity: 0;
-    }
-    to {
-        grid-template-rows: 1fr;
-        opacity: 1;
-    }
-}
-
-.ledger-history-entry--new {
-    animation: ledger-history-entry-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ledger-history-entry--new {
-        animation: none;
-    }
-}
-
 :root {
     --ink: #f4f0e9;
     --paper: #102431;
@@ -496,6 +475,8 @@
 }
 
 @theme inline {
+    --animate-ledger-history-entry: ledger-history-entry-in 320ms
+        cubic-bezier(0.22, 1, 0.36, 1);
     --color-ink: var(--ink);
     --color-paper: var(--paper);
     --color-jet-lag-yellow: #f5c25a;
@@ -603,6 +584,17 @@
     --radius-xl: calc(var(--radius) * 1.4);
     --radius-control-xs: min(var(--radius-md), 0.625rem);
     --radius-control-sm: min(var(--radius-md), 0.75rem);
+
+    @keyframes ledger-history-entry-in {
+        from {
+            grid-template-rows: 0fr;
+            opacity: 0;
+        }
+        to {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+    }
 }
 
 @layer base {

@@ -9,6 +9,8 @@ import {
     useRef,
     useState,
 } from "react";
+import type { TailwindThemeColor } from "@/components/episode/types";
+import { cn } from "@/lib/utils";
 
 const HISTORY_ENTRY_ANIMATION_MS = 320;
 
@@ -18,7 +20,7 @@ type HistoryItem = {
 
 export type LedgerTeam = {
     name: string;
-    color: string;
+    color: TailwindThemeColor;
 };
 
 type TeamHistoryProps<TeamId extends string, Item extends HistoryItem> = {
@@ -134,7 +136,10 @@ function HistoryRow({
     children: ReactNode;
 }) {
     return (
-        <li className={animate ? "ledger-history-entry--new grid" : "grid"}>
+        <li className={cn(
+            "grid",
+            animate && "animate-ledger-history-entry motion-reduce:animate-none",
+        )}>
             <div className="min-h-0 overflow-hidden">
                 <div className="border-paper/10 grid min-h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b px-5 py-2.5 sm:px-6">
                     {children}

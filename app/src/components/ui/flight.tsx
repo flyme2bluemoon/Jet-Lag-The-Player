@@ -26,64 +26,8 @@ import { cn } from "@/lib/utils";
 
 import { airports, type AirportInfo, type AirportRef } from "./flight-airports";
 import { getAirportInfo, resolveAirport } from "./flight-airports-utils";
+import { MAPLIBRE_COLORS } from "./map-colors";
 export type { AirportInfo, AirportRef } from "./flight-airports";
-
-type FlightMapTheme = "light" | "dark";
-
-function getDocumentTheme(): FlightMapTheme | null {
-  if (typeof document === "undefined") return null;
-  if (document.documentElement.classList.contains("dark")) return "dark";
-  if (document.documentElement.classList.contains("light")) return "light";
-  return null;
-}
-
-function getSystemTheme(): FlightMapTheme {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-/**
- * Resolves light/dark the same way as Map’s basemap: `html` class (e.g. next-themes)
- * or `prefers-color-scheme` when unset.
- */
-function useFlightMapTheme(): FlightMapTheme {
-  const [theme, setTheme] = useState<FlightMapTheme>(
-    () => getDocumentTheme() ?? getSystemTheme(),
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const docTheme = getDocumentTheme();
-      if (docTheme) setTheme(docTheme);
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const onSystem = (e: MediaQueryListEvent) => {
-      if (!getDocumentTheme()) setTheme(e.matches ? "dark" : "light");
-    };
-    mediaQuery.addEventListener("change", onSystem);
-
-    return () => {
-      observer.disconnect();
-      mediaQuery.removeEventListener("change", onSystem);
-    };
-  }, []);
-
-  return theme;
-}
-
-// MapLibre paint values cannot resolve CSS custom properties, so these mirror
-// the corresponding Tailwind theme colors as literal fallbacks.
-/** Default arc stroke on light basemap when `color` is omitted */
-const FLIGHT_ROUTE_COLOR_LIGHT = "#242F3F";
-/** Default arc stroke on dark basemap when `color` is omitted */
-const FLIGHT_ROUTE_COLOR_DARK = "#F5C25A";
 
 function normalizeAirportRefKey(ref: AirportRef): string {
   if (typeof ref === "string") {
@@ -425,8 +369,7 @@ function FlightAirport({
   children,
 }: FlightAirportProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const { map } = useMap();
-  const flightMapTheme = useFlightMapTheme();
+  const { map, resolvedTheme: flightMapTheme } = useMap();
   const isVisible = useAirportMarkerVisibility(map, dedupeKey);
 
   // Resolve coordinates
@@ -712,13 +655,12 @@ function FlightRoute({
   hoverEffect = true,
   tripType,
 }: FlightRouteProps) {
-  const { map, isLoaded } = useMap();
-  const flightMapTheme = useFlightMapTheme();
+  const { map, isLoaded, resolvedTheme: flightMapTheme } = useMap();
   const resolvedRouteColor =
     color ??
     (flightMapTheme === "dark"
-      ? FLIGHT_ROUTE_COLOR_DARK
-      : FLIGHT_ROUTE_COLOR_LIGHT);
+      ? MAPLIBRE_COLORS.jetLagYellow
+      : MAPLIBRE_COLORS.jetLagNavyBlue);
   const autoId = useId();
   const id = propId ?? autoId;
   const sourceId = `flight-route-source-${id}`;
@@ -819,7 +761,7 @@ function FlightRoute({
       },
     });
 
-    const paint: Record<string, unknown> = {
+    const paint: NonNullable<MapLibreGL.LineLayerSpecification["paint"]> = {
       "line-width": width,
       "line-opacity": opacity,
       "line-color": resolvedRouteColor,
@@ -837,8 +779,7 @@ function FlightRoute({
         "line-join": "round",
         "line-cap": resolvedDash ? "butt" : "round",
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      paint: paint as any,
+      paint,
     });
 
     return () => {
@@ -1297,7 +1238,7 @@ function FlightMultiRoute({
 }: FlightMultiRouteProps) {
   const autoId = useId();
   const id = propId ?? autoId;
-  const flightMapTheme = useFlightMapTheme();
+  const { resolvedTheme: flightMapTheme } = useMap();
 
   // Normalize animate prop
   const animateConfig = useMemo<FlightRouteAnimateConfig | null>(() => {

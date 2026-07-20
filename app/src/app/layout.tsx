@@ -38,8 +38,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${barlowCondensed.variable} ${rubik.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="bg-ink text-paper flex min-h-full flex-col">
+      <head>
         <ThemeInitializer />
+      </head>
+      <body className="bg-ink text-paper flex min-h-full flex-col">
         <div className="flex-1">{children}</div>
         <SiteFooter />
         <Analytics />

@@ -40,6 +40,7 @@ export type { Coordinate } from "./tracker-routes";
  */
 type EpisodeSlug = (typeof seasonEighteen.episodes)[number]["slug"];
 
+const EPISODE_ONE_TRACKER_START = 0 * 60 + 5;
 const EPISODE_ONE_TRACKER_END = 55 * 60 + 52;
 const EPISODE_TWO_TRACKER_START = 1 * 60 + 7;
 const EPISODE_TWO_TRACKER_END = 52 * 60 + 53;
@@ -49,7 +50,7 @@ const EPISODE_FOUR_TRACKER_START = 55;
 const EPISODE_FOUR_TRACKER_END = 56 * 60 + 42;
 
 const trackerEpisodeRanges = {
-    "episode-1": { start: 0, end: EPISODE_ONE_TRACKER_END },
+    "episode-1": { start: EPISODE_ONE_TRACKER_START, end: EPISODE_ONE_TRACKER_END },
     "episode-2": { start: EPISODE_TWO_TRACKER_START, end: EPISODE_TWO_TRACKER_END },
     "episode-3": { start: EPISODE_THREE_TRACKER_START, end: EPISODE_THREE_TRACKER_END },
     "episode-4": { start: EPISODE_FOUR_TRACKER_START, end: EPISODE_FOUR_TRACKER_END },

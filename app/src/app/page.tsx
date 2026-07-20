@@ -1,10 +1,11 @@
 import Image from "next/image";
 import { seasons, type Season } from "@/data/seasons";
 import { getSeasonPageHref } from "@/data/season-pages";
+import { cn } from "@/lib/utils";
 
 function RouteMap({ className = "" }: { className?: string }) {
   return (
-    <svg className={`absolute inset-0 size-full overflow-visible ${className}`} viewBox="0 0 800 360" aria-hidden="true">
+    <svg className={cn("absolute inset-0 size-full overflow-visible", className)} viewBox="0 0 800 360" aria-hidden="true">
       <path className="stroke-map-line fill-none stroke-1 opacity-25" d="M23 97c47-8 73 21 116 9 41-11 54-58 107-53 41 4 47 40 91 43 58 4 84-54 144-39 37 9 41 42 82 45 57 4 77-40 138-26 43 10 62 41 90 67M35 253c59 1 75-37 126-29 54 9 64 53 115 48 62-6 65-72 127-70 48 2 60 43 103 47 58 5 93-54 148-34 38 14 50 49 101 47" />
       <path className="stroke-signal fill-none stroke-2 [stroke-dasharray:8_8]" d="M27 277C99 188 134 318 211 222s143 17 216-89 142 84 337-82" />
       <g className="stroke-signal fill-none stroke-2"><path d="m104 243 13 13m0-13-13 13M406 137l13 13m0-13-13 13M675 78l13 13m0-13-13 13" /><circle cx="287" cy="211" r="8" /><circle cx="565" cy="131" r="8" /></g>

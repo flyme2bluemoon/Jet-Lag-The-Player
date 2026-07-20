@@ -1,20 +1,11 @@
 export type ThemePreference = "system" | "light" | "dark";
 
-export const THEME_CHANGE_EVENT = "jet-lag-theme-change";
+const THEME_CHANGE_EVENT = "jet-lag-theme-change";
 
 export function getThemePreference(): ThemePreference {
   if (typeof document === "undefined") return "system";
   const preference = document.documentElement.dataset.theme;
   return preference === "light" || preference === "dark" ? preference : "system";
-}
-
-export function getStoredThemePreference(): ThemePreference {
-  try {
-    const preference = localStorage.getItem("jetlag-theme");
-    return preference === "light" || preference === "dark" ? preference : "system";
-  } catch {
-    return "system";
-  }
 }
 
 export function subscribeToTheme(callback: () => void) {

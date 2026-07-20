@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { formatEpisodeLabel, formatTimestamp } from "@/lib/timestamps";
 
 type TeamLedgerHistoryItemProps = {
     amount: ReactNode;
@@ -10,19 +11,6 @@ type TeamLedgerHistoryItemProps = {
     isCredit: boolean;
     wrapDescription?: boolean;
 };
-
-function formatEpisodeLabel(episode: string) {
-    if (episode === "finale") return "FINALE";
-
-    const episodeNumber = episode.match(/^episode-(\d+)$/)?.[1];
-    return episodeNumber ? `EP ${episodeNumber}` : episode.toUpperCase();
-}
-
-function formatTimestamp(seconds: number) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
 
 export function TeamLedgerHistoryItem({
     amount,

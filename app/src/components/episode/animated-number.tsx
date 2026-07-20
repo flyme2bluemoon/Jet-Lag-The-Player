@@ -1,21 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+    type ComponentProps,
+    type ReactNode,
+} from "react";
 
-type AnimatedBudgetAmountProps = {
+type AnimatedNumberProps = Omit<ComponentProps<"span">, "children"> & {
+    duration?: number;
+    formatValue: (value: number) => ReactNode;
     value: number;
 };
 
-const animationDuration = 260;
+const defaultAnimationDuration = 260;
 
-function formatBudget(value: number) {
-    return value.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-}
-
-export function AnimatedBudgetAmount({ value }: AnimatedBudgetAmountProps) {
+export function AnimatedNumber({
+    duration = defaultAnimationDuration,
+    formatValue,
+    value,
+    ...props
+}: AnimatedNumberProps) {
     const [displayValue, setDisplayValue] = useState(value);
     const displayValueRef = useRef(value);
 
@@ -37,7 +43,7 @@ export function AnimatedBudgetAmount({ value }: AnimatedBudgetAmountProps) {
 
         const animate = (time: number) => {
             startTime ??= time;
-            const progress = Math.min((time - startTime) / animationDuration, 1);
+            const progress = Math.min((time - startTime) / duration, 1);
             const easedProgress = 1 - Math.pow(1 - progress, 3);
             const nextValue = startValue + (value - startValue) * easedProgress;
 
@@ -54,7 +60,7 @@ export function AnimatedBudgetAmount({ value }: AnimatedBudgetAmountProps) {
 
         animationFrame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrame);
-    }, [value]);
+    }, [duration, value]);
 
-    return <span aria-hidden="true">{formatBudget(displayValue)}</span>;
+    return <span {...props}>{formatValue(displayValue)}</span>;
 }

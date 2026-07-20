@@ -13,8 +13,20 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Map, MapGeoJSON, useMap } from "@/components/ui/map";
+import {
+    Map,
+    MapGeoJSON,
+    useMap,
+    type MapFillColor,
+    type MapFillOpacity,
+    type MapLineColor,
+} from "@/components/ui/map";
+import {
+    MAPLIBRE_COLORS,
+    MAPLIBRE_SCOREBOARD_COLORS,
+} from "@/components/ui/map-colors";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatEpisodeLabel, formatTimestamp } from "@/lib/timestamps";
 import {
     getGameBoardState,
     seasonEighteenCards,
@@ -31,26 +43,9 @@ import {
     type TeamId,
 } from "./team-data";
 
-const US_STATES_GEOJSON = "/seasons/season-4/geojson/us-states.geojson";
-const CANADA_GEOJSON = "/seasons/season-4/geojson/canada.geojson";
+const US_STATES_GEOJSON = "/geojson/us-states.geojson";
+const CANADA_GEOJSON = "/geojson/canada.geojson";
 const PUBLIC_HAND_SIZE = 6;
-
-// MapLibre paint expressions cannot resolve CSS variables. These literals
-// mirror the application theme and Jet Lag palette tokens in globals.css.
-const MAPLIBRE_TRANSPARENT = "rgba(0, 0, 0, 0)";
-const MAP_COLORS = {
-    public: "#204DAC",
-    light: {
-        canadaUnavailable: "#ddd9d1",
-        unavailable: "#c9cac6",
-        line: "#f4f0e9",
-    },
-    dark: {
-        canadaUnavailable: "#0b1a22",
-        unavailable: "#233744",
-        line: "#071722",
-    },
-} as const;
 
 type GameBoardCardProps = {
     episodeSlug: string;
@@ -120,23 +115,23 @@ export function GameBoardCard({
 
 function GameBoardMapLayers({ game }: { game: GameBoardState }) {
     const { resolvedTheme } = useMap();
-    const colors = MAP_COLORS[resolvedTheme];
+    const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const statuses = useMemo(() => getRegionStatuses(game), [game]);
     const fillColor = useMemo(() => {
         const expression: unknown[] = [
             "match",
             ["get", "name"],
             "Puerto Rico",
-            MAPLIBRE_TRANSPARENT,
+            MAPLIBRE_COLORS.transparent,
         ];
 
         for (const [region, status] of statuses) {
             if (region === "Canada") continue;
             expression.push(region, getStatusColor(status));
         }
-        expression.push(colors.unavailable);
-        return expression as never;
-    }, [colors.unavailable, statuses]);
+        expression.push(colors.unclaimedRegion);
+        return expression as MapFillColor;
+    }, [colors.unclaimedRegion, statuses]);
     const fillOpacity = useMemo(() => {
         const expression: unknown[] = [
             "match",
@@ -150,14 +145,14 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
             expression.push(region, getStatusOpacity(status));
         }
         expression.push(0.96);
-        return expression as never;
+        return expression as MapFillOpacity;
     }, [statuses]);
     const stateLineColor = [
         "case",
         ["==", ["get", "name"], "Puerto Rico"],
-        MAPLIBRE_TRANSPARENT,
+        MAPLIBRE_COLORS.transparent,
         colors.line,
-    ] as never;
+    ] as MapLineColor;
     const canadaStatus = statuses.get("Canada");
 
     return (
@@ -168,7 +163,7 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
                 fillPaint={{
                     "fill-color": canadaStatus
                         ? getStatusColor(canadaStatus)
-                        : colors.canadaUnavailable,
+                        : colors.unavailableRegion,
                     "fill-opacity": canadaStatus
                         ? getStatusOpacity(canadaStatus)
                         : 1,
@@ -216,7 +211,7 @@ function getRegionStatuses(game: GameBoardState) {
 
 function getStatusColor(status: RegionStatus) {
     return status.kind === "public"
-        ? MAP_COLORS.public
+        ? MAPLIBRE_COLORS.jetLagBlue
         : seasonEighteenTeams[status.team].mapColor;
 }
 
@@ -471,7 +466,7 @@ function ClaimedStates({ game }: { game: GameBoardState }) {
                                                             {card.title ?? card.name}
                                                         </dd>
                                                         <dd className="text-card-meta mt-1.5 font-sans text-3xs tracking-wider">
-                                                            {formatEpisodeShort(claim.episode)} · {formatTimestamp(claim.claimedAt)}
+                                                            {formatEpisodeLabel(claim.episode)} · {formatTimestamp(claim.claimedAt)}
                                                         </dd>
                                                     </dl>
                                                 </AccordionContent>
@@ -696,18 +691,6 @@ function PrivateCardSkeleton({ day }: { day: number }) {
             Day {day}
         </div>
     );
-}
-
-function formatTimestamp(seconds: number) {
-    const roundedSeconds = Math.floor(seconds);
-    const minutes = Math.floor(roundedSeconds / 60);
-    const remainingSeconds = roundedSeconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-}
-
-function formatEpisodeShort(episode: string) {
-    if (episode === "finale") return "Finale";
-    return `Ep. ${episode.replace("episode-", "")}`;
 }
 
 function getGameCard(cardKey: Claim["card"]): GameCard {

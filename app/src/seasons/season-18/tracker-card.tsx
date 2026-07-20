@@ -70,7 +70,8 @@ const PIN_PROXIMITY_PX = 72;
 const PIN_TILT_DEGREES = 8;
 const LABEL_MIN_ZOOM = 8;
 const CAMERA_INTERACTION_GRACE_MS = 15_000;
-const PIN_POSITION_TRANSITION_MS = 300;
+const TRACKER_UPDATE_INTERVAL_SECONDS = 0.5;
+const PIN_POSITION_TRANSITION_MS = 500;
 
 const MAP_STAGES = {
     newYork: { center: [-73.92, 40.76] as Coordinate, zoom: 10.7 },
@@ -687,7 +688,11 @@ export function TrackerCard({
     currentTime,
     className,
 }: TrackerCardProps) {
-    const trackerTime = clampTrackerTime(episodeSlug, currentTime);
+    const trackerTime = clampTrackerTime(
+        episodeSlug,
+        Math.floor(currentTime / TRACKER_UPDATE_INTERVAL_SECONDS)
+            * TRACKER_UPDATE_INTERVAL_SECONDS,
+    );
     const mapStage = getMapStage(episodeSlug, trackerTime);
     const teamStates = useMemo(() => TEAM_ORDER.map((team) => {
         const snapshot = getTrackerSnapshot(episodeSlug, trackerTime, team);

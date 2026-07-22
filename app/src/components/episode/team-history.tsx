@@ -37,7 +37,7 @@ type HistoryViewProps<TeamId extends string, Item extends HistoryItem> = Pick<
     "emptyLabel" | "histories" | "renderItem" | "teamIds" | "teams"
 >;
 
-type MobileHistoryProps<TeamId extends string, Item extends HistoryItem> =
+type TabHistoryProps<TeamId extends string, Item extends HistoryItem> =
     HistoryViewProps<TeamId, Item> & {
         title: string;
     };
@@ -149,7 +149,7 @@ function HistoryRow({
     );
 }
 
-function DesktopHistory<TeamId extends string, Item extends HistoryItem>({
+function TableHistory<TeamId extends string, Item extends HistoryItem>({
     emptyLabel,
     histories,
     renderItem,
@@ -158,7 +158,7 @@ function DesktopHistory<TeamId extends string, Item extends HistoryItem>({
 }: HistoryViewProps<TeamId, Item>) {
     return (
         <div
-            className="border-paper/20 hidden border-t @min-[44rem]:grid"
+            className="border-paper/20 hidden border-t @xl:grid"
             style={{ gridTemplateColumns: `repeat(${teamIds.length}, minmax(0, 1fr))` }}
         >
             {teamIds.map((team, index) => (
@@ -195,19 +195,19 @@ function DesktopHistory<TeamId extends string, Item extends HistoryItem>({
     );
 }
 
-function MobileHistory<TeamId extends string, Item extends HistoryItem>({
+function TabHistory<TeamId extends string, Item extends HistoryItem>({
     emptyLabel,
     histories,
     renderItem,
     teamIds,
     teams,
     title,
-}: MobileHistoryProps<TeamId, Item>) {
+}: TabHistoryProps<TeamId, Item>) {
     const historyLabel = title.toLowerCase();
 
     return (
         <Tabs.Root
-            className="border-paper/20 border-t @min-[44rem]:hidden"
+            className="border-paper/20 border-t @xl:hidden"
             defaultValue={teamIds[0]}
         >
             <Tabs.List
@@ -219,7 +219,7 @@ function MobileHistory<TeamId extends string, Item extends HistoryItem>({
                     <Tabs.Trigger
                         key={team}
                         value={team}
-                        className="bg-paper/8 text-card-meta hover:text-paper data-[state=active]:bg-panel data-[state=active]:text-paper dark:bg-transparent dark:data-[state=active]:bg-paper/8 flex min-w-0 items-center justify-center gap-2 px-4 py-3 font-heading text-base leading-none font-bold uppercase whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
+                        className="bg-paper/8 text-card-meta hover:text-paper data-active:bg-panel data-active:text-paper dark:bg-transparent dark:data-active:bg-paper/8 flex min-w-0 items-center justify-center gap-2 px-4 py-3 font-heading text-base leading-none font-bold uppercase whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper"
                     >
                         <span
                             className="size-2.5 shrink-0"
@@ -270,14 +270,14 @@ export function TeamHistory<TeamId extends string, Item extends HistoryItem>({
                 {title}
             </h3>
 
-            <DesktopHistory
+            <TableHistory
                 emptyLabel={emptyLabel}
                 histories={histories}
                 renderItem={renderItem}
                 teamIds={teamIds}
                 teams={teams}
             />
-            <MobileHistory
+            <TabHistory
                 emptyLabel={emptyLabel}
                 histories={histories}
                 renderItem={renderItem}

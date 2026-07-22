@@ -72,7 +72,7 @@ export function GameBoardCard({
 
     return (
         <section
-            className="border-paper/25 bg-panel flex min-h-0 w-full flex-col overflow-hidden rounded-lg border"
+            className="border-paper/25 bg-panel @container flex min-h-0 w-full flex-col overflow-hidden rounded-lg border"
             aria-labelledby={titleId}
         >
             <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
@@ -330,7 +330,7 @@ function AreaTiebreakBadge() {
 function ClaimPanels({ claims }: { claims: Claim[] }) {
     return (
         <section
-            className="border-paper/20 grid items-start gap-3 border-t px-5 py-4 sm:grid-cols-2 sm:px-8 sm:py-5"
+            className="border-paper/20 grid items-start gap-3 border-t px-5 py-4 sm:grid-cols-2 sm:px-8 sm:py-5 lg:px-5"
             aria-label="Current claim attempts"
         >
             {seasonEighteenTeamIds.map((team) => (
@@ -393,7 +393,7 @@ function ClaimPanel({ claim, team }: { claim?: Claim; team: TeamId }) {
                     aria-hidden="true"
                 />
             </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            <CollapsibleContent className="overflow-hidden data-closed:animate-collapsible-up data-open:animate-collapsible-down">
                 <p className="border-paper/10 text-card-meta border-t px-5 py-4 font-sans text-xs leading-relaxed">
                     {card.description}
                 </p>
@@ -449,7 +449,7 @@ function ClaimedStates({ game }: { game: GameBoardState }) {
                                                 value={`${team}:${claim.state}`}
                                                 className="border-paper/10"
                                             >
-                                                <AccordionTrigger className="gap-3 rounded-none py-2.5 text-xs font-normal hover:text-paper hover:no-underline focus-visible:border-paper focus-visible:ring-paper/30">
+                                                <AccordionTrigger className="gap-3 rounded-none text-xs font-normal hover:text-paper hover:no-underline focus-visible:border-paper focus-visible:ring-paper/30">
                                                     <span className="flex min-w-0 flex-1 items-center gap-2 pr-1">
                                                         <span>{claim.state}</span>
                                                         {isConnected && (
@@ -531,7 +531,7 @@ function Hands({
                 />
             </div>
 
-            <div className="grid lg:grid-cols-2">
+            <div className="grid @5xl:grid-cols-2">
                 {seasonEighteenTeamIds.map((team, index) => (
                     <PrivateHand
                         key={team}
@@ -589,7 +589,7 @@ function PrivateHand({
     const teamDetails = seasonEighteenTeams[team];
 
     return (
-        <div className={`border-paper/15 border-t px-5 py-4 sm:px-8 sm:py-5 lg:px-5 ${showColumnDivider ? "lg:border-r" : ""}`}>
+        <div className={`border-paper/15 border-t px-5 py-4 sm:px-8 sm:py-5 lg:px-5 ${showColumnDivider ? "@5xl:border-r" : ""}`}>
             <h3
                 className="mb-3 flex items-center gap-2 font-heading text-sm leading-none font-bold uppercase"
                 style={{ color: teamDetails.color }}
@@ -661,7 +661,9 @@ function GameCardArtwork({
                 <Skeleton className="h-12 w-4/5 bg-jet-lag-navy-blue/15 dark:bg-paper/15" aria-hidden="true" />
             )}
 
-            <span className="max-w-full font-heading text-xs leading-tight font-bold tracking-tight uppercase sm:text-sm">
+            <span
+                className={`max-w-full font-heading leading-tight font-bold tracking-tight uppercase ${compact ? "text-xs sm:text-sm" : "text-xs @5xl:text-sm"}`}
+            >
                 {compact ? card.label : card.name}
             </span>
         </article>

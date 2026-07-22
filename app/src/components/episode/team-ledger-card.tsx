@@ -91,7 +91,7 @@ export function TeamLedgerCard<
             </header>
 
             <div
-                className="grid grid-cols-1 @min-[36rem]:grid-cols-[repeat(var(--team-count),minmax(0,1fr))]"
+                className="grid grid-cols-1 @xl:grid-cols-[repeat(var(--team-count),minmax(0,1fr))]"
                 style={{ "--team-count": teamIds.length } as CSSProperties}
                 aria-label={summaryLabel}
             >
@@ -102,7 +102,7 @@ export function TeamLedgerCard<
                     return (
                         <article
                             key={team}
-                            className={`flex min-h-32 min-w-0 items-center gap-3 px-5 py-5 sm:gap-4 sm:px-6 ${index < teamIds.length - 1 ? "border-paper/20 border-b @min-[36rem]:border-r @min-[36rem]:border-b-0" : ""}`}
+                            className={`flex min-h-32 min-w-0 items-center gap-3 px-5 py-5 sm:gap-4 sm:px-6 ${index < teamIds.length - 1 ? "border-paper/20 border-b @xl:border-r @xl:border-b-0" : ""}`}
                             style={{
                                 backgroundImage: `linear-gradient(110deg, color-mix(in srgb, ${teams[team].color} 14%, transparent), color-mix(in srgb, ${teams[team].color} 4%, transparent))`,
                             }}
@@ -117,7 +117,7 @@ export function TeamLedgerCard<
                                     {teams[team].name}
                                 </h3>
                                 <p
-                                    className="mt-2 font-display text-4xl leading-none font-bold tracking-tight tabular-nums @min-[52rem]:text-5xl"
+                                    className="mt-2 font-display text-4xl leading-none font-bold tracking-tight tabular-nums @3xl:text-5xl"
                                     aria-label={balanceLabel}
                                 >
                                     {renderBalance(balance)}

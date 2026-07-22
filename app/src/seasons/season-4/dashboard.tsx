@@ -9,26 +9,34 @@ import { ClaimsCard } from "./claims-card";
 import { BattleStatusCard } from "./battle-status-card";
 import { PowerupsCard } from "./powerups-card";
 
+const WIDE_COLUMN_RATIO = [3, 4, 3] as const;
+
 export function SeasonFourDashboard({ episodeSlug, label, title, videoId }: EpisodeDashboardProps) {
     const [currentTime, setCurrentTime] = useState(0);
 
     return (
-        <DashboardGrid className="lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-            <div className="flex min-w-0 flex-col gap-5">
-                <YouTubePlayer
-                    label={label}
-                    title={title}
-                    videoId={videoId}
-                    onTimeChange={setCurrentTime}
-                />
-                <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-5">
-                <BattleStatusCard episodeSlug={episodeSlug} currentTime={currentTime} />
+        <DashboardGrid
+            wideColumnRatio={WIDE_COLUMN_RATIO}
+            video={
+                <>
+                    <YouTubePlayer
+                        label={label}
+                        title={title}
+                        videoId={videoId}
+                        onTimeChange={setCurrentTime}
+                    />
+                    <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
+                </>
+            }
+            left={
                 <ClaimsCard episodeSlug={episodeSlug} currentTime={currentTime} />
-                <PowerupsCard episodeSlug={episodeSlug} currentTime={currentTime} />
-            </div>
-        </DashboardGrid>
+            }
+            right={
+                <>
+                    <BattleStatusCard episodeSlug={episodeSlug} currentTime={currentTime} />
+                    <PowerupsCard episodeSlug={episodeSlug} currentTime={currentTime} />
+                </>
+            }
+        />
     );
 }

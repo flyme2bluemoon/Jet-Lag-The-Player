@@ -4,7 +4,6 @@ export const seasonEighteen = {
     slug: "season-18",
     number: 18,
     name: "Stateside Scramble",
-    description: "Choose an episode from Jet Lag: The Game — Stateside Scramble.",
     episodes: [
         {
             slug: "episode-1",

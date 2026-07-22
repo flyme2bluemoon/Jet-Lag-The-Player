@@ -13,7 +13,6 @@ export type SeasonPage = {
   slug: string;
   number: number;
   name: string;
-  description: string;
   episodes: readonly Episode[];
 };
 

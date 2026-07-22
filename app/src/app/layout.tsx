@@ -23,7 +23,6 @@ const barlowCondensed = Barlow_Condensed({
 
 export const metadata: Metadata = {
   title: "Jet Lag: The Player",
-  description: "Choose a season and play Jet Lag: The Game.",
 };
 
 export default function RootLayout({

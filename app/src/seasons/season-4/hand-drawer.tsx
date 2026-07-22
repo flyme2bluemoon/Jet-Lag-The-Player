@@ -35,22 +35,22 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
                 <Button
                     variant="outline"
                     size="sm"
-                    className="border-paper/25 bg-paper/[0.04] text-paper hover:bg-paper hover:text-ink h-8 gap-2 rounded-md px-3 font-display text-sm leading-none font-bold uppercase"
+                    className="border-paper/25 bg-paper/4 text-paper hover:bg-paper hover:text-ink h-8 gap-2 rounded-md px-3 font-display text-sm leading-none font-bold uppercase"
                     aria-label={`View ${teamDetails.name}'s current hand`}
                 >
                     <WalletCards className="size-3.5" aria-hidden="true" />
                     View hand
                 </Button>
             </DrawerTrigger>
-            <DrawerContent className="border-paper/25 bg-panel text-paper max-h-[70vh] rounded-t-lg">
-                <div className="mx-auto flex min-h-0 w-full max-w-[100rem] flex-1 flex-col">
-                    <DrawerHeader className="border-paper/15 shrink-0 border-b px-5 pt-5 pb-4 text-left sm:px-8">
+            <DrawerContent className="border-paper/25 bg-panel text-paper">
+                <div className="mx-auto flex min-h-0 w-full max-w-page flex-1 flex-col">
+                    <DrawerHeader className="border-paper/15 shrink-0 border-b px-5 pt-5 pb-4 sm:px-8">
                         <div className="flex items-center gap-3">
                             <span
                                 className="size-3 shrink-0"
                                 style={{ backgroundColor: teamDetails.color }}
                             />
-                            <DrawerTitle className="text-paper font-heading text-3xl leading-none font-bold tracking-tight uppercase">
+                            <DrawerTitle className="text-paper text-3xl leading-none font-bold tracking-tight uppercase">
                                 {teamDetails.name}&apos;s hand
                             </DrawerTitle>
                         </div>
@@ -58,7 +58,7 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
 
                     <div className="min-h-0 overflow-x-auto px-5 py-4 sm:px-8 sm:py-5">
                         {hand.length ? (
-                            <ol className="grid w-max grid-flow-col auto-cols-[10rem] gap-3 lg:w-full lg:grid-flow-row lg:grid-cols-7 lg:auto-cols-auto">
+                            <ol className="grid w-max grid-flow-col auto-cols-40 gap-3 lg:w-full lg:grid-flow-row lg:grid-cols-7 lg:auto-cols-auto">
                                 {hand.map((card, index) => (
                                     <li key={card?.id ?? `empty-slot-${index}`} className="min-w-0">
                                         {card ? <HandCard card={card} /> : <ReplacementCardSkeleton />}
@@ -81,7 +81,7 @@ function StartingHandSkeleton() {
             <p className="text-card-meta mb-3 text-center font-display text-lg leading-none font-bold uppercase">
                 Starting hand not yet drawn
             </p>
-            <div className="grid w-max grid-flow-col auto-cols-[10rem] gap-3 lg:w-full lg:grid-flow-row lg:grid-cols-7 lg:auto-cols-auto">
+            <div className="grid w-max grid-flow-col auto-cols-40 gap-3 lg:w-full lg:grid-flow-row lg:grid-cols-7 lg:auto-cols-auto">
                 {Array.from({ length: 7 }).map((_, index) => (
                     <CardSkeleton key={index} />
                 ))}
@@ -142,7 +142,7 @@ function HandCard({ card }: { card: ChallengeCard }) {
                 )}
             </div>
             <div className="flex flex-1 flex-col px-3.5 pt-4 pb-5">
-                <h3 className="font-heading text-[1.1875rem] leading-tight font-bold tracking-tight uppercase">
+                <h3 className="font-heading text-xl leading-tight font-bold tracking-tight uppercase">
                     {card.title}
                 </h3>
                 <div className="bg-challenge-card-ink/15 my-3 h-px" />

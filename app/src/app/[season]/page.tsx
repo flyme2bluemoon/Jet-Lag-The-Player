@@ -27,13 +27,13 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
         <Link className="text-copy-muted hover:text-paper focus-visible:text-paper absolute top-10 left-0 z-2 flex items-center gap-2.5 font-heading text-base leading-none font-bold uppercase transition-colors focus-visible:outline-none" href="/" aria-label="Back to all seasons"><span className="text-signal text-lg" aria-hidden="true">←</span> All seasons</Link>
         <div className="relative z-1">
           <p className="text-signal mb-2 font-display text-base leading-none font-bold uppercase">Season {season.number}</p>
-          <h1 className="font-heading text-season-title leading-display-title max-w-120 font-bold tracking-tight uppercase md:max-w-none md:text-season-title-md">{season.name}</h1>
+          <h1 className="font-heading text-[clamp(3.25rem,14vw,4.875rem)] leading-display-title max-w-120 font-bold tracking-tight uppercase md:max-w-none md:text-[clamp(3.125rem,5.7vw,5.5rem)]">{season.name}</h1>
         </div>
-        <div className="font-display text-season-number leading-season-number text-stroke-paper-subtle md:text-season-number-md absolute -right-2.5 bottom-5 select-none font-bold tracking-tighter text-transparent opacity-70 md:static md:opacity-100" aria-hidden="true">{String(season.number).padStart(2, "0")}</div>
+        <div className="font-display text-[9.375rem] leading-[0.68] text-stroke-paper-subtle md:text-[clamp(8.125rem,13vw,13.125rem)] absolute -right-2.5 bottom-5 select-none font-bold tracking-tighter text-transparent opacity-70 md:static md:opacity-100" aria-hidden="true">{String(season.number).padStart(2, "0")}</div>
       </header>
 
       <section className="pt-8" aria-labelledby="episodes-title">
-        <div className="mb-2 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px before:content-[''] after:absolute after:top-1/2 after:h-px after:w-full after:content-['']" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold whitespace-nowrap uppercase" id="episodes-title">Episodes</h2><span className="bg-paper/20 h-px flex-1" /></div>
+        <div className="mb-2 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px after:absolute after:top-1/2 after:h-px after:w-full" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold whitespace-nowrap uppercase" id="episodes-title">Episodes</h2><span className="bg-paper/20 h-px flex-1" /></div>
         <div className="flex flex-col">
           {season.episodes.map((episode, index) => {
             const content = (
@@ -42,9 +42,9 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
                   <Image className="object-contain transition-[filter] duration-200 group-hover:saturate-(--thumbnail-hover-saturation) group-focus-visible:saturate-(--thumbnail-hover-saturation)" src={episode.image} alt={`Thumbnail for ${episode.label}`} fill sizes="(max-width: 800px) 105px, 225px" priority={index < 2} />
                 </div>
                 <div className="relative min-w-0 md:py-2 md:pr-14">
-                  <h2 className="text-sm leading-snug font-medium tracking-tight md:text-episode-list-title"><span className="text-meta font-semibold">{episode.label}:</span> {episode.title}</h2>
+                  <h2 className="text-sm leading-snug font-medium tracking-tight md:text-[clamp(1.1875rem,1.6vw,1.5625rem)]"><span className="text-meta font-semibold">{episode.label}:</span> {episode.title}</h2>
                   {episode.video ? (
-                    <i className="border-signal after:border-signal absolute top-1/2 right-1 hidden h-3 w-7 translate-y-px border-t-2 opacity-0 transition after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2 after:content-[''] group-hover:translate-x-1 group-hover:opacity-100 group-focus-visible:translate-x-1 group-focus-visible:opacity-100 md:block" aria-hidden="true" />
+                    <i className="border-signal after:border-signal absolute top-1/2 right-1 hidden h-3 w-7 translate-y-px border-t-2 opacity-0 transition after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2 group-hover:translate-x-1 group-hover:opacity-100 group-focus-visible:translate-x-1 group-focus-visible:opacity-100 md:block" aria-hidden="true" />
                   ) : (
                     <span className="border-paper/20 bg-panel text-meta mt-2 inline-flex rounded border px-2 py-1 font-display text-xs leading-none font-bold uppercase md:mt-3">Coming soon</span>
                   )}

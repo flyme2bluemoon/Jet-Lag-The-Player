@@ -99,7 +99,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                 {seasonFourTeamIds.map((team, index) => (
                     <article
                         key={team}
-                        className={`grid min-w-0 md:row-start-1 md:grid-rows-subgrid ${isFinalScore ? "grid-rows-[auto_auto] md:row-span-2" : "grid-rows-[auto_auto_auto] md:row-span-3"} ${index === 0 ? "border-paper/20 border-b md:border-r md:border-b-0" : ""}`}
+                        className={`grid min-w-0 md:row-start-1 md:grid-rows-subgrid ${isFinalScore ? "md:row-span-2" : "md:row-span-3"} ${index === 0 ? "border-paper/20 border-b md:border-r md:border-b-0" : ""}`}
                     >
                         {!isFinalScore && (
                             <div className="border-paper/15 border-b p-4 sm:p-5">
@@ -471,7 +471,7 @@ function StateDisclosure({
 }: StateDisclosureProps) {
     return (
         <AccordionItem value={disclosureId} className="border-paper/10">
-            <AccordionTrigger className="gap-4 rounded-none py-2.5 text-xs font-normal hover:text-paper hover:no-underline focus-visible:border-paper focus-visible:ring-paper/30">
+            <AccordionTrigger className="gap-4 rounded-none text-xs font-normal hover:text-paper hover:no-underline focus-visible:border-paper focus-visible:ring-paper/30">
                 <span className="flex min-w-0 items-center gap-2">
                     <span>{getStateLabel(state)}</span>
                     {locked && (
@@ -564,7 +564,7 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
                     <Hexagon className="size-8" strokeWidth={1.75} aria-hidden="true" />
                 </span>
             </CollapsibleTrigger>
-            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            <CollapsibleContent className="overflow-hidden data-closed:animate-collapsible-up data-open:animate-collapsible-down">
                 <p className="border-paper/10 text-card-meta border-t px-4 py-3 text-xs leading-relaxed">
                     {challenge.description}
                 </p>

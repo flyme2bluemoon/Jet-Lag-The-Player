@@ -27,7 +27,7 @@ function TeamRole({
     const teamDetails = seasonFourTeams[team];
 
     return (
-        <div className="border-paper/15 bg-paper/[0.035] flex min-w-0 items-center gap-3 rounded-lg border px-3 py-3">
+        <div className="border-paper/15 bg-paper/3.5 flex min-w-0 items-center gap-3 rounded-lg border px-3 py-3">
             <span
                 className="grid size-9 shrink-0 place-items-center rounded-full"
                 style={{
@@ -85,7 +85,7 @@ export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardP
             </header>
 
             <div className="px-5 py-5 sm:px-6">
-                <div className="border-paper/20 bg-paper/[0.06] mb-5 flex w-fit items-center gap-2 rounded-full border px-3 py-2">
+                <div className="border-paper/20 bg-paper/6 mb-5 flex w-fit items-center gap-2 rounded-full border px-3 py-2">
                     <span
                         className={`size-2 translate-y-px rounded-full ${isConcluded ? "" : "animate-pulse bg-paper"}`}
                         style={winner ? { backgroundColor: winner.color } : undefined}

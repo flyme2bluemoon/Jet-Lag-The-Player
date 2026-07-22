@@ -23,7 +23,7 @@ function SeasonCard({ season }: { season: Season }) {
       </div>
       <div className="tablet:min-h-32 flex min-h-28 flex-col px-4.5 pt-4 pb-4">
         <h2 className="wide:text-xl max-w-9/10 font-sans text-lg leading-tight font-bold tracking-tight text-balance">Season {season.number}: {season.name}</h2>
-        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isAvailable ? "Open Dashboard" : "Watch on YT (dashboard coming soon)"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2 after:content-['']" aria-hidden="true" /></div>
+        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isAvailable ? "Open Dashboard" : "Watch on YT (dashboard coming soon)"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2" aria-hidden="true" /></div>
       </div>
     </a>
   );
@@ -32,11 +32,11 @@ function SeasonCard({ season }: { season: Season }) {
 export default function Home() {
   return (
     <main className="page-texture min-h-screen overflow-hidden">
-      <section className="max-w-page px-gutter tablet:grid-cols-[1.2fr_.8fr] tablet:items-center tablet:pt-10 wide:grid-cols-[1.04fr_.96fr] relative mx-auto grid min-h-100 grid-cols-1 items-start pt-10 pb-10" id="top">
+      <section className="max-w-page px-gutter tablet:grid-cols-[1.2fr_.8fr] tablet:items-center wide:grid-cols-2 relative mx-auto grid min-h-100 grid-cols-1 items-start pt-10 pb-10" id="top">
         <div className="z-2">
-          <h1 className="font-heading max-w-copy text-[clamp(3.75rem,16vw,5.75rem)] tablet:text-[clamp(4.5rem,8.25vw,8rem)] leading-[0.92] font-bold tracking-tight uppercase">Jet Lag:<br /><span className="whitespace-nowrap">The Player</span></h1>
+          <h1 className="font-heading max-w-3xl text-[clamp(3.75rem,16vw,5.75rem)] tablet:text-[clamp(4.5rem,8.25vw,8rem)] leading-display-title font-bold tracking-tight uppercase">Jet Lag:<br /><span className="whitespace-nowrap">The Player</span></h1>
         </div>
-        <div className="tablet:relative tablet:inset-auto tablet:h-80 tablet:opacity-100 absolute -right-28 -bottom-18 left-[28%] h-84 min-w-0 opacity-75" aria-hidden="true">
+        <div className="tablet:relative tablet:inset-auto tablet:h-80 tablet:opacity-100 absolute -right-28 -bottom-18 h-84 min-w-0 opacity-75" aria-hidden="true">
           <RouteMap />
           <div className="passport-stamps">
             <div className="passport-stamp stamp-usa bg-ink/70">
@@ -62,8 +62,8 @@ export default function Home() {
       </section>
 
       <section className="max-w-page px-gutter tablet:pt-0 mx-auto pt-6 pb-18" aria-labelledby="archive-title">
-        <div className="mb-6 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px before:content-[''] after:absolute after:top-1/2 after:h-px after:w-full after:content-['']" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold tracking-normal whitespace-nowrap uppercase" id="archive-title">Seasons</h2><span className="bg-paper/20 h-px flex-1" /></div>
-        <div className="tablet:grid-cols-2 tablet:gap-6 wide:grid-cols-3 min-[80rem]:grid-cols-4 min-[96rem]:grid-cols-5 grid grid-cols-1 gap-5">{seasons.map((season) => <SeasonCard key={season.number} season={season} />)}</div>
+        <div className="mb-6 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px after:absolute after:top-1/2 after:h-px after:w-full" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold tracking-normal whitespace-nowrap uppercase" id="archive-title">Seasons</h2><span className="bg-paper/20 h-px flex-1" /></div>
+        <div className="tablet:grid-cols-2 tablet:gap-6 wide:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 grid grid-cols-1 gap-5">{seasons.map((season) => <SeasonCard key={season.number} season={season} />)}</div>
       </section>
 
     </main>

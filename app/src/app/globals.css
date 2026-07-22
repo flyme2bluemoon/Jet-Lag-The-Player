@@ -18,7 +18,6 @@
     --meta: #697981;
     --card-meta: #52656f;
     --control: #354c58;
-    --control-disabled: #98a3a8;
     --footer-copy: #586b75;
     --map-canvas: #e6e3dc;
     --budget-credit: color-mix(
@@ -81,7 +80,6 @@
     --meta: #9da7ad;
     --card-meta: #aeb8be;
     --control: #c4ccd0;
-    --control-disabled: #59666e;
     --footer-copy: #8c9aa2;
     --map-canvas: #071722;
     --budget-credit: color-mix(
@@ -504,7 +502,6 @@
     --color-meta: var(--meta);
     --color-card-meta: var(--card-meta);
     --color-control: var(--control);
-    --color-control-disabled: var(--control-disabled);
     --color-footer-copy: var(--footer-copy);
     --color-map-canvas: var(--map-canvas);
     --color-challenge-card-paper: #f4f0e9;
@@ -512,7 +509,6 @@
     --color-budget-credit: var(--budget-credit);
     --color-budget-debit: var(--budget-debit);
     --container-page: 100rem;
-    --container-copy: 48rem;
     --spacing-gutter: clamp(1.375rem, 5vw, 5rem);
     --breakpoint-tablet: 43.75rem;
     --breakpoint-wide: 62.5rem;
@@ -521,20 +517,7 @@
     --text-3xs: 0.5625rem;
     --text-2xs: 0.625rem;
     --text-button-sm: 0.8rem;
-    --text-page-hero: clamp(3.5rem, 18vw, 5.5rem);
-    --text-page-hero-tablet: clamp(4.125rem, 8.25vw, 8.25rem);
-    --text-season-title: clamp(3.25rem, 14vw, 4.875rem);
-    --text-season-title-md: clamp(3.125rem, 5.7vw, 5.5rem);
-    --text-season-number: 9.375rem;
-    --text-season-number-md: clamp(8.125rem, 13vw, 13.125rem);
-    --text-episode-title-tablet: clamp(3rem, 6vw, 5.25rem);
-    --text-episode-list-title: clamp(1.1875rem, 1.6vw, 1.5625rem);
-    --leading-display: 0.84;
     --leading-display-title: 0.88;
-    --leading-season-number: 0.68;
-    --tracking-display: -0.045em;
-    --tracking-overline: 0.18em;
-    --tracking-section-label: 0.16em;
     --shadow-card-hover: 0.5rem 0.5rem 0
         color-mix(in srgb, var(--color-jet-lag-red) 17%, transparent);
     --shadow-player: 0.75rem 0.75rem 0

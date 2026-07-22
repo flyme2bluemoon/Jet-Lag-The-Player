@@ -24,12 +24,14 @@ import {
 import {
     clampTrackerTime,
     cropPath,
-    getActiveTrajectory,
     getPointAlongPath,
-    getTrackerSnapshot,
-    type ActiveTrajectory,
+    resolveTrackerInterval,
+    resolveTrackerProgress,
     type Coordinate,
-    type TrackerSnapshot,
+    type ResolvedFlightTrajectory,
+    type ResolvedGroundTrajectory,
+    type ResolvedEndpointLabel,
+    type TrackerInterval,
 } from "./tracker-data";
 
 type TrackerCardProps = {
@@ -43,12 +45,30 @@ type MapStage = {
     zoom: number;
 };
 
-type ResolvedTeamState = TrackerSnapshot & {
+type TrackerTrajectory = (
+    | ResolvedGroundTrajectory
+    | ResolvedFlightTrajectory
+) & {
+    positionProgress: number;
+    revealProgressOnly: boolean;
+    originLabel: string;
+    destinationLabel: string;
+    destinationVisible: boolean;
+};
+
+type ResolvedTeamState = {
+    interval: TrackerInterval;
+    event: {
+        id: string;
+        team: (typeof TEAM_ORDER)[number];
+        status: TrackerInterval["status"];
+    };
     position: Coordinate;
-    trajectory: ActiveTrajectory | null;
-    trajectoryCoordinates: Coordinate[];
+    trajectory: TrackerTrajectory | null;
+    trajectoryCoordinates: readonly Coordinate[];
     originCoordinate: Coordinate | null;
     destinationCoordinate: Coordinate | null;
+    waypointLabels: readonly ResolvedEndpointLabel[];
 };
 
 type ResolvedTrajectory = Pick<
@@ -115,6 +135,14 @@ function TrackerCamera({
 }) {
     const { map } = useMap();
     const lastInteractionAt = useRef(Number.NEGATIVE_INFINITY);
+    const lastHandledUpdate = useRef<string | null>(null);
+    const previousStage = useRef<string | null>(null);
+    const previousStates = useRef<ResolvedTeamState[] | null>(null);
+    const stageKey = `${stage.center.join(",")}:${stage.zoom}`;
+    const cameraUpdate = [
+        stageKey,
+        ...states.map((state) => state.interval.id),
+    ].join(":");
 
     useEffect(() => {
         if (!map) return;
@@ -123,14 +151,19 @@ function TrackerCamera({
         const markInteraction = () => {
             lastInteractionAt.current = Date.now();
         };
+        const markPointerInteraction = (event: PointerEvent) => {
+            if (event.buttons !== 0) markInteraction();
+        };
 
         container.addEventListener("pointerdown", markInteraction, true);
+        container.addEventListener("pointermove", markPointerInteraction, true);
         container.addEventListener("wheel", markInteraction, { capture: true, passive: true });
         container.addEventListener("touchstart", markInteraction, { capture: true, passive: true });
         container.addEventListener("keydown", markInteraction, true);
 
         return () => {
             container.removeEventListener("pointerdown", markInteraction, true);
+            container.removeEventListener("pointermove", markPointerInteraction, true);
             container.removeEventListener("wheel", markInteraction, true);
             container.removeEventListener("touchstart", markInteraction, true);
             container.removeEventListener("keydown", markInteraction, true);
@@ -138,7 +171,29 @@ function TrackerCamera({
     }, [map]);
 
     useEffect(() => {
-        if (!map || map.isMoving()) return;
+        if (!map || lastHandledUpdate.current === cameraUpdate) return;
+
+        const priorStates = previousStates.current;
+        const stageChanged = previousStage.current !== null
+            && previousStage.current !== stageKey;
+        const changedStates = states.flatMap((state, index) => {
+            const previousState = priorStates?.[index];
+            return previousState?.interval.id === state.interval.id
+                ? []
+                : [{ state, previousState }];
+        });
+
+        // Consume each discrete tracker update once. If user interaction or an
+        // in-progress movement suppresses it, later position ticks must not
+        // replay the update after the grace period expires.
+        lastHandledUpdate.current = cameraUpdate;
+        previousStage.current = stageKey;
+        previousStates.current = states;
+
+        // The Map itself already receives the correct initial center and zoom.
+        if (!priorStates) return;
+
+        if (map.isMoving()) return;
 
         if (
             Date.now() - lastInteractionAt.current
@@ -147,23 +202,65 @@ function TrackerCamera({
             return;
         }
 
+        if (stageChanged) {
+            map.easeTo({
+                center: stage.center,
+                zoom: stage.zoom,
+                duration: 900,
+            });
+            return;
+        }
+
         const visibleBounds = map.getBounds();
-        const trackerCoordinates = states.flatMap((state) => [
+        const coordinatesMatch = (
+            left: Coordinate | null,
+            right: Coordinate | null,
+        ) => left?.[0] === right?.[0] && left?.[1] === right?.[1];
+        const trackerCoordinates = changedStates.flatMap(({ state, previousState }) => [
             state.position,
-            ...(state.originCoordinate ? [state.originCoordinate] : []),
-            ...(state.destinationCoordinate ? [state.destinationCoordinate] : []),
+            ...(
+                state.originCoordinate
+                && !coordinatesMatch(state.originCoordinate, previousState?.originCoordinate ?? null)
+                    ? [state.originCoordinate]
+                    : []
+            ),
+            ...(
+                state.destinationCoordinate
+                && !coordinatesMatch(
+                    state.destinationCoordinate,
+                    previousState?.destinationCoordinate ?? null,
+                )
+                    ? [state.destinationCoordinate]
+                    : []
+            ),
         ]);
 
         if (trackerCoordinates.every((coordinate) => visibleBounds.contains(coordinate))) {
             return;
         }
 
-        map.easeTo({
-            center: stage.center,
-            zoom: stage.zoom,
+        const currentCenter = map.getCenter().toArray() as Coordinate;
+        const cameraCoordinates = [currentCenter, ...trackerCoordinates];
+        const bounds = cameraCoordinates.slice(1).reduce<[Coordinate, Coordinate]>(
+            ([southwest, northeast], coordinate) => [
+                [
+                    Math.min(southwest[0], coordinate[0]),
+                    Math.min(southwest[1], coordinate[1]),
+                ],
+                [
+                    Math.max(northeast[0], coordinate[0]),
+                    Math.max(northeast[1], coordinate[1]),
+                ],
+            ],
+            [currentCenter, currentCenter],
+        );
+
+        map.fitBounds(bounds, {
+            padding: 56,
+            maxZoom: map.getZoom(),
             duration: 900,
         });
-    }, [map, stage, states]);
+    }, [cameraUpdate, map, stage, stageKey, states]);
 
     return null;
 }
@@ -225,7 +322,7 @@ function TeamFocusController({
 }
 
 function resolveTrajectory(
-    trajectory: ActiveTrajectory | null,
+    trajectory: TrackerTrajectory | null,
 ): ResolvedTrajectory {
     if (!trajectory) {
         return {
@@ -255,6 +352,12 @@ function resolveTrajectory(
             ? null
             : fullCoordinates[fullCoordinates.length - 1],
     };
+}
+
+function trackerIntervalFallbackPosition(interval: TrackerInterval): Coordinate {
+    if (interval.kind === "stationary") return interval.coordinate;
+    if (interval.kind === "ground") return interval.trajectory.coordinates[0];
+    return resolveAirport(interval.trajectory.from);
 }
 
 function getTeamPinRotations(
@@ -313,7 +416,7 @@ function TeamPin({
                     <svg
                         aria-hidden="true"
                         viewBox="0 0 56 68"
-                        className="h-[4.5rem] w-14 overflow-visible drop-shadow-[0_3px_3px_color-mix(in_srgb,var(--color-foreground)_30%,transparent)]"
+                        className="h-18 w-14 overflow-visible drop-shadow-[0_3px_3px_color-mix(in_srgb,var(--color-foreground)_30%,transparent)]"
                         style={{
                             transform: `rotate(${rotation}deg)`,
                             transformOrigin: "50% 100%",
@@ -455,7 +558,7 @@ function TransitEndpointMarker({
                                 borderColor: `color-mix(in srgb, ${labelColor} 58%, var(--color-border))`,
                             } : undefined}
                         >
-                            <p className="whitespace-normal break-words font-sans text-xs font-semibold leading-tight text-card-foreground">
+                            <p className="whitespace-normal wrap-break-word font-sans text-xs font-semibold leading-tight text-card-foreground">
                                 {label}
                             </p>
                         </div>
@@ -496,6 +599,10 @@ function TransitEndpoints({
                 coordinate: state.destinationCoordinate,
                 label: state.trajectory.destinationLabel,
             }] : []),
+            ...state.waypointLabels.map((waypoint) => ({
+                coordinate: waypoint.coordinate,
+                label: waypoint.text,
+            })),
         ];
 
         additions.forEach(({ coordinate, label }) => {
@@ -552,12 +659,12 @@ function TrackerMarkers({ states }: { states: ResolvedTeamState[] }) {
 }
 
 type GroundTeamState = ResolvedTeamState & {
-    trajectory: Extract<ActiveTrajectory, { kind: "ground" }>;
+    trajectory: Extract<TrackerTrajectory, { kind: "ground" }>;
 };
 
 function getSharedRoutePrefix(
-    first: Coordinate[],
-    second: Coordinate[],
+    first: readonly Coordinate[],
+    second: readonly Coordinate[],
 ) {
     const length = Math.min(first.length, second.length);
     let sharedLength = 0;
@@ -668,14 +775,14 @@ function TeamStatus({
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: team.color }}
                     />
-                    <p className="break-words font-heading text-xl font-bold uppercase leading-none text-card-foreground">
+                    <p className="wrap-break-word font-heading text-xl font-bold uppercase leading-none text-card-foreground">
                         {team.name}
                     </p>
                 </div>
-                <p className="mt-2 whitespace-normal break-words font-sans text-base font-semibold leading-snug text-card-foreground sm:text-lg">
+                <p className="mt-2 whitespace-normal wrap-break-word font-sans text-base font-semibold leading-snug text-card-foreground sm:text-lg">
                     {state.event.status.primary}
                 </p>
-                <p className="mt-1 whitespace-normal break-words font-sans text-sm leading-snug text-muted-foreground sm:text-base">
+                <p className="mt-1 whitespace-normal wrap-break-word font-sans text-sm leading-snug text-muted-foreground sm:text-base">
                     {state.event.status.secondary}
                 </p>
             </div>
@@ -695,17 +802,38 @@ export function TrackerCard({
     );
     const mapStage = getMapStage(episodeSlug, trackerTime);
     const teamStates = useMemo(() => TEAM_ORDER.map((team) => {
-        const snapshot = getTrackerSnapshot(episodeSlug, trackerTime, team);
-        const trajectory = getActiveTrajectory(episodeSlug, trackerTime, team);
+        const interval = resolveTrackerInterval(episodeSlug, trackerTime, team);
+        const trajectory = interval.kind === "stationary"
+            ? null
+            : {
+                ...interval.trajectory,
+                positionProgress: resolveTrackerProgress(interval, trackerTime),
+                revealProgressOnly: interval.display.revealPath === "traveled",
+                originLabel: interval.display.originLabel?.text ?? "",
+                destinationLabel: interval.display.destinationLabel?.text ?? "",
+                destinationVisible: interval.display.destinationLabel !== null,
+            } satisfies TrackerTrajectory;
         const resolved = resolveTrajectory(trajectory);
+        const stationaryPosition = interval.kind === "stationary"
+            ? interval.coordinate
+            : null;
 
         return {
-            ...snapshot,
+            interval,
+            event: {
+                id: interval.eventId,
+                team,
+                status: interval.status,
+            },
             trajectory,
-            position: resolved.position ?? snapshot.position,
+            position: resolved.position ?? stationaryPosition
+                ?? trackerIntervalFallbackPosition(interval),
             trajectoryCoordinates: resolved.trajectoryCoordinates,
             originCoordinate: resolved.originCoordinate,
             destinationCoordinate: resolved.destinationCoordinate,
+            waypointLabels: interval.kind === "stationary"
+                ? []
+                : interval.display.waypointLabels,
         } satisfies ResolvedTeamState;
     }), [episodeSlug, trackerTime]);
     const [focusRequest, setFocusRequest] = useState<TeamFocusRequest | null>(null);
@@ -725,7 +853,7 @@ export function TrackerCard({
                 </h2>
             </div>
 
-            <div className="relative h-[31rem] min-h-96 sm:h-[36rem]">
+            <div className="relative h-124 min-h-96 sm:h-144">
                 <Map
                     center={mapStage.center}
                     zoom={mapStage.zoom}

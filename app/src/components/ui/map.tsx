@@ -1155,7 +1155,7 @@ type MapRouteProps = {
   /** Optional unique identifier for the route layer */
   id?: string;
   /** Array of [longitude, latitude] coordinate pairs defining the route */
-  coordinates: [number, number][];
+  coordinates: readonly [number, number][];
   /** Line color as CSS color value (default: Jet Lag blue) */
   color?: string;
   /** Line width in pixels (default: 3) */
@@ -1241,7 +1241,7 @@ function MapRoute({
       source.setData({
         type: "Feature",
         properties: {},
-        geometry: { type: "LineString", coordinates },
+        geometry: { type: "LineString", coordinates: [...coordinates] },
       });
     }
   }, [isLoaded, map, coordinates, sourceId]);

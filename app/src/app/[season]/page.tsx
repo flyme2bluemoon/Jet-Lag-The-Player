@@ -13,7 +13,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: SeasonPageProps): Promise<Metadata> {
   const season = getSeasonPage((await params).season);
   return season
-    ? { title: `Season ${season.number}: ${season.name} | Jet Lag: The Player`, description: season.description }
+    ? { title: `Season ${season.number}: ${season.name} | Jet Lag: The Player` }
     : {};
 }
 

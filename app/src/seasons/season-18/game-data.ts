@@ -213,7 +213,7 @@ export const seasonEighteenCards = {
     },
     oklahoma: { id: "oklahoma", label: "OK", name: "Oklahoma", targets: ["Oklahoma"] },
     kentucky: {
-        description: "Get drunk at a bourbon distillery.",
+        description: "Visit any authentic bourbon distillery and get one team member legally intoxicated using Kentucky bourbon.",
         id: "kentucky",
         label: "KY",
         name: "Kentucky",

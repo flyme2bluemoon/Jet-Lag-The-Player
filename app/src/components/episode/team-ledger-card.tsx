@@ -81,10 +81,10 @@ export function TeamLedgerCard<
             className="border-paper/25 bg-panel @container w-full overflow-hidden rounded-lg border"
             aria-labelledby={titleId}
         >
-            <header className="border-paper/20 border-b px-5 py-5 sm:px-6">
+            <header className="border-paper/20 border-b p-6">
                 <h2
                     id={titleId}
-                    className="font-heading text-3xl leading-none font-bold tracking-tight uppercase"
+                    className="font-heading text-2xl leading-none font-bold tracking-tight uppercase"
                 >
                     {title}
                 </h2>
@@ -111,13 +111,13 @@ export function TeamLedgerCard<
                             {renderTeamIcon(team)}
                             <div className="min-w-0">
                                 <h3
-                                    className="truncate font-heading text-base leading-none font-bold uppercase sm:text-lg"
+                                    className="truncate font-heading text-base leading-none font-bold uppercase"
                                     style={{ color: teams[team].color }}
                                 >
                                     {teams[team].name}
                                 </h3>
                                 <p
-                                    className="mt-2 font-display text-4xl leading-none font-bold tracking-tight tabular-nums @3xl:text-5xl"
+                                    className="mt-2 font-display text-3xl leading-none font-bold tracking-tight tabular-nums @3xl:text-4xl"
                                     aria-label={balanceLabel}
                                 >
                                     {renderBalance(balance)}

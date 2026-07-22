@@ -75,7 +75,7 @@ export function GameBoardCard({
             className="border-paper/25 bg-panel @container flex min-h-0 w-full flex-col overflow-hidden rounded-lg border"
             aria-labelledby={titleId}
         >
-            <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
+            <header className="border-paper/20 border-b p-6">
                 <h2
                     id={titleId}
                     className="font-heading text-3xl leading-none font-bold tracking-tight uppercase"
@@ -254,7 +254,7 @@ function Scoreboard({
                         {areaLeader === leftTeam ? <AreaTiebreakBadge /> : null}
                     </div>
                     <div
-                        className="flex min-w-0 items-center gap-2 font-display text-sm leading-none font-bold uppercase sm:text-base"
+                        className="flex min-w-0 items-center gap-2 font-display text-sm leading-none font-bold uppercase"
                         style={{ color: seasonEighteenTeams[leftTeam].color }}
                     >
                         <span
@@ -280,7 +280,7 @@ function Scoreboard({
                         {seasonEighteenTeamIds.map((team) => (
                             <span
                                 key={team}
-                                className="font-display text-5xl leading-none font-bold tabular-nums sm:text-6xl"
+                                className="font-display text-4xl leading-none font-bold tabular-nums sm:text-5xl"
                             >
                                 {scores[team].score}
                             </span>
@@ -297,7 +297,7 @@ function Scoreboard({
                         {areaLeader === rightTeam ? <AreaTiebreakBadge /> : null}
                     </div>
                     <div
-                        className="flex min-w-0 items-center justify-end gap-2 font-display text-sm leading-none font-bold uppercase sm:text-base"
+                        className="flex min-w-0 items-center justify-end gap-2 font-display text-sm leading-none font-bold uppercase"
                         style={{ color: seasonEighteenTeams[rightTeam].color }}
                     >
                         <span className="truncate">{seasonEighteenTeams[rightTeam].name}</span>
@@ -354,7 +354,7 @@ function ClaimPanel({ claim, team }: { claim?: Claim; team: TeamId }) {
                 className="border-paper/20 bg-paper/4 flex min-h-28 items-center justify-between gap-4 rounded-lg border px-5 py-4"
                 aria-label={`${teamDetails.name}: no claim in progress`}
             >
-                <p className="text-card-meta font-display text-xl leading-none font-bold uppercase">
+                <p className="text-card-meta font-display text-lg leading-none font-bold uppercase">
                     No claim in progress
                 </p>
                 <Hexagon
@@ -382,7 +382,7 @@ function ClaimPanel({ claim, team }: { claim?: Claim; team: TeamId }) {
                     <p className="border-paper/20 bg-paper/5 text-card-meta mb-2 inline-flex rounded-md border px-2.5 py-1 font-display text-xs leading-none font-bold uppercase">
                         {card.name}
                     </p>
-                    <p className="font-heading text-xl leading-tight font-bold tracking-tight uppercase">
+                    <p className="font-heading text-lg leading-tight font-bold tracking-tight uppercase">
                         {card.title ?? "Challenge in progress"}
                     </p>
                 </div>

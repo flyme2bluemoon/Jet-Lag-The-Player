@@ -775,14 +775,14 @@ function TeamStatus({
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: team.color }}
                     />
-                    <p className="wrap-break-word font-heading text-xl font-bold uppercase leading-none text-card-foreground">
+                    <p className="wrap-break-word font-heading text-lg font-bold uppercase leading-none text-card-foreground">
                         {team.name}
                     </p>
                 </div>
-                <p className="mt-2 whitespace-normal wrap-break-word font-sans text-base font-semibold leading-snug text-card-foreground sm:text-lg">
+                <p className="mt-2 whitespace-normal wrap-break-word font-sans text-base font-semibold leading-snug text-card-foreground">
                     {state.event.status.description}
                 </p>
-                <p className="mt-1 whitespace-normal wrap-break-word font-sans text-sm leading-snug text-muted-foreground sm:text-base">
+                <p className="mt-1 whitespace-normal wrap-break-word font-sans text-sm leading-snug text-muted-foreground">
                     {state.event.status.location}
                 </p>
             </div>
@@ -848,7 +848,7 @@ export function TrackerCard({
     return (
         <section className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}>
             <div className="border-b border-border px-5 py-4 sm:px-7">
-                <h2 className="font-heading text-4xl font-bold uppercase tracking-tight text-card-foreground">
+                <h2 className="font-heading text-3xl font-bold uppercase tracking-tight text-card-foreground">
                     Tracker
                 </h2>
             </div>

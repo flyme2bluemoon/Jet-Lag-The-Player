@@ -73,7 +73,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
 
     return (
         <section className="border-paper/25 bg-panel flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
-            <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
+            <header className="border-paper/20 border-b p-6">
                 <h2 id="claims-title" className="font-heading text-3xl leading-none font-bold tracking-tight uppercase">Scoreboard</h2>
             </header>
             <div className="bg-map-canvas relative h-64 min-h-64 overflow-hidden">

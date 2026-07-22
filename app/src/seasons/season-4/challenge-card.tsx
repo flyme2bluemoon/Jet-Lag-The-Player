@@ -15,7 +15,7 @@ export function ChallengeCard({ episodeSlug, currentTime }: ChallengeCardProps) 
             className="border-paper/25 bg-panel w-full self-start overflow-hidden rounded-lg border"
             aria-labelledby="challenge-title"
         >
-            <header className="border-paper/20 border-b px-6 py-6 sm:px-8 sm:py-7">
+            <header className="border-paper/20 border-b p-6">
                 <h2
                     id="challenge-title"
                     className="font-heading text-3xl leading-none font-bold tracking-tight uppercase"

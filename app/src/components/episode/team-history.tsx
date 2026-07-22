@@ -265,7 +265,7 @@ export function TeamHistory<TeamId extends string, Item extends HistoryItem>({
         <section className="border-paper/20 border-t" aria-labelledby={titleId}>
             <h3
                 id={titleId}
-                className="px-5 py-4 font-heading text-2xl leading-none font-bold uppercase sm:px-6 sm:text-3xl"
+                className="px-5 py-4 font-heading text-2xl leading-none font-bold uppercase sm:px-6"
             >
                 {title}
             </h3>

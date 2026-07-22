@@ -66,7 +66,7 @@ export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardP
             aria-labelledby="battle-status-title"
             aria-live="polite"
         >
-            <header className="border-paper/20 flex items-start justify-between gap-4 border-b px-5 py-5 sm:px-6">
+            <header className="border-paper/20 flex items-start justify-between gap-4 border-b p-6">
                 <h2
                     id="battle-status-title"
                     className="font-heading self-center text-3xl leading-none font-bold tracking-tight uppercase"

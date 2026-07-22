@@ -18,8 +18,8 @@ export type TimeRange = Readonly<{
 }>;
 
 export type TrackerStatus = Readonly<{
-    primary: string;
-    secondary: string;
+    description: string;
+    location: string;
 }>;
 
 export type TrackerLocation = Readonly<{

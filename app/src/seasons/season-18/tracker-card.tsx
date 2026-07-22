@@ -458,7 +458,7 @@ function TeamPin({
                                 borderColor: `color-mix(in srgb, ${team.color} 58%, var(--color-border))`,
                             }}
                         >
-                            {state.event.status.primary}
+                            {state.event.status.description}
                         </div>
                     </MarkerContent>
                 </MapMarker>
@@ -780,10 +780,10 @@ function TeamStatus({
                     </p>
                 </div>
                 <p className="mt-2 whitespace-normal wrap-break-word font-sans text-base font-semibold leading-snug text-card-foreground sm:text-lg">
-                    {state.event.status.primary}
+                    {state.event.status.description}
                 </p>
                 <p className="mt-1 whitespace-normal wrap-break-word font-sans text-sm leading-snug text-muted-foreground sm:text-base">
-                    {state.event.status.secondary}
+                    {state.event.status.location}
                 </p>
             </div>
         </button>

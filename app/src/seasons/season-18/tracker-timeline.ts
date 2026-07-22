@@ -35,8 +35,8 @@ function time(episode: EpisodeSlug, at: number): TrackerTimestamp {
     return { episode, at };
 }
 
-function status(primary: string, secondary: string): TrackerStatus {
-    return { primary, secondary };
+function status(description: string, location: string): TrackerStatus {
+    return { description, location };
 }
 
 function stationary(
@@ -44,10 +44,16 @@ function stationary(
     episode: EpisodeSlug,
     at: number,
     location: LocationId,
-    primary: string,
-    secondary: string,
+    description: string,
+    statusLocation: string,
 ): StationaryEvent<LocationId> {
-    return { id, kind: "stationary", at: time(episode, at), location, status: status(primary, secondary) };
+    return {
+        id,
+        kind: "stationary",
+        at: time(episode, at),
+        location,
+        status: status(description, statusLocation),
+    };
 }
 
 type PhaseOptions = {
@@ -92,8 +98,8 @@ function ground(
     id: string,
     origin: LocationId,
     destination: LocationId,
-    primary: string,
-    secondary: string,
+    description: string,
+    location: string,
     phases: GroundTravelEvent<PathId, LocationId>["phases"],
     options: Pick<GroundTravelEvent<PathId, LocationId>, "display" | "interruption"> = {},
 ): GroundTravelEvent<PathId, LocationId> {
@@ -102,7 +108,7 @@ function ground(
         kind: "ground",
         origin,
         destination,
-        status: status(primary, secondary),
+        status: status(description, location),
         phases,
         ...options,
     };
@@ -116,16 +122,16 @@ function simpleGround(
     path: PathId,
     origin: LocationId,
     destination: LocationId,
-    primary: string,
-    secondary: string,
+    description: string,
+    location: string,
     display?: TravelDisplay<LocationId>,
 ) {
     return ground(
         id,
         origin,
         destination,
-        primary,
-        secondary,
+        description,
+        location,
         [pathPhase(path, episode, start, end)],
         { display },
     );
@@ -135,7 +141,7 @@ function flight(
     id: string,
     origin: LocationId,
     destination: LocationId,
-    primary: string,
+    description: string,
     phases: FlightTravelEvent<LocationId>["phases"],
 ): FlightTravelEvent<LocationId> {
     return {
@@ -143,7 +149,7 @@ function flight(
         kind: "flight",
         origin,
         destination,
-        status: status(primary, "In the air"),
+        status: status(description, "In the air"),
         phases,
     };
 }

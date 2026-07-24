@@ -49,12 +49,19 @@ function distance(left: Coordinate, right: Coordinate) {
     return Math.hypot(left[0] - right[0], left[1] - right[1]);
 }
 
+function measurePath(path: readonly Coordinate[]) {
+    const segmentLengths = path.slice(1).map((point, index) =>
+        distance(point, path[index]));
+    return {
+        segmentLengths,
+        totalLength: segmentLengths.reduce((total, length) => total + length, 0),
+    };
+}
+
 function getClosestProgress(path: readonly Coordinate[], target: Coordinate) {
     if (path.length < 2) return 0;
 
-    const segmentLengths = path.slice(1).map((point, index) =>
-        distance(point, path[index]));
-    const totalLength = segmentLengths.reduce((total, length) => total + length, 0);
+    const { segmentLengths, totalLength } = measurePath(path);
     let traveled = 0;
     let closestProgress = 0;
     let closestDistance = Number.POSITIVE_INFINITY;
@@ -225,6 +232,28 @@ function getGroundPhaseProgressBounds(
     };
 }
 
+function getGroundWaypointLabel(
+    phase: SeasonEighteenGroundPhase,
+): ResolvedEndpointLabel<LocationId> | null {
+    if (phase.kind === "path" && phase.destWaypointMapLabel) {
+        const destination = trackerPaths[phase.path].destination;
+        return {
+            text: phase.destWaypointMapLabel.text
+                ?? trackerLocations[destination].name,
+            location: destination,
+            coordinate: trackerLocations[destination].coordinate,
+        };
+    }
+    if (phase.kind === "dwell" && phase.mapLabel) {
+        return {
+            text: phase.mapLabel.text ?? trackerLocations[phase.location].name,
+            location: phase.location,
+            coordinate: trackerLocations[phase.location].coordinate,
+        };
+    }
+    return null;
+}
+
 function getGroundDisplay(
     event: SeasonEighteenGroundEvent,
     phase: SeasonEighteenGroundPhase,
@@ -235,20 +264,7 @@ function getGroundDisplay(
     const revealPath = definition.revealPath ?? "full";
     const originGroup = groups[startGroupIndex];
     const originLocation = trackerPaths[originGroup.path].origin;
-    const waypointLabel = phase.kind === "path" && phase.destWaypointMapLabel
-        ? {
-            text: phase.destWaypointMapLabel.text
-                ?? trackerLocations[trackerPaths[phase.path].destination].name,
-            location: trackerPaths[phase.path].destination,
-            coordinate: trackerLocations[trackerPaths[phase.path].destination].coordinate,
-        }
-        : phase.kind === "dwell" && phase.mapLabel
-            ? {
-                text: phase.mapLabel.text ?? trackerLocations[phase.location].name,
-                location: phase.location,
-                coordinate: trackerLocations[phase.location].coordinate,
-            }
-            : null;
+    const waypointLabel = getGroundWaypointLabel(phase);
 
     return {
         revealPath,
@@ -272,10 +288,8 @@ function compileGroundEvent(
     initialOrder: number,
 ) {
     const groups = getGroundPathGroups(event);
-    const intervals: DraftInterval[] = [];
-    let order = initialOrder;
 
-    event.phases.forEach((phase, phaseIndex) => {
+    return event.phases.map((phase, phaseIndex): DraftInterval => {
         const startGroupIndex = getIntermediateOriginGroupIndex(
             event,
             groups,
@@ -291,7 +305,7 @@ function compileGroundEvent(
             phaseIndex,
             coordinates,
         );
-        intervals.push({
+        return {
             id: `${event.id}:${phaseIndex}`,
             eventId: event.id,
             team,
@@ -309,12 +323,9 @@ function compileGroundEvent(
                 groups,
                 startGroupIndex,
             ),
-            order,
-        });
-        order += 1;
+            order: initialOrder + phaseIndex,
+        };
     });
-
-    return intervals;
 }
 
 function getFlightDisplay(
@@ -358,29 +369,23 @@ function compileFlightEvent(
         throw new Error(`Flight event "${event.id}" requires airport locations.`);
     }
 
-    const intervals: DraftInterval[] = [];
-    let order = initialOrder;
-    event.phases.forEach((phase, phaseIndex) => {
-        intervals.push({
-            id: `${event.id}:${phaseIndex}`,
-            eventId: event.id,
-            team,
+    return event.phases.map((phase, phaseIndex): DraftInterval => ({
+        id: `${event.id}:${phaseIndex}`,
+        eventId: event.id,
+        team,
+        kind: "flight",
+        time: phase.time,
+        status: phase.status ?? event.status,
+        trajectory: {
             kind: "flight",
-            time: phase.time,
-            status: phase.status ?? event.status,
-            trajectory: {
-                kind: "flight",
-                from: originAirport,
-                to: destinationAirport,
-                progressFrom: phase.progress?.from ?? 0,
-                progressTo: phase.progress?.to ?? 1,
-            },
-            display: getFlightDisplay(event, phase),
-            order,
-        });
-        order += 1;
-    });
-    return intervals;
+            from: originAirport,
+            to: destinationAirport,
+            progressFrom: phase.progress?.from ?? 0,
+            progressTo: phase.progress?.to ?? 1,
+        },
+        display: getFlightDisplay(event, phase),
+        order: initialOrder + phaseIndex,
+    }));
 }
 
 function compileStationaryEvent(
@@ -405,6 +410,18 @@ function compileStationaryEvent(
     };
 }
 
+function getEventStart(event: SeasonEighteenEvent) {
+    return event.kind === "stationary"
+        ? event.at
+        : event.phases[0].time.start;
+}
+
+function getIntervalStarts(event: SeasonEighteenEvent) {
+    return event.kind === "stationary"
+        ? [event.at]
+        : event.phases.map((phase) => phase.time.start);
+}
+
 function validateTimeline(team: TeamId, events: readonly SeasonEighteenEvent[]) {
     const eventIds = new Set<string>();
     const stationaryKeys = new Set<string>();
@@ -415,9 +432,7 @@ function validateTimeline(team: TeamId, events: readonly SeasonEighteenEvent[]) 
         if (eventIds.has(event.id)) throw new Error(`Duplicate tracker event ID "${event.id}".`);
         eventIds.add(event.id);
 
-        const eventStart = event.kind === "stationary"
-            ? event.at
-            : event.phases[0].time.start;
+        const eventStart = getEventStart(event);
         if (previousEventStart && compare(previousEventStart, eventStart) > 0) {
             throw new Error(`Tracker events for ${team} are not chronological at "${event.id}".`);
         }
@@ -541,12 +556,10 @@ function getLastTrackerTimestamp(): TrackerTimestamp {
 
 function compileTeam(team: TeamId) {
     const events = trackerTimeline[team] as readonly SeasonEighteenEvent[];
-    validateTimeline(team, events);
-    const starts = events.flatMap((event) =>
-        event.kind === "stationary"
-            ? [event.at]
-            : event.phases.map((phase) => phase.time.start))
-        .sort(compare);
+    if (process.env.NODE_ENV !== "production") {
+        validateTimeline(team, events);
+    }
+    const starts = events.flatMap(getIntervalStarts).sort(compare);
     const intervals: DraftInterval[] = [];
     let order = 0;
 
@@ -631,7 +644,9 @@ function validateCompiledIntervals() {
     });
 }
 
-validateCompiledIntervals();
+if (process.env.NODE_ENV !== "production") {
+    validateCompiledIntervals();
+}
 
 export function getTrackerProgress(
     interval: SeasonEighteenInterval,
@@ -653,54 +668,63 @@ export function getPointAlongPath(
     path: readonly Coordinate[],
     progress: number,
 ): Coordinate {
-    if (path.length === 0) return trackerLocations.centralPark.coordinate;
-    if (path.length === 1 || progress <= 0) return path[0];
-    if (progress >= 1) return path[path.length - 1];
+    return locatePointAlongPath(path, progress).point;
+}
 
-    const lengths = path.slice(1).map((point, index) =>
-        distance(point, path[index]));
-    const totalLength = lengths.reduce((total, length) => total + length, 0);
+function locatePointAlongPath(
+    path: readonly Coordinate[],
+    progress: number,
+) {
+    if (path.length === 0) {
+        return {
+            point: trackerLocations.centralPark.coordinate,
+            segmentIndex: -1,
+        };
+    }
+    if (path.length === 1 || progress <= 0) {
+        return { point: path[0], segmentIndex: 0 };
+    }
+    if (progress >= 1) {
+        return {
+            point: path[path.length - 1],
+            segmentIndex: path.length - 2,
+        };
+    }
+
+    const { segmentLengths, totalLength } = measurePath(path);
     const target = totalLength * progress;
     let traveled = 0;
 
-    for (let index = 0; index < lengths.length; index += 1) {
-        const length = lengths[index];
+    for (let index = 0; index < segmentLengths.length; index += 1) {
+        const length = segmentLengths[index];
         if (traveled + length < target) {
             traveled += length;
             continue;
         }
         const amount = length === 0 ? 1 : (target - traveled) / length;
-        return [
-            path[index][0] + (path[index + 1][0] - path[index][0]) * amount,
-            path[index][1] + (path[index + 1][1] - path[index][1]) * amount,
-        ];
+        return {
+            point: [
+                path[index][0] + (path[index + 1][0] - path[index][0]) * amount,
+                path[index][1] + (path[index + 1][1] - path[index][1]) * amount,
+            ] satisfies Coordinate,
+            segmentIndex: index,
+        };
     }
-    return path[path.length - 1];
+    return {
+        point: path[path.length - 1],
+        segmentIndex: path.length - 2,
+    };
 }
 
 export function cropPath(
     path: readonly Coordinate[],
     progress: number,
 ): Coordinate[] {
-    const point = getPointAlongPath(path, progress);
     if (path.length === 0) return [];
     if (progress <= 0) return [path[0], path[0]];
     if (progress >= 1) return [...path];
+    if (path.length === 1) return [path[0]];
 
-    const lengths = path.slice(1).map((next, index) =>
-        distance(next, path[index]));
-    const totalLength = lengths.reduce((total, length) => total + length, 0);
-    const target = totalLength * progress;
-    const result: Coordinate[] = [path[0]];
-    let traveled = 0;
-    for (let index = 0; index < lengths.length; index += 1) {
-        if (traveled + lengths[index] < target) {
-            result.push(path[index + 1]);
-            traveled += lengths[index];
-            continue;
-        }
-        result.push(point);
-        break;
-    }
-    return result;
+    const { point, segmentIndex } = locatePointAlongPath(path, progress);
+    return [...path.slice(0, segmentIndex + 1), point];
 }

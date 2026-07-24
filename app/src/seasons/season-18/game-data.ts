@@ -358,7 +358,6 @@ export type Claim = {
 export type TeamScore = {
     score: number;
     statesClaimed: number;
-    connectedArea: number;
     connectedStates: BoardRegion[];
 };
 
@@ -769,7 +768,6 @@ function makeScores(
         return {
             score: largestComponent.length,
             statesClaimed: states.length,
-            connectedArea: getArea(largestComponent),
             connectedStates: largestComponent,
         };
     });
@@ -797,19 +795,12 @@ function getLargestConnectedComponent(states: BoardRegion[]) {
             }
         }
 
-        if (
-            component.length > largest.length ||
-            (component.length === largest.length && getArea(component) > getArea(largest))
-        ) {
+        if (component.length > largest.length) {
             largest = component;
         }
     }
 
     return largest;
-}
-
-function getArea(states: readonly BoardRegion[]) {
-    return states.reduce((total, state) => total + (regionAreas[state] ?? 0), 0);
 }
 
 // Connections use shared land borders. Canada is included so the wildcard can
@@ -880,36 +871,6 @@ const stateNeighbors = {
     Wisconsin: ["Illinois", "Iowa", "Michigan", "Minnesota"],
     Wyoming: ["Colorado", "Idaho", "Montana", "Nebraska", "South Dakota", "Utah"],
 } satisfies Record<BoardRegion, readonly BoardRegion[]>;
-
-// Census Bureau MAF/TIGER total-area measurements in square miles, rounded to
-// the nearest square mile. Only regions currently represented by game cards
-// are needed here; add new card targets alongside their area.
-const regionAreas: Partial<Record<BoardRegion, number>> = {
-    Alabama: 52_420,
-    Canada: 3_855_100,
-    Delaware: 2_489,
-    Georgia: 59_425,
-    Illinois: 57_914,
-    Iowa: 56_273,
-    Kentucky: 40_408,
-    Louisiana: 52_378,
-    Michigan: 96_714,
-    Massachusetts: 10_554,
-    Maryland: 12_406,
-    Mississippi: 48_432,
-    Missouri: 69_707,
-    Minnesota: 86_936,
-    Nebraska: 77_348,
-    "New Hampshire": 9_349,
-    "New York": 54_555,
-    Pennsylvania: 46_054,
-    "South Dakota": 77_116,
-    Tennessee: 42_144,
-    Utah: 84_897,
-    Vermont: 9_616,
-    Virginia: 42_775,
-    Wisconsin: 65_496,
-};
 
 function makeTeamRecord<Value>(
     getValue: (team: TeamId) => Value,

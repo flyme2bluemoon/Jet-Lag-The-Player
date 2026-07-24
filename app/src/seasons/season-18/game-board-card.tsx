@@ -50,6 +50,7 @@ const PUBLIC_HAND_SIZE = 6;
 const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
 const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
 const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
+const AREA_TIEBREAK_WINNER: TeamId = "sam-amy";
 
 type GameBoardCardProps = {
     episodeSlug: string;
@@ -334,12 +335,7 @@ function Scoreboard({
     showAreaTiebreak: boolean;
 }) {
     const [leftTeam, rightTeam] = seasonEighteenTeamIds;
-    const areaLeader = showAreaTiebreak
-        && scores[leftTeam].connectedArea !== scores[rightTeam].connectedArea
-        ? scores[leftTeam].connectedArea > scores[rightTeam].connectedArea
-            ? leftTeam
-            : rightTeam
-        : null;
+    const areaLeader = showAreaTiebreak ? AREA_TIEBREAK_WINNER : null;
     const ariaLabel = seasonEighteenTeamIds
         .map((team) => {
             const score = scores[team];

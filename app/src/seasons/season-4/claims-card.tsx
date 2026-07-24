@@ -72,7 +72,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
     }, [claims]);
 
     return (
-        <section className="border-paper/25 bg-panel flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
+        <section className="border-paper/25 bg-panel @container flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
             <header className="border-paper/20 border-b p-6">
                 <h2 id="claims-title" className="font-heading text-3xl leading-none font-bold tracking-tight uppercase">Scoreboard</h2>
             </header>
@@ -218,11 +218,16 @@ function Score({
 
         return (
             <div
-                className="border-paper/20 relative grid grid-cols-2 border-t"
+                className="border-paper/20 relative grid grid-cols-1 border-t @4xl:grid-cols-2"
                 aria-label={getAreaBonusAriaLabel(scores, isFinalScore)}
             >
                 {isFinalScore && (
-                    <div className="col-span-2 flex justify-center pt-3">
+                    <div
+                        className="flex justify-center pt-3 @4xl:col-span-2"
+                        style={{
+                            backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${seasonFourTeams["sam-brian"].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams["sam-brian"].color} 4%, transparent) 42%, transparent 62%), linear-gradient(to left, color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 4%, transparent) 42%, transparent 62%)`,
+                        }}
+                    >
                         <span className="border-jet-lag-yellow/50 bg-jet-lag-yellow/10 text-jet-lag-yellow rounded-full border px-3 py-1 font-display text-xs leading-none font-bold uppercase">
                             Final
                         </span>
@@ -243,7 +248,7 @@ function Score({
                     team="ben-adam"
                     reverse
                 />
-                <span className="bg-paper/25 absolute top-1/2 left-1/2 h-16 w-px -translate-x-1/2 -translate-y-1/2" aria-hidden="true" />
+                <span className="bg-paper/25 absolute top-1/2 left-1/2 hidden h-16 w-px -translate-x-1/2 -translate-y-1/2 @4xl:block" aria-hidden="true" />
             </div>
         );
     }
@@ -252,7 +257,7 @@ function Score({
     const benAdam = claimsByTeam["ben-adam"].length;
 
     return (
-        <div className="border-paper/20 relative grid grid-cols-2 border-t" aria-label={`Score: Sam and Brian ${samBrian}, Ben and Adam ${benAdam}`}>
+        <div className="border-paper/20 relative grid grid-cols-1 border-t @4xl:grid-cols-2" aria-label={`Score: Sam and Brian ${samBrian}, Ben and Adam ${benAdam}`}>
             <div
                 className="flex min-w-0 items-center justify-between gap-3 py-5 pr-4 pl-5 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
                 style={{
@@ -262,7 +267,7 @@ function Score({
                 <div className="min-w-0">
                     <div className="mb-2 flex min-w-0 items-center gap-2.5">
                         <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams["sam-brian"].color }} />
-                        <span className="truncate font-display text-sm leading-none font-bold uppercase">
+                        <span className="shrink-0 whitespace-nowrap font-display text-sm leading-none font-bold uppercase">
                             Sam &amp; Brian
                         </span>
                     </div>
@@ -273,7 +278,7 @@ function Score({
                 </span>
             </div>
             <div
-                className="flex min-w-0 items-center justify-between gap-3 py-5 pr-5 pl-4 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8"
+                className="border-paper/20 flex min-w-0 items-center justify-between gap-3 border-t py-5 pr-5 pl-4 sm:gap-4 sm:py-6 sm:pr-8 sm:pl-8 @4xl:border-t-0"
                 style={{
                     backgroundImage: `linear-gradient(to left, color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams["ben-adam"].color} 4%, transparent) 68%, transparent)`,
                 }}
@@ -283,7 +288,7 @@ function Score({
                 </span>
                 <div className="min-w-0 text-right">
                     <div className="mb-2 flex min-w-0 items-center justify-end gap-2.5">
-                        <span className="truncate font-display text-sm leading-none font-bold uppercase">
+                        <span className="shrink-0 whitespace-nowrap font-display text-sm leading-none font-bold uppercase">
                             Ben &amp; Adam
                         </span>
                         <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams["ben-adam"].color }} />
@@ -291,7 +296,7 @@ function Score({
                     <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team="ben-adam" />
                 </div>
             </div>
-            <span className="bg-paper/25 absolute top-1/2 left-1/2 h-10 w-px -translate-x-1/2 -translate-y-1/2" aria-hidden="true" />
+            <span className="bg-paper/25 absolute top-1/2 left-1/2 hidden h-10 w-px -translate-x-1/2 -translate-y-1/2 @4xl:block" aria-hidden="true" />
         </div>
     );
 }
@@ -311,21 +316,21 @@ function AreaBonusTeamScore({
 }) {
     return (
         <div
-            className={`flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5 sm:py-5 ${reverse ? "pr-5 pl-4 sm:pr-8 sm:pl-6" : "pr-4 pl-5 sm:pr-6 sm:pl-8"}`}
+            className={`flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5 sm:py-5 ${reverse ? "border-paper/20 border-t pr-5 pl-4 sm:pr-8 sm:pl-6 @4xl:border-t-0" : "pr-4 pl-5 sm:pr-6 sm:pl-8"}`}
             style={{
                 backgroundImage: `linear-gradient(to ${reverse ? "left" : "right"}, color-mix(in srgb, ${seasonFourTeams[team].color} 14%, transparent), color-mix(in srgb, ${seasonFourTeams[team].color} 4%, transparent) 68%, transparent)`,
             }}
         >
             {reverse && <ScoreTotal isFinalScore={isFinalScore} score={score} />}
-            <div className={`min-w-0 ${reverse ? "text-right" : ""}`}>
-                <div className={`mb-2 flex min-w-0 items-center gap-2.5 ${reverse ? "justify-end" : ""}`}>
+            <div className={`grid shrink-0 gap-2 ${reverse ? "justify-items-end text-right" : "justify-items-start"}`}>
+                <div className={`flex items-center gap-2.5 ${reverse ? "justify-end" : ""}`}>
                     {!reverse && <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams[team].color }} />}
-                    <span className="truncate font-display text-sm leading-none font-bold uppercase">
+                    <span className="shrink-0 whitespace-nowrap font-display text-sm leading-none font-bold uppercase">
                         {seasonFourTeams[team].name}
                     </span>
                     {reverse && <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams[team].color }} />}
                 </div>
-                <p className="text-card-meta mb-2 font-sans text-3xs tracking-wider sm:text-xs">
+                <p className="text-card-meta whitespace-nowrap font-sans text-3xs tracking-wider sm:text-xs">
                     <span className="text-paper font-bold tabular-nums">{formatArea(score.area)}</span> sq mi
                 </p>
                 {!isFinalScore && (
@@ -345,7 +350,7 @@ function ScoreTotal({
     score: AreaBonusScore;
 }) {
     return (
-        <div className="w-20 shrink-0 text-center sm:w-24">
+        <div className="w-20 min-w-0 shrink-0 text-center sm:w-24">
             <span className="font-display block text-4xl leading-none font-bold sm:text-5xl">
                 {score.states + (isFinalScore ? score.bonus : 0)}
             </span>

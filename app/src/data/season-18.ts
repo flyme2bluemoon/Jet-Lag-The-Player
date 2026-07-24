@@ -44,7 +44,7 @@ export const seasonEighteen = {
             slug: "finale",
             label: "Finale",
             title: "Three to Win",
-            video: "",
+            video: "M3GPI3jShKQ",
             image: "/thumbnails/season-18/finale.jpg",
         },
     ],

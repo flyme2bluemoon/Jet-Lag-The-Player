@@ -62,6 +62,7 @@ type ResolvedTeamState = {
         id: string;
         team: (typeof TEAM_ORDER)[number];
         status: TrackerInterval["status"];
+        markerLabel?: string;
     };
     position: Coordinate;
     trajectory: TrackerTrajectory | null;
@@ -85,10 +86,36 @@ type TeamFocusRequest = {
     requestId: number;
 };
 
+type EndpointLabelDirection = {
+    east: number;
+    north: number;
+};
+
+type EndpointLabelPlacement = {
+    anchor: "top" | "bottom" | "left" | "right";
+    offset: [number, number];
+};
+
+type TransitEndpoint = {
+    key: string;
+    coordinate: Coordinate;
+    states: ResolvedTeamState[];
+    label: string;
+    labelDirections: EndpointLabelDirection[];
+    minZoom: number;
+};
+
 const TEAM_ORDER = seasonEighteenTeamIds;
 const PIN_PROXIMITY_PX = 72;
 const PIN_TILT_DEGREES = 8;
-const LABEL_MIN_ZOOM = 8;
+const COLOCATED_MARKER_DISTANCE_MILES = 0.5;
+const MAP_MIN_ZOOM = 3;
+const LABEL_MAX_ZOOM = 8;
+const LABEL_MIN_ZOOM = MAP_MIN_ZOOM;
+const LABEL_REFERENCE_DISTANCE_MILES = 10;
+const LABEL_DIRECTION_SAMPLE_FRACTION = 0.05;
+const LABEL_DIRECTION_MIN_SAMPLE_MILES = 0.25;
+const EARTH_RADIUS_MILES = 3_958.8;
 const CAMERA_INTERACTION_GRACE_MS = 15_000;
 const TRACKER_UPDATE_INTERVAL_SECONDS = 0.5;
 const PIN_POSITION_TRANSITION_MS = 500;
@@ -102,9 +129,11 @@ const MAP_STAGES = {
     episodeThree: { center: [-80.8, 39.7] as Coordinate, zoom: 3.7 },
     episodeFour: { center: [-87.2, 40.3] as Coordinate, zoom: 3.15 },
     episodeFive: { center: [-84.8, 42.2] as Coordinate, zoom: 3.1 },
+    finale: { center: [-74.7, 39.7] as Coordinate, zoom: 3.9 },
 } satisfies Record<string, MapStage>;
 
 function getMapStage(episodeSlug: string, currentTime: number): MapStage {
+    if (episodeSlug === "finale") return MAP_STAGES.finale;
     if (episodeSlug === "episode-5") return MAP_STAGES.episodeFive;
     if (episodeSlug === "episode-4") return MAP_STAGES.episodeFour;
     if (episodeSlug === "episode-3") return MAP_STAGES.episodeThree;
@@ -124,6 +153,242 @@ function getMapStage(episodeSlug: string, currentTime: number): MapStage {
     }
 
     return MAP_STAGES.split;
+}
+
+function degreesToRadians(degrees: number) {
+    return degrees * Math.PI / 180;
+}
+
+function getSegmentDistanceMiles(start: Coordinate, end: Coordinate) {
+    const startLatitude = degreesToRadians(start[1]);
+    const endLatitude = degreesToRadians(end[1]);
+    const latitudeDelta = endLatitude - startLatitude;
+    const longitudeDelta = degreesToRadians(end[0] - start[0]);
+    const haversine = (
+        Math.sin(latitudeDelta / 2) ** 2
+        + Math.cos(startLatitude)
+        * Math.cos(endLatitude)
+        * Math.sin(longitudeDelta / 2) ** 2
+    );
+
+    return 2 * EARTH_RADIUS_MILES * Math.asin(
+        Math.sqrt(Math.min(1, haversine)),
+    );
+}
+
+function coordinatesAreColocated(left: Coordinate, right: Coordinate) {
+    return getSegmentDistanceMiles(left, right)
+        <= COLOCATED_MARKER_DISTANCE_MILES;
+}
+
+function getAverageCoordinate(states: readonly ResolvedTeamState[]): Coordinate {
+    const totals = states.reduce<Coordinate>(
+        ([longitude, latitude], state) => [
+            longitude + state.position[0],
+            latitude + state.position[1],
+        ],
+        [0, 0] as Coordinate,
+    );
+
+    return [
+        totals[0] / states.length,
+        totals[1] / states.length,
+    ];
+}
+
+function getUniqueTeamStates(states: readonly ResolvedTeamState[]) {
+    const byTeam = new globalThis.Map(
+        states.map((state) => [state.event.team, state]),
+    );
+
+    return TEAM_ORDER.flatMap((team) => {
+        const state = byTeam.get(team);
+        return state ? [state] : [];
+    });
+}
+
+function getTeamColors(states: readonly ResolvedTeamState[]) {
+    return getUniqueTeamStates(states).map((state) =>
+        seasonEighteenTeams[state.event.team].color);
+}
+
+function getStationaryLabel(state: ResolvedTeamState) {
+    return state.event.markerLabel ?? state.event.status.description;
+}
+
+function endpointMatchesStationaryState(
+    endpoint: TransitEndpoint,
+    state: ResolvedTeamState,
+) {
+    return !state.trajectory
+        && endpoint.label === getStationaryLabel(state)
+        && coordinatesAreColocated(endpoint.coordinate, state.position);
+}
+
+function getTrajectoryCoordinates(state: ResolvedTeamState) {
+    if (!state.trajectory) return [];
+
+    return state.trajectory.kind === "flight"
+        ? generateArcCoordinates(
+            resolveAirport(state.trajectory.from),
+            resolveAirport(state.trajectory.to),
+        )
+        : state.trajectory.coordinates;
+}
+
+function getTrajectoryDistanceMiles(coordinates: readonly Coordinate[]) {
+    return coordinates.slice(1).reduce(
+        (total, coordinate, index) =>
+            total + getSegmentDistanceMiles(coordinates[index], coordinate),
+        0,
+    );
+}
+
+function getTrajectoryLabelMinZoom(distanceMiles: number) {
+    if (distanceMiles <= 0) return LABEL_MAX_ZOOM;
+
+    return Math.max(
+        LABEL_MIN_ZOOM,
+        Math.min(
+            LABEL_MAX_ZOOM,
+            LABEL_MAX_ZOOM - Math.log2(
+                distanceMiles / LABEL_REFERENCE_DISTANCE_MILES,
+            ),
+        ),
+    );
+}
+
+function getEndpointDirectionReference(
+    coordinates: readonly Coordinate[],
+    endpoint: "origin" | "destination",
+    sampleDistanceMiles: number,
+) {
+    let traveledMiles = 0;
+
+    if (endpoint === "origin") {
+        for (let index = 1; index < coordinates.length; index += 1) {
+            traveledMiles += getSegmentDistanceMiles(
+                coordinates[index - 1],
+                coordinates[index],
+            );
+            if (traveledMiles >= sampleDistanceMiles) {
+                return coordinates[index];
+            }
+        }
+        return coordinates[coordinates.length - 1];
+    }
+
+    for (let index = coordinates.length - 2; index >= 0; index -= 1) {
+        traveledMiles += getSegmentDistanceMiles(
+            coordinates[index + 1],
+            coordinates[index],
+        );
+        if (traveledMiles >= sampleDistanceMiles) {
+            return coordinates[index];
+        }
+    }
+    return coordinates[0];
+}
+
+function getEndpointLabelDirection(
+    coordinates: readonly Coordinate[],
+    endpoint: "origin" | "destination",
+    trajectoryDistanceMiles: number,
+): EndpointLabelDirection | null {
+    if (coordinates.length < 2 || trajectoryDistanceMiles <= 0) return null;
+
+    const endpointCoordinate = endpoint === "origin"
+        ? coordinates[0]
+        : coordinates[coordinates.length - 1];
+    const sampleDistanceMiles = Math.min(
+        trajectoryDistanceMiles,
+        Math.max(
+            LABEL_DIRECTION_MIN_SAMPLE_MILES,
+            trajectoryDistanceMiles * LABEL_DIRECTION_SAMPLE_FRACTION,
+        ),
+    );
+    const adjacentCoordinate = getEndpointDirectionReference(
+        coordinates,
+        endpoint,
+        sampleDistanceMiles,
+    );
+    const latitudeScale = Math.cos(degreesToRadians(endpointCoordinate[1]));
+    const east = (endpointCoordinate[0] - adjacentCoordinate[0]) * latitudeScale;
+    const north = endpointCoordinate[1] - adjacentCoordinate[1];
+    const magnitude = Math.hypot(east, north);
+
+    return magnitude === 0 ? null : {
+        east: east / magnitude,
+        north: north / magnitude,
+    };
+}
+
+function getEndpointLabelPlacement(
+    directions: readonly EndpointLabelDirection[],
+    fallbackRow: number,
+    avoidPinAbove = false,
+): EndpointLabelPlacement {
+    if (directions.length === 0) {
+        return fallbackRow === 0
+            ? { anchor: "bottom", offset: [0, -12] }
+            : { anchor: "top", offset: [0, 12] };
+    }
+
+    const above = {
+        direction: { east: 0, north: 1 },
+        placement: { anchor: "bottom", offset: [0, -12] },
+    } satisfies {
+        direction: EndpointLabelDirection;
+        placement: EndpointLabelPlacement;
+    };
+    const below = {
+        direction: { east: 0, north: -1 },
+        placement: { anchor: "top", offset: [0, 12] },
+    } satisfies {
+        direction: EndpointLabelDirection;
+        placement: EndpointLabelPlacement;
+    };
+    const left = {
+        direction: { east: -1, north: 0 },
+        placement: { anchor: "right", offset: [-12, 0] },
+    } satisfies {
+        direction: EndpointLabelDirection;
+        placement: EndpointLabelPlacement;
+    };
+    const right = {
+        direction: { east: 1, north: 0 },
+        placement: { anchor: "left", offset: [12, 0] },
+    } satisfies {
+        direction: EndpointLabelDirection;
+        placement: EndpointLabelPlacement;
+    };
+    const preferredCandidates =
+        fallbackRow === 0
+            ? [above, below, left, right]
+            : [below, above, right, left];
+    const candidates = avoidPinAbove
+        ? preferredCandidates.filter((candidate) => candidate !== above)
+        : preferredCandidates;
+
+    return candidates.reduce(
+        (best, candidate) => {
+            const score = Math.min(
+                ...directions.map(
+                    (direction) =>
+                        candidate.direction.east * direction.east +
+                        candidate.direction.north * direction.north,
+                ),
+            );
+
+            return score > best.score
+                ? { placement: candidate.placement, score }
+                : best;
+        },
+        {
+            placement: candidates[0].placement,
+            score: Number.NEGATIVE_INFINITY,
+        },
+    ).placement;
 }
 
 function TrackerCamera({
@@ -392,23 +657,70 @@ function getTeamPinRotations(
     return rotations;
 }
 
+function getColocatedStateGroups(states: ResolvedTeamState[]) {
+    return states.reduce<ResolvedTeamState[][]>((groups, state) => {
+        const existing = !state.trajectory
+            ? groups.find((group) =>
+                group.every((candidate) => !candidate.trajectory)
+                && group.some((candidate) =>
+                    coordinatesAreColocated(candidate.position, state.position)))
+            : undefined;
+
+        if (existing) {
+            existing.push(state);
+        } else {
+            groups.push([state]);
+        }
+        return groups;
+    }, []);
+}
+
 function TeamPin({
-    state,
+    states,
+    associatedEndpoints,
     rotation,
     showLabel,
 }: {
-    state: ResolvedTeamState;
+    states: ResolvedTeamState[];
+    associatedEndpoints: TransitEndpoint[];
     rotation: number;
     showLabel: boolean;
 }) {
-    const team = seasonEighteenTeams[state.event.team];
-    const teamIndex = TEAM_ORDER.indexOf(state.event.team);
+    const position = getAverageCoordinate(states);
+    const stationaryStates = states.filter((state) => !state.trajectory);
+    const markerStates = getUniqueTeamStates(states);
+    const labelStates = getUniqueTeamStates([
+        ...states,
+        ...associatedEndpoints.flatMap((endpoint) => endpoint.states),
+    ]);
+    const colors = getTeamColors(markerStates);
+    const gradientId = `tracker-pin-${markerStates.map((state) =>
+        state.event.team).join("-")}`;
+    const markerFill = colors.length === 1
+        ? colors[0]
+        : `url(#${gradientId})`;
+    const labelState = stationaryStates[0];
+    const labelTeamIndex = Math.min(...labelStates.map((state) =>
+        TEAM_ORDER.indexOf(state.event.team)));
+    const labelDirections = associatedEndpoints.flatMap((endpoint) =>
+        endpoint.labelDirections);
+    const labelPlacement = labelDirections.length > 0
+        ? getEndpointLabelPlacement(
+            labelDirections,
+            labelTeamIndex,
+            true,
+        )
+        : labelTeamIndex === 0
+            ? { anchor: "right" as const, offset: [-12, 0] as [number, number] }
+            : { anchor: "left" as const, offset: [12, 0] as [number, number] };
+    const labelColors = getTeamColors(labelStates);
+    const labelColor = labelStates.length === 1 ? labelColors[0] : null;
 
     return (
         <>
             <MapMarker
-                longitude={state.position[0]}
-                latitude={state.position[1]}
+                longitude={position[0]}
+                latitude={position[1]}
                 positionTransitionDuration={PIN_POSITION_TRANSITION_MS}
                 anchor="bottom"
             >
@@ -423,42 +735,50 @@ function TeamPin({
                             transition: "transform 250ms ease-out",
                         }}
                     >
+                        {colors.length > 1 ? (
+                            <defs>
+                                <linearGradient id={gradientId}>
+                                    <stop offset="50%" stopColor={colors[0]} />
+                                    <stop offset="50%" stopColor={colors[1]} />
+                                </linearGradient>
+                            </defs>
+                        ) : null}
                         <path
                             d="M28 1C13.09 1 1 13.09 1 28c0 12.63 8.68 23.23 20.4 26.17L28 62l6.6-7.83C46.32 51.23 55 40.63 55 28 55 13.09 42.91 1 28 1Z"
                             fill="var(--color-muted)"
                             stroke="var(--color-paper)"
                             strokeWidth="2"
                         />
-                        <circle cx="28" cy="28" r="22" fill={team.color} />
+                        <circle cx="28" cy="28" r="22" fill={markerFill} />
                         <circle cx="28" cy="68" r="7" fill="var(--color-paper)" />
                         <circle
                             cx="28"
                             cy="68"
                             r="5"
-                            fill={team.color}
+                            fill={markerFill}
                             stroke="var(--color-muted)"
                             strokeWidth="2"
                         />
                     </svg>
                 </MarkerContent>
             </MapMarker>
-            {showLabel && !state.trajectory ? (
+            {showLabel && labelState ? (
                 <MapMarker
-                    longitude={state.position[0]}
-                    latitude={state.position[1]}
+                    longitude={position[0]}
+                    latitude={position[1]}
                     positionTransitionDuration={PIN_POSITION_TRANSITION_MS}
-                    anchor={teamIndex === 0 ? "right" : "left"}
-                    offset={[teamIndex === 0 ? -12 : 12, 0]}
+                    anchor={labelPlacement.anchor}
+                    offset={labelPlacement.offset}
                 >
                     <MarkerContent className="pointer-events-none z-30">
                         <div
-                            className="w-max max-w-48 rounded-md border px-2 py-1 text-center font-sans text-xs font-semibold leading-tight text-card-foreground shadow-sm"
-                            style={{
-                                backgroundColor: `color-mix(in srgb, ${team.color} 28%, var(--color-card))`,
-                                borderColor: `color-mix(in srgb, ${team.color} 58%, var(--color-border))`,
-                            }}
+                            className="w-max max-w-48 rounded-md border border-border bg-card px-2 py-1 text-center font-sans text-xs font-semibold leading-tight text-card-foreground shadow-sm"
+                            style={labelColor ? {
+                                backgroundColor: `color-mix(in srgb, ${labelColor} 28%, var(--color-card))`,
+                                borderColor: `color-mix(in srgb, ${labelColor} 58%, var(--color-border))`,
+                            } : undefined}
                         >
-                            {state.event.status.description}
+                            {getStationaryLabel(labelState)}
                         </div>
                     </MarkerContent>
                 </MapMarker>
@@ -469,9 +789,11 @@ function TeamPin({
 
 function TeamPins({
     states,
+    endpoints,
     showLabels,
 }: {
     states: ResolvedTeamState[];
+    endpoints: TransitEndpoint[];
     showLabels: boolean;
 }) {
     const { map, isLoaded } = useMap();
@@ -498,36 +820,51 @@ function TeamPins({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cameraRevision, isLoaded, map, states]);
 
-    return states.map((state) => (
-        <TeamPin
-            key={state.event.team}
-            state={state}
-            rotation={rotations.get(state.event.team) ?? 0}
-            showLabel={showLabels}
-        />
-    ));
+    return getColocatedStateGroups(states).map((group) => {
+        const stationaryStates = group.filter((state) => !state.trajectory);
+        const associatedEndpoints = endpoints.filter((endpoint) =>
+            stationaryStates.some((state) =>
+                endpointMatchesStationaryState(endpoint, state)));
+
+        return (
+            <TeamPin
+                key={group.map((state) => state.event.team).join("-")}
+                states={group}
+                associatedEndpoints={associatedEndpoints}
+                rotation={group.length === 1
+                    ? rotations.get(group[0].event.team) ?? 0
+                    : 0}
+                showLabel={showLabels}
+            />
+        );
+    });
 }
 
 function TransitEndpointMarker({
     coordinate,
     states,
     label,
+    labelDirections,
     showLabel,
 }: {
     coordinate: Coordinate;
     states: ResolvedTeamState[];
     label: string;
+    labelDirections: readonly EndpointLabelDirection[];
     showLabel: boolean;
 }) {
-    const colors = states.map((state) =>
-        seasonEighteenTeams[state.event.team].color);
+    const uniqueStates = getUniqueTeamStates(states);
+    const colors = getTeamColors(uniqueStates);
     const markerColor = colors.length === 1
         ? colors[0]
         : `conic-gradient(${colors[0]} 0 50%, ${colors[1]} 50% 100%)`;
-    const teamIds = new Set(states.map((state) => state.event.team));
-    const labelColor = teamIds.size === 1 ? colors[0] : null;
-    const labelRow = Math.min(...states.map((state) =>
+    const labelColor = uniqueStates.length === 1 ? colors[0] : null;
+    const labelRow = Math.min(...uniqueStates.map((state) =>
         TEAM_ORDER.indexOf(state.event.team)));
+    const labelPlacement = getEndpointLabelPlacement(
+        labelDirections,
+        labelRow,
+    );
     return (
         <>
             <MapMarker
@@ -547,8 +884,8 @@ function TransitEndpointMarker({
                 <MapMarker
                     longitude={coordinate[0]}
                     latitude={coordinate[1]}
-                    anchor={labelRow === 0 ? "bottom" : "top"}
-                    offset={[0, labelRow === 0 ? -12 : 12]}
+                    anchor={labelPlacement.anchor}
+                    offset={labelPlacement.offset}
                 >
                     <MarkerContent className="pointer-events-none z-20">
                         <div
@@ -569,19 +906,8 @@ function TransitEndpointMarker({
     );
 }
 
-function TransitEndpoints({
-    states,
-    showLabels,
-}: {
-    states: ResolvedTeamState[];
-    showLabels: boolean;
-}) {
-    const endpoints = new globalThis.Map<string, {
-        coordinate: Coordinate;
-        states: ResolvedTeamState[];
-        label: string;
-    }>();
-
+function getTransitEndpoints(states: ResolvedTeamState[]) {
+    const endpoints: TransitEndpoint[] = [];
     states.forEach((state) => {
         if (
             !state.trajectory
@@ -590,70 +916,132 @@ function TransitEndpoints({
             return;
         }
 
+        const trajectoryCoordinates = getTrajectoryCoordinates(state);
+        const trajectoryDistanceMiles = getTrajectoryDistanceMiles(
+            trajectoryCoordinates,
+        );
+        const trajectoryLabelMinZoom = getTrajectoryLabelMinZoom(
+            trajectoryDistanceMiles,
+        );
+        const originLabelDirection = getEndpointLabelDirection(
+            trajectoryCoordinates,
+            "origin",
+            trajectoryDistanceMiles,
+        );
+        const destinationLabelDirection = getEndpointLabelDirection(
+            trajectoryCoordinates,
+            "destination",
+            trajectoryDistanceMiles,
+        );
         const additions = [
             {
                 coordinate: state.originCoordinate,
                 label: state.trajectory.originLabel,
+                labelDirection: originLabelDirection,
+                minZoom: trajectoryLabelMinZoom,
             },
             ...(state.destinationCoordinate ? [{
                 coordinate: state.destinationCoordinate,
                 label: state.trajectory.destinationLabel,
+                labelDirection: destinationLabelDirection,
+                minZoom: trajectoryLabelMinZoom,
             }] : []),
             ...state.waypointLabels.map((waypoint) => ({
                 coordinate: waypoint.coordinate,
                 label: waypoint.text,
+                labelDirection: null,
+                minZoom: LABEL_MAX_ZOOM,
             })),
         ];
 
-        additions.forEach(({ coordinate, label }) => {
-            const key = `${coordinate[0]},${coordinate[1]}:${label}`;
-            const existing = endpoints.get(key);
+        additions.forEach(({ coordinate, label, labelDirection, minZoom }) => {
+            const existing = endpoints.find((endpoint) =>
+                endpoint.label === label
+                && coordinatesAreColocated(endpoint.coordinate, coordinate));
             if (existing) {
                 existing.states.push(state);
+                if (labelDirection) {
+                    existing.labelDirections.push(labelDirection);
+                }
+                existing.minZoom = Math.min(existing.minZoom, minZoom);
                 return;
             }
-            endpoints.set(key, {
+            endpoints.push({
+                key: `${coordinate[0]},${coordinate[1]}:${label}`,
                 coordinate,
                 states: [state],
                 label,
+                labelDirections: labelDirection ? [labelDirection] : [],
+                minZoom,
             });
         });
     });
+    return endpoints;
+}
 
-    return [...endpoints.entries()].map(([key, endpoint]) => (
-        <TransitEndpointMarker
-            key={key}
-            coordinate={endpoint.coordinate}
-            states={endpoint.states}
-            label={endpoint.label}
-            showLabel={showLabels}
-        />
-    ));
+function TransitEndpoints({
+    endpoints,
+    states,
+    zoom,
+}: {
+    endpoints: TransitEndpoint[];
+    states: ResolvedTeamState[];
+    zoom: number;
+}) {
+    return endpoints.map((endpoint) => {
+        const matchingStationaryStates = states.filter((state) =>
+            endpointMatchesStationaryState(endpoint, state));
+        const markerStates = getUniqueTeamStates([
+            ...endpoint.states,
+            ...matchingStationaryStates,
+        ]);
+
+        return (
+            <TransitEndpointMarker
+                key={endpoint.key}
+                coordinate={endpoint.coordinate}
+                states={markerStates}
+                label={endpoint.label}
+                labelDirections={endpoint.labelDirections}
+                showLabel={
+                    zoom >= endpoint.minZoom
+                    && matchingStationaryStates.length === 0
+                }
+            />
+        );
+    });
 }
 
 function TrackerMarkers({ states }: { states: ResolvedTeamState[] }) {
     const { map, isLoaded } = useMap();
-    const [showLabels, setShowLabels] = useState(false);
+    const [zoom, setZoom] = useState(0);
+    const endpoints = useMemo(() => getTransitEndpoints(states), [states]);
 
     useEffect(() => {
         if (!map || !isLoaded) return;
 
-        const updateLabelVisibility = () => {
-            setShowLabels(map.getZoom() >= LABEL_MIN_ZOOM);
-        };
+        const updateZoom = () => setZoom(map.getZoom());
 
-        updateLabelVisibility();
-        map.on("zoom", updateLabelVisibility);
+        updateZoom();
+        map.on("zoom", updateZoom);
 
         return () => {
-            map.off("zoom", updateLabelVisibility);
+            map.off("zoom", updateZoom);
         };
     }, [isLoaded, map]);
 
     return (
         <>
-            <TeamPins states={states} showLabels={showLabels} />
-            <TransitEndpoints states={states} showLabels={showLabels} />
+            <TeamPins
+                states={states}
+                endpoints={endpoints}
+                showLabels={zoom >= MAP_MIN_ZOOM}
+            />
+            <TransitEndpoints
+                endpoints={endpoints}
+                states={states}
+                zoom={zoom}
+            />
         </>
     );
 }
@@ -824,6 +1212,9 @@ export function TrackerCard({
                 id: interval.eventId,
                 team,
                 status: interval.status,
+                markerLabel: interval.kind === "stationary"
+                    ? interval.markerLabel
+                    : undefined,
             },
             trajectory,
             position: resolved.position ?? stationaryPosition
@@ -857,7 +1248,7 @@ export function TrackerCard({
                 <Map
                     center={mapStage.center}
                     zoom={mapStage.zoom}
-                    minZoom={3}
+                    minZoom={MAP_MIN_ZOOM}
                     maxZoom={16}
                     attributionControl={false}
                 >

@@ -24,6 +24,7 @@ export type TrackerStatus = Readonly<{
 
 export type TrackerLocation = Readonly<{
     name: string;
+    flightName?: string;
     coordinate: Coordinate;
     airportCode?: FlightAirport;
 }>;
@@ -38,13 +39,10 @@ export type MapLabel = Readonly<{
     text?: string;
 }>;
 
-export type EndpointLabel<Location extends string = string> =
-    | false
-    | Readonly<{
-        text?: string;
-        location?: Location;
-        visibleFrom?: TrackerTimestamp;
-    }>;
+export type EndpointLabel<Location extends string = string> = Readonly<{
+    text?: string;
+    location?: Location;
+}>;
 
 export type TravelDisplay<Location extends string = string> = Readonly<{
     revealPath?: "full" | "traveled";
@@ -58,6 +56,7 @@ export type StationaryEvent<Location extends string = string> = Readonly<{
     at: TrackerTimestamp;
     location: Location;
     status: TrackerStatus;
+    mapLabel?: MapLabel;
 }>;
 
 export type GroundPathPhase<
@@ -71,6 +70,7 @@ export type GroundPathPhase<
     display?: TravelDisplay<Location>;
     destWaypointMapLabel?: MapLabel;
     setIntermediateOrigin?: boolean;
+    progressFromLocation?: Location;
 }>;
 
 export type GroundDwellPhase<Location extends string = string> = Readonly<{
@@ -175,6 +175,7 @@ export type ResolvedTrackerInterval<Location extends string = string> =
             kind: "stationary";
             location: Location;
             coordinate: Coordinate;
+            markerLabel?: string;
         }>
         | Readonly<{
             kind: "ground";

@@ -100,37 +100,18 @@ function mergeDisplay(
     return { ...eventDisplay, ...phaseDisplay };
 }
 
-function labelIsVisible(
-    label: EndpointLabel<LocationId> | undefined,
-    at: TrackerTimestamp,
-) {
-    return label !== false
-        && (!label?.visibleFrom || compare(label.visibleFrom, at) <= 0);
-}
-
 function resolveEndpointLabel(
     label: EndpointLabel<LocationId> | undefined,
     defaultLocation: LocationId,
-    at: TrackerTimestamp,
     defaultText?: string,
-): ResolvedEndpointLabel<LocationId> | null {
-    if (!labelIsVisible(label, at)) return null;
-    const definition = label || {};
+): ResolvedEndpointLabel<LocationId> {
+    const definition = label ?? {};
     const location = definition.location ?? defaultLocation;
     return {
         text: definition.text ?? defaultText ?? trackerLocations[location].name,
         location,
         coordinate: trackerLocations[location].coordinate,
     };
-}
-
-function getLabelVisibilityBoundaries(
-    display: TravelDisplay<LocationId> | undefined,
-) {
-    return [
-        display?.originLabel && display.originLabel.visibleFrom,
-        display?.destinationLabel && display.destinationLabel.visibleFrom,
-    ].filter((boundary): boundary is TrackerTimestamp => Boolean(boundary));
 }
 
 function getGroundPathGroups(event: SeasonEighteenGroundEvent) {
@@ -232,8 +213,14 @@ function getGroundPhaseProgressBounds(
         coordinates,
         trackerLocations[trackerPaths[phase.path].destination].coordinate,
     );
+    const progressFrom = phase.progressFromLocation
+        ? getClosestProgress(
+            coordinates,
+            trackerLocations[phase.progressFromLocation].coordinate,
+        )
+        : pathStart + (pathEnd - pathStart) * phaseFrom;
     return {
-        progressFrom: pathStart + (pathEnd - pathStart) * phaseFrom,
+        progressFrom,
         progressTo: pathStart + (pathEnd - pathStart) * phaseTo,
     };
 }
@@ -243,9 +230,9 @@ function getGroundDisplay(
     phase: SeasonEighteenGroundPhase,
     groups: ReturnType<typeof getGroundPathGroups>,
     startGroupIndex: number,
-    rangeStart: TrackerTimestamp,
 ): ResolvedTravelDisplay<LocationId> {
     const definition = mergeDisplay(event.display, phase.display);
+    const revealPath = definition.revealPath ?? "full";
     const originGroup = groups[startGroupIndex];
     const originLocation = trackerPaths[originGroup.path].origin;
     const waypointLabel = phase.kind === "path" && phase.destWaypointMapLabel
@@ -264,17 +251,17 @@ function getGroundDisplay(
             : null;
 
     return {
-        revealPath: definition.revealPath ?? "full",
+        revealPath,
         originLabel: resolveEndpointLabel(
             definition.originLabel,
             originLocation,
-            rangeStart,
         ),
-        destinationLabel: resolveEndpointLabel(
-            definition.destinationLabel,
-            event.destination,
-            rangeStart,
-        ),
+        destinationLabel: revealPath === "traveled"
+            ? null
+            : resolveEndpointLabel(
+                definition.destinationLabel,
+                event.destination,
+            ),
         waypointLabels: waypointLabel ? [waypointLabel] : [],
     };
 }
@@ -321,7 +308,6 @@ function compileGroundEvent(
                 phase,
                 groups,
                 startGroupIndex,
-                phase.time.start,
             ),
             order,
         });
@@ -334,25 +320,25 @@ function compileGroundEvent(
 function getFlightDisplay(
     event: Extract<SeasonEighteenEvent, { kind: "flight" }>,
     phase: Extract<SeasonEighteenEvent, { kind: "flight" }>["phases"][number],
-    rangeStart: TrackerTimestamp,
 ): ResolvedTravelDisplay<LocationId> {
     const definition = mergeDisplay(event.display, phase.display);
+    const revealPath = definition.revealPath ?? "full";
     const origin = trackerLocations[event.origin];
     const destination = trackerLocations[event.destination];
     return {
-        revealPath: definition.revealPath ?? "full",
+        revealPath,
         originLabel: resolveEndpointLabel(
             definition.originLabel,
             event.origin,
-            rangeStart,
-            "airportCode" in origin ? origin.airportCode : undefined,
+            "flightName" in origin ? origin.flightName : undefined,
         ),
-        destinationLabel: resolveEndpointLabel(
-            definition.destinationLabel,
-            event.destination,
-            rangeStart,
-            "airportCode" in destination ? destination.airportCode : undefined,
-        ),
+        destinationLabel: revealPath === "traveled"
+            ? null
+            : resolveEndpointLabel(
+                definition.destinationLabel,
+                event.destination,
+                "flightName" in destination ? destination.flightName : undefined,
+            ),
         waypointLabels: [],
     };
 }
@@ -389,7 +375,7 @@ function compileFlightEvent(
                 progressFrom: phase.progress?.from ?? 0,
                 progressTo: phase.progress?.to ?? 1,
             },
-            display: getFlightDisplay(event, phase, phase.time.start),
+            display: getFlightDisplay(event, phase),
             order,
         });
         order += 1;
@@ -412,6 +398,9 @@ function compileStationaryEvent(
         status: event.status,
         location: event.location,
         coordinate: trackerLocations[event.location].coordinate,
+        markerLabel: event.mapLabel
+            ? event.mapLabel.text ?? trackerLocations[event.location].name
+            : undefined,
         order,
     };
 }
@@ -448,25 +437,6 @@ function validateTimeline(team: TeamId, events: readonly SeasonEighteenEvent[]) 
                 throw new Error(`Tracker phase in "${event.id}" must have positive duration.`);
             }
 
-            getLabelVisibilityBoundaries(phase.display).forEach((boundary) => {
-                if (!timestampEquals(boundary, phase.time.start)) {
-                    throw new Error(
-                        `Phase label visibility in "${event.id}" must begin at that phase boundary.`,
-                    );
-                }
-            });
-        });
-
-        const phaseBoundaries = event.phases.flatMap((phase) => [
-            phase.time.start,
-            phase.time.end,
-        ]);
-        getLabelVisibilityBoundaries(event.display).forEach((boundary) => {
-            if (!phaseBoundaries.some((candidate) => timestampEquals(candidate, boundary))) {
-                throw new Error(
-                    `Event label visibility in "${event.id}" must coincide with a phase boundary.`,
-                );
-            }
         });
 
         if (event.kind === "flight") {
@@ -514,6 +484,14 @@ function validateTimeline(team: TeamId, events: readonly SeasonEighteenEvent[]) 
             }
 
             const path = trackerPaths[phase.path];
+            if (phase.progressFromLocation) {
+                const progressCoordinate = trackerLocations[phase.progressFromLocation].coordinate;
+                const progressIsOnPath = materializePath(phase.path).some((coordinate) =>
+                    distance(coordinate, progressCoordinate) < 1e-9);
+                if (!progressIsOnPath) {
+                    throw new Error(`Progress origin in "${event.id}" is not on its path.`);
+                }
+            }
             const repeatsPreviousPath = previous?.kind === "path"
                 && previous.path === phase.path;
             if (!repeatsPreviousPath && path.origin !== currentLocation) {
@@ -539,7 +517,13 @@ function validateTimeline(team: TeamId, events: readonly SeasonEighteenEvent[]) 
                     return candidate.location === event.interruption
                         && timestampEquals(candidate.at, finalPhase.time.end);
                 }
-                return candidate.origin === event.interruption
+                const firstPhase = candidate.phases[0];
+                return (candidate.origin === event.interruption
+                    || (
+                        candidate.kind === "ground"
+                        && firstPhase.kind === "path"
+                        && firstPhase.progressFromLocation === event.interruption
+                    ))
                     && timestampEquals(candidate.phases[0].time.start, finalPhase.time.end);
             });
             if (!arrival) {

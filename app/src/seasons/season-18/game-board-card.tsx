@@ -1,5 +1,6 @@
 "use client";
 
+import type MapLibreGL from "maplibre-gl";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Check, Hexagon, LockKeyhole, Star } from "lucide-react";
 import {
@@ -46,6 +47,9 @@ import {
 const US_STATES_GEOJSON = "/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/geojson/canada.geojson";
 const PUBLIC_HAND_SIZE = 6;
+const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
+const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
+const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
 
 type GameBoardCardProps = {
     episodeSlug: string;
@@ -55,9 +59,13 @@ type GameBoardCardProps = {
 type RegionStatus =
     | { kind: "claimed"; team: TeamId }
     | { kind: "private"; team: TeamId }
-    | { kind: "public" };
+    | { kind: "public" }
+    | { kind: "striped" };
 
 type StateOutlinePaths = Partial<Record<BoardRegion, string>>;
+type MapFillPattern = NonNullable<
+    NonNullable<MapLibreGL.FillLayerSpecification["paint"]>["fill-pattern"]
+>;
 
 export function GameBoardCard({
     episodeSlug,
@@ -101,6 +109,10 @@ export function GameBoardCard({
 
             <Scoreboard
                 scores={game.scores}
+                showFinalScore={
+                    episodeSlug === "finale"
+                    && currentTime >= FINAL_SCORE_REVEALED_AT
+                }
                 showAreaTiebreak={
                     episodeSlug === "finale"
                     || (episodeSlug === "episode-5" && currentTime >= 29)
@@ -114,9 +126,41 @@ export function GameBoardCard({
 }
 
 function GameBoardMapLayers({ game }: { game: GameBoardState }) {
-    const { resolvedTheme } = useMap();
+    const { isLoaded, map, resolvedTheme } = useMap();
     const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const statuses = useMemo(() => getRegionStatuses(game), [game]);
+    const stripedRegions = useMemo(
+        () => [...statuses]
+            .filter(([, status]) => status.kind === "striped")
+            .map(([region]) => region),
+        [statuses],
+    );
+    const stripeFillPattern = useMemo(() => [
+        "case",
+        ["in", ["get", "name"], ["literal", stripedRegions]],
+        PRIVATE_OVERLAP_PATTERN_ID,
+        TRANSPARENT_PATTERN_ID,
+    ] as MapFillPattern, [stripedRegions]);
+
+    useEffect(() => {
+        if (!isLoaded || !map) return;
+
+        if (!map.hasImage(PRIVATE_OVERLAP_PATTERN_ID)) {
+            map.addImage(
+                PRIVATE_OVERLAP_PATTERN_ID,
+                createStripePatternImage(),
+                { pixelRatio: 2 },
+            );
+        }
+        if (!map.hasImage(TRANSPARENT_PATTERN_ID)) {
+            map.addImage(
+                TRANSPARENT_PATTERN_ID,
+                createTransparentPatternImage(),
+                { pixelRatio: 2 },
+            );
+        }
+    }, [isLoaded, map]);
+
     const fillColor = useMemo(() => {
         const expression: unknown[] = [
             "match",
@@ -127,7 +171,10 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
 
         for (const [region, status] of statuses) {
             if (region === "Canada") continue;
-            expression.push(region, getStatusColor(status));
+            expression.push(
+                region,
+                getStatusColor(status),
+            );
         }
         expression.push(colors.unclaimedRegion);
         return expression as MapFillColor;
@@ -184,23 +231,77 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
                 }}
                 linePaint={{ "line-color": stateLineColor, "line-width": 1 }}
             />
+            <MapGeoJSON
+                id="season-eighteen-private-overlap"
+                data={US_STATES_GEOJSON}
+                fillPaint={{
+                    "fill-pattern": stripeFillPattern,
+                    "fill-opacity": 0.96,
+                }}
+                linePaint={false}
+            />
         </>
     );
 }
 
+function createStripePatternImage() {
+    const size = 24;
+    const stripeWidth = 6;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Unable to create team stripe pattern.");
+
+    for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+            const stripe = Math.floor((x + y) / stripeWidth) % 2;
+            context.fillStyle = stripe === 0
+                ? MAPLIBRE_COLORS.jetLagRed
+                : MAPLIBRE_COLORS.jetLagYellow;
+            context.fillRect(x, y, 1, 1);
+        }
+    }
+
+    return context.getImageData(0, 0, size, size);
+}
+
+function createTransparentPatternImage() {
+    return new ImageData(new Uint8ClampedArray(4), 1, 1);
+}
+
 function getRegionStatuses(game: GameBoardState) {
     const statuses = new globalThis.Map<BoardRegion, RegionStatus>();
+    const privateCoverage = new globalThis.Map<BoardRegion, Set<TeamId>>();
 
-    // Later passes intentionally override earlier availability states.
+    // Public cards override single-team private coverage. Shared private
+    // coverage stays striped, while completed claims override either state.
     for (const team of seasonEighteenTeamIds) {
         for (const card of game.cardsByLocation[team]) {
             for (const region of card.targets) {
-                statuses.set(region, { kind: "private", team });
+                const teams = privateCoverage.get(region) ?? new Set<TeamId>();
+                teams.add(team);
+                privateCoverage.set(region, teams);
             }
         }
     }
+
+    for (const [region, teams] of privateCoverage) {
+        const [team] = teams;
+        statuses.set(
+            region,
+            teams.size > 1
+                ? { kind: "striped" }
+                : { kind: "private", team },
+        );
+    }
+
     for (const card of game.cardsByLocation.public) {
-        for (const region of card.targets) statuses.set(region, { kind: "public" });
+        for (const region of card.targets) {
+            if (statuses.get(region)?.kind !== "striped") {
+                statuses.set(region, { kind: "public" });
+            }
+        }
     }
     for (const [region, claim] of game.claims) {
         statuses.set(region, { kind: "claimed", team: claim.team });
@@ -210,20 +311,26 @@ function getRegionStatuses(game: GameBoardState) {
 }
 
 function getStatusColor(status: RegionStatus) {
-    return status.kind === "public"
+    return status.kind === "striped"
+        ? MAPLIBRE_COLORS.jetLagRed
+        : status.kind === "public"
         ? MAPLIBRE_COLORS.jetLagBlue
         : seasonEighteenTeams[status.team].mapColor;
 }
 
 function getStatusOpacity(status: RegionStatus) {
-    return status.kind === "claimed" ? 0.96 : 0.3;
+    return status.kind === "claimed" || status.kind === "striped"
+        ? 0.96
+        : 0.3;
 }
 
 function Scoreboard({
     scores,
+    showFinalScore,
     showAreaTiebreak,
 }: {
     scores: Record<TeamId, TeamScore>;
+    showFinalScore: boolean;
     showAreaTiebreak: boolean;
 }) {
     const [leftTeam, rightTeam] = seasonEighteenTeamIds;
@@ -248,10 +355,21 @@ function Scoreboard({
             }}
             aria-label={`Connected-state scores. ${ariaLabel}.${areaLeader ? ` ${seasonEighteenTeams[areaLeader].name} leads the area tiebreak.` : ""}`}
         >
+            {showFinalScore && (
+                <div className="mb-4 flex justify-center">
+                    <span className="border-jet-lag-yellow/50 bg-jet-lag-yellow/10 text-jet-lag-yellow rounded-full border px-3 py-1 font-display text-xs leading-none font-bold uppercase">
+                        Final
+                    </span>
+                </div>
+            )}
             <div className="grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_minmax(0,1fr)] sm:gap-5">
                 <div className="min-w-0">
-                    <div className="mb-2 flex h-6 items-center">
-                        {areaLeader === leftTeam ? <AreaTiebreakBadge /> : null}
+                    <div
+                        className={areaLeader === leftTeam
+                            ? "mb-2 flex h-6 items-center"
+                            : "hidden"}
+                    >
+                        <AreaTiebreakBadge />
                     </div>
                     <div
                         className="flex min-w-0 items-center gap-2 font-display text-sm leading-none font-bold uppercase"
@@ -293,8 +411,12 @@ function Scoreboard({
                 </div>
 
                 <div className="min-w-0 text-right">
-                    <div className="mb-2 flex h-6 items-center justify-end">
-                        {areaLeader === rightTeam ? <AreaTiebreakBadge /> : null}
+                    <div
+                        className={areaLeader === rightTeam
+                            ? "mb-2 flex h-6 items-center justify-end"
+                            : "hidden"}
+                    >
+                        <AreaTiebreakBadge />
                     </div>
                     <div
                         className="flex min-w-0 items-center justify-end gap-2 font-display text-sm leading-none font-bold uppercase"
@@ -531,7 +653,7 @@ function Hands({
                 />
             </div>
 
-            <div className="grid @5xl:grid-cols-2">
+            <div className="grid @3xl:grid-cols-2">
                 {seasonEighteenTeamIds.map((team, index) => (
                     <PrivateHand
                         key={team}
@@ -589,7 +711,7 @@ function PrivateHand({
     const teamDetails = seasonEighteenTeams[team];
 
     return (
-        <div className={`border-paper/15 border-t px-5 py-4 sm:px-8 sm:py-5 lg:px-5 ${showColumnDivider ? "@5xl:border-r" : ""}`}>
+        <div className={`border-paper/15 border-t px-5 py-4 sm:px-8 sm:py-5 lg:px-5 ${showColumnDivider ? "@3xl:border-r" : ""}`}>
             <h3
                 className="mb-3 flex items-center gap-2 font-heading text-sm leading-none font-bold uppercase"
                 style={{ color: teamDetails.color }}
@@ -662,9 +784,16 @@ function GameCardArtwork({
             )}
 
             <span
-                className={`max-w-full font-heading leading-tight font-bold tracking-tight uppercase ${compact ? "text-xs sm:text-sm" : "text-xs @5xl:text-sm"}`}
+                className={`max-w-full font-heading leading-tight font-bold tracking-tight uppercase ${compact ? "text-xs sm:text-sm" : "text-xs @4xl:text-sm"}`}
             >
-                {compact ? card.label : card.name}
+                {compact ? (
+                    card.label
+                ) : (
+                    <>
+                        <span className="@xl:hidden">{card.label}</span>
+                        <span className="hidden @xl:inline">{card.name}</span>
+                    </>
+                )}
             </span>
         </article>
     );

@@ -23,13 +23,25 @@ function SeasonCard({ season }: { season: Season }) {
       </div>
       <div className="tablet:min-h-32 flex min-h-28 flex-col px-4.5 pt-4 pb-4">
         <h2 className="wide:text-xl max-w-9/10 font-sans text-lg leading-tight font-bold tracking-tight text-balance">Season {season.number}: {season.name}</h2>
-        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isAvailable ? "Open Dashboard" : "Watch on YT (dashboard coming soon)"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2" aria-hidden="true" /></div>
+        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isAvailable ? "Open Dashboard" : "Watch on YouTube"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2" aria-hidden="true" /></div>
       </div>
     </a>
   );
 }
 
+function SeasonSection({ id, title, seasons }: { id: string; title: string; seasons: readonly Season[] }) {
+  return (
+    <section aria-labelledby={id}>
+      <div className="mb-6 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px after:absolute after:top-1/2 after:h-px after:w-full" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold tracking-normal whitespace-nowrap uppercase" id={id}>{title}</h2><span className="bg-paper/20 h-px flex-1" /></div>
+      <div className="tablet:grid-cols-2 tablet:gap-6 wide:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 grid grid-cols-1 gap-5">{seasons.map((season) => <SeasonCard key={season.number} season={season} />)}</div>
+    </section>
+  );
+}
+
 export default function Home() {
+  const availableSeasons = seasons.filter((season) => getSeasonPageHref(season.number));
+  const unavailableSeasons = seasons.filter((season) => !getSeasonPageHref(season.number));
+
   return (
     <main className="page-texture min-h-screen overflow-hidden">
       <section className="max-w-page px-gutter tablet:grid-cols-[1.2fr_.8fr] tablet:items-center wide:grid-cols-2 relative mx-auto grid min-h-100 grid-cols-1 items-start pt-10 pb-10" id="top">
@@ -61,10 +73,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-page px-gutter tablet:pt-0 mx-auto pt-6 pb-18" aria-labelledby="archive-title">
-        <div className="mb-6 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px after:absolute after:top-1/2 after:h-px after:w-full" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold tracking-normal whitespace-nowrap uppercase" id="archive-title">Seasons</h2><span className="bg-paper/20 h-px flex-1" /></div>
-        <div className="tablet:grid-cols-2 tablet:gap-6 wide:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 grid grid-cols-1 gap-5">{seasons.map((season) => <SeasonCard key={season.number} season={season} />)}</div>
-      </section>
+      <div className="max-w-page px-gutter tablet:pt-0 mx-auto space-y-12 pt-6 pb-18">
+        <SeasonSection id="watch-now-title" title="Watch now" seasons={availableSeasons} />
+        <SeasonSection id="coming-soon-title" title="Coming soon" seasons={unavailableSeasons} />
+      </div>
 
     </main>
   );

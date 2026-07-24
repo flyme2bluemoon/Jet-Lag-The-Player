@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSeasonPage, seasonPages } from "@/data/season-pages";
+import { getSeasonPage, isReleasedEpisode, seasonPages, type Episode } from "@/data/season-pages";
 
 type SeasonPageProps = { params: Promise<{ season: string }> };
 
@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: SeasonPageProps): Promise<Met
 export default async function SeasonPage({ params }: SeasonPageProps) {
   const season = getSeasonPage((await params).season);
   if (!season) notFound();
+  const episodes: readonly Episode[] = season.episodes;
 
   return (
     <main className="page-texture max-w-page px-gutter mx-auto min-h-screen w-full overflow-hidden pb-24">
@@ -35,7 +36,7 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
       <section className="pt-8" aria-labelledby="episodes-title">
         <div className="mb-2 flex items-center gap-4"><span className="before:bg-paper/60 after:bg-paper/60 relative size-5.5 shrink-0 before:absolute before:left-1/2 before:h-full before:w-px after:absolute after:top-1/2 after:h-px after:w-full" aria-hidden="true" /><h2 className="font-heading tablet:text-3xl text-2xl font-bold whitespace-nowrap uppercase" id="episodes-title">Episodes</h2><span className="bg-paper/20 h-px flex-1" /></div>
         <div className="flex flex-col">
-          {season.episodes.map((episode, index) => {
+          {episodes.map((episode, index) => {
             const content = (
               <>
                 <div className="bg-surface relative aspect-video overflow-hidden rounded-lg">
@@ -43,7 +44,7 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
                 </div>
                 <div className="relative min-w-0 md:py-2 md:pr-14">
                   <h2 className="text-sm leading-snug font-medium tracking-tight md:text-[clamp(1.1875rem,1.6vw,1.5625rem)]"><span className="text-meta font-semibold">{episode.label}:</span> {episode.title}</h2>
-                  {episode.video ? (
+                  {isReleasedEpisode(episode) ? (
                     <i className="border-signal after:border-signal absolute top-1/2 right-1 hidden h-3 w-7 translate-y-px border-t-2 opacity-0 transition after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2 group-hover:translate-x-1 group-hover:opacity-100 group-focus-visible:translate-x-1 group-focus-visible:opacity-100 md:block" aria-hidden="true" />
                   ) : (
                     <span className="border-paper/20 bg-panel text-meta mt-2 inline-flex rounded border px-2 py-1 font-display text-xs leading-none font-bold uppercase md:mt-3">Coming soon</span>
@@ -52,12 +53,12 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
               </>
             );
 
-            return episode.video ? (
+            return isReleasedEpisode(episode) ? (
               <Link className="border-paper/15 hover:border-signal/70 focus-visible:border-signal/70 group grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3.5 border-b py-3 transition-colors focus-visible:outline-none md:grid-cols-[clamp(180px,15.75vw,225px)_minmax(0,1fr)] md:gap-8 md:py-3.5" href={`/${season.slug}/${episode.slug}`} key={episode.slug}>
                 {content}
               </Link>
             ) : (
-              <div className="border-paper/15 grid min-w-0 cursor-not-allowed grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3.5 border-b py-3 opacity-50 grayscale md:grid-cols-[clamp(180px,15.75vw,225px)_minmax(0,1fr)] md:gap-8 md:py-3.5" key={episode.slug} aria-disabled="true">
+              <div className="border-paper/15 grid min-w-0 cursor-not-allowed grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-3.5 border-b py-3 opacity-50 grayscale md:grid-cols-[clamp(180px,15.75vw,225px)_minmax(0,1fr)] md:gap-8 md:py-3.5" key={`${episode.label}-${index}`} aria-disabled="true">
                 {content}
               </div>
             );

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { FastForward, Rewind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EpisodeDashboard } from "@/components/episode/episode-dashboard";
-import { getSeasonPage, seasonPages } from "@/data/season-pages";
+import { getSeasonPage, isReleasedEpisode, seasonPages } from "@/data/season-pages";
 import { EpisodeSwitcher } from "./episode-switcher";
 
 type EpisodePageProps = { params: Promise<{ season: string; episode: string }> };
@@ -13,18 +13,22 @@ export const dynamicParams = false;
 
 export function generateStaticParams() {
   return seasonPages.flatMap((season) =>
-    season.episodes
-      .filter((episode) => episode.video)
-      .map((episode) => ({ season: season.slug, episode: episode.slug })),
+    season.episodes.flatMap((episode) =>
+      isReleasedEpisode(episode)
+        ? [{ season: season.slug, episode: episode.slug }]
+        : [],
+    ),
   );
 }
 
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const route = await params;
   const season = getSeasonPage(route.season);
-  const episodeNumber = season?.episodes.findIndex((item) => item.slug === route.episode) ?? -1;
+  const episodeNumber = season?.episodes.findIndex(
+    (item) => isReleasedEpisode(item) && item.slug === route.episode,
+  ) ?? -1;
   const episode = season?.episodes[episodeNumber];
-  return episode?.video && season
+  return episode && isReleasedEpisode(episode) && season
     ? { title: `S${season.number}E${episodeNumber + 1} ${episode.title} | Jet Lag: The Player`, description: episode.title }
     : {};
 }
@@ -33,10 +37,12 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
   const route = await params;
   const season = getSeasonPage(route.season);
   if (!season) notFound();
-  const episode = season.episodes.find((item) => item.slug === route.episode);
-  if (!episode?.video) notFound();
+  const episode = season.episodes.find(
+    (item) => isReleasedEpisode(item) && item.slug === route.episode,
+  );
+  if (!episode || !isReleasedEpisode(episode)) notFound();
 
-  const releasedEpisodes = season.episodes.filter((item) => item.video);
+  const releasedEpisodes = season.episodes.filter(isReleasedEpisode);
   const episodeIndex = releasedEpisodes.findIndex((item) => item.slug === episode.slug);
   const previousEpisode = releasedEpisodes[episodeIndex - 1];
   const nextEpisode = releasedEpisodes[episodeIndex + 1];

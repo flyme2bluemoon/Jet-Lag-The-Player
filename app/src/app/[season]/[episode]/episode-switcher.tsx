@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Episode } from "@/data/season-pages";
+import { isReleasedEpisode, type Episode } from "@/data/season-pages";
 
 type EpisodeSwitcherProps = {
   seasonSlug: string;
@@ -20,11 +20,15 @@ export function EpisodeSwitcher({ seasonSlug, episodes, currentSlug }: EpisodeSw
           <SelectValue className="h-full" />
         </SelectTrigger>
         <SelectContent position="popper" side="bottom" align="start" sideOffset={1} className="bg-select text-paper w-(--radix-select-trigger-width) shadow-xl">
-          {episodes.map((episode) => (
-            <SelectItem className="bg-select text-paper border-paper/10 focus:bg-select-hover focus:text-paper! focus:**:text-paper! data-highlighted:bg-select-hover data-checked:bg-select-active data-checked:focus:bg-select-hover data-checked:data-highlighted:bg-select-hover [&>span:first-child]:hidden rounded-none border-b px-4 py-3 font-display text-base leading-none font-bold last:border-b-0" value={episode.slug} key={episode.slug} disabled={!episode.video}>
-              {episode.label}
-            </SelectItem>
-          ))}
+          {episodes.map((episode, index) => {
+            const released = isReleasedEpisode(episode);
+
+            return (
+              <SelectItem className="bg-select text-paper border-paper/10 focus:bg-select-hover focus:text-paper! focus:**:text-paper! data-highlighted:bg-select-hover data-checked:bg-select-active data-checked:focus:bg-select-hover data-checked:data-highlighted:bg-select-hover [&>span:first-child]:hidden rounded-none border-b px-4 py-3 font-display text-base leading-none font-bold last:border-b-0" value={released ? episode.slug : `upcoming-${index}`} key={released ? episode.slug : `${episode.label}-${index}`} disabled={!released}>
+                {episode.label}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import "./globals.css";
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -44,6 +45,7 @@ export default function RootLayout({
         <div className="flex-1">{children}</div>
         <SiteFooter />
         <Analytics />
+        <SpeedInsights/>
       </body>
     </html>
   );

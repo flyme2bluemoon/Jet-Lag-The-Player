@@ -51,6 +51,10 @@ const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
 const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
 const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
 const AREA_TIEBREAK_WINNER: TeamId = "sam-amy";
+const AVAILABLE_REGION_OPACITY = {
+    light: 0.4,
+    dark: 0.5,
+} as const;
 
 type GameBoardCardProps = {
     episodeSlug: string;
@@ -190,11 +194,14 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
 
         for (const [region, status] of statuses) {
             if (region === "Canada") continue;
-            expression.push(region, getStatusOpacity(status));
+            expression.push(
+                region,
+                getStatusOpacity(status, resolvedTheme),
+            );
         }
         expression.push(0.96);
         return expression as MapFillOpacity;
-    }, [statuses]);
+    }, [resolvedTheme, statuses]);
     const stateLineColor = [
         "case",
         ["==", ["get", "name"], "Puerto Rico"],
@@ -213,7 +220,7 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
                         ? getStatusColor(canadaStatus)
                         : colors.unavailableRegion,
                     "fill-opacity": canadaStatus
-                        ? getStatusOpacity(canadaStatus)
+                        ? getStatusOpacity(canadaStatus, resolvedTheme)
                         : 1,
                 }}
                 linePaint={canadaStatus
@@ -319,10 +326,13 @@ function getStatusColor(status: RegionStatus) {
         : seasonEighteenTeams[status.team].mapColor;
 }
 
-function getStatusOpacity(status: RegionStatus) {
+function getStatusOpacity(
+    status: RegionStatus,
+    theme: keyof typeof AVAILABLE_REGION_OPACITY,
+) {
     return status.kind === "claimed" || status.kind === "striped"
         ? 0.96
-        : 0.3;
+        : AVAILABLE_REGION_OPACITY[theme];
 }
 
 function Scoreboard({

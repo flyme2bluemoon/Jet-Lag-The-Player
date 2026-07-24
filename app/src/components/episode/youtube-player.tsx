@@ -4,7 +4,21 @@ import { useEffect, useRef } from "react";
 
 type YouTubePlayerInstance = {
     destroy: () => void;
+    getAvailablePlaybackRates: () => number[];
     getCurrentTime: () => number;
+    getDuration: () => number;
+    getIframe: () => HTMLIFrameElement;
+    getOption: (module: string, option: string) => unknown;
+    getPlaybackRate: () => number;
+    getPlayerState: () => number;
+    isMuted: () => boolean;
+    mute: () => void;
+    pauseVideo: () => void;
+    playVideo: () => void;
+    seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+    setOption: (module: string, option: string, value: unknown) => void;
+    setPlaybackRate: (rate: number) => void;
+    unMute: () => void;
 };
 
 type YouTubePlayerStateChangeEvent = {
@@ -13,6 +27,27 @@ type YouTubePlayerStateChangeEvent = {
 
 const YOUTUBE_PLAYER_STATE_PLAYING = 1;
 const TIME_UPDATE_INTERVAL_MS = 250;
+
+type CaptionTrack = {
+    languageCode: string;
+};
+
+function isCaptionTrack(value: unknown): value is CaptionTrack {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        "languageCode" in value &&
+        typeof value.languageCode === "string"
+    );
+}
+
+function isEditableTarget(target: EventTarget | null) {
+    return (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+            target.matches("input, textarea, select, [role='textbox']"))
+    );
+}
 
 type YouTubeNamespace = {
     Player: new (
@@ -54,7 +89,9 @@ export function YouTubePlayer({
         let player: YouTubePlayerInstance | null = null;
         let timer: ReturnType<typeof setInterval> | null = null;
         let cancelled = false;
+        let isReady = false;
         let isPlaying = false;
+        let lastCaptionTrack: CaptionTrack | null = null;
 
         const stopTimer = () => {
             if (!timer) return;
@@ -85,7 +122,134 @@ export function YouTubePlayer({
             if (isPlaying) startTimer();
         };
 
+        const seekBy = (seconds: number) => {
+            if (!player) return;
+            const duration = player.getDuration();
+            const nextTime = Math.max(
+                0,
+                Math.min(player.getCurrentTime() + seconds, duration),
+            );
+            player.seekTo(nextTime, true);
+            emitCurrentTime();
+        };
+
+        const changePlaybackRate = (direction: -1 | 1) => {
+            if (!player) return;
+            const rates = player.getAvailablePlaybackRates();
+            const currentRate = player.getPlaybackRate();
+            const currentIndex = rates.indexOf(currentRate);
+            const nextIndex = Math.max(
+                0,
+                Math.min(
+                    currentIndex + direction,
+                    rates.length - 1,
+                ),
+            );
+            const nextRate = rates[nextIndex];
+            if (nextRate !== undefined) player.setPlaybackRate(nextRate);
+        };
+
+        const toggleCaptions = () => {
+            if (!player) return;
+            const currentTrack = player.getOption("captions", "track");
+
+            if (isCaptionTrack(currentTrack)) {
+                lastCaptionTrack = currentTrack;
+                player.setOption("captions", "track", {});
+                return;
+            }
+
+            const trackList = player.getOption("captions", "tracklist");
+            const firstTrack = Array.isArray(trackList)
+                ? trackList.find(isCaptionTrack)
+                : undefined;
+            const nextTrack = lastCaptionTrack ?? firstTrack;
+            if (nextTrack) player.setOption("captions", "track", nextTrack);
+        };
+
+        const toggleFullscreen = () => {
+            if (!player) return;
+            const iframe = player.getIframe();
+
+            if (document.fullscreenElement) {
+                void document.exitFullscreen();
+            } else {
+                void iframe.requestFullscreen();
+            }
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (
+                !player ||
+                !isReady ||
+                event.defaultPrevented ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.altKey ||
+                isEditableTarget(event.target)
+            ) {
+                return;
+            }
+
+            const key = event.key.toLowerCase();
+            const target = event.target;
+            const spaceActivatesControl =
+                key === " " &&
+                target instanceof HTMLElement &&
+                target.matches("button, a, summary, [role='button']");
+            if (spaceActivatesControl) return;
+
+            let handled = true;
+
+            switch (key) {
+                case " ":
+                case "k":
+                    if (player.getPlayerState() === YOUTUBE_PLAYER_STATE_PLAYING) {
+                        player.pauseVideo();
+                    } else {
+                        player.playVideo();
+                    }
+                    break;
+                case "arrowleft":
+                    seekBy(-5);
+                    break;
+                case "arrowright":
+                    seekBy(5);
+                    break;
+                case "j":
+                    seekBy(-10);
+                    break;
+                case "l":
+                    seekBy(10);
+                    break;
+                case "<":
+                    changePlaybackRate(-1);
+                    break;
+                case ">":
+                    changePlaybackRate(1);
+                    break;
+                case "f":
+                    toggleFullscreen();
+                    break;
+                case "c":
+                    toggleCaptions();
+                    break;
+                case "m":
+                    if (player.isMuted()) {
+                        player.unMute();
+                    } else {
+                        player.mute();
+                    }
+                    break;
+                default:
+                    handled = false;
+            }
+
+            if (handled) event.preventDefault();
+        };
+
         document.addEventListener("visibilitychange", handleVisibilityChange);
+        document.addEventListener("keydown", handleKeyDown);
 
         const createPlayer = () => {
             if (cancelled || !hostRef.current || !window.YT) return;
@@ -95,14 +259,17 @@ export function YouTubePlayer({
                     color: "white",
                     controls: 1,
                     enablejsapi: 1,
-                    fs: 0,
+                    fs: 1,
                     iv_load_policy: 3,
                     origin: window.location.origin,
                     playsinline: 1,
                     rel: 0,
                 },
                 events: {
-                    onReady: emitCurrentTime,
+                    onReady: () => {
+                        isReady = true;
+                        emitCurrentTime();
+                    },
                     onStateChange: (event) => {
                         isPlaying = event.data === YOUTUBE_PLAYER_STATE_PLAYING;
                         if (isPlaying) {
@@ -135,10 +302,12 @@ export function YouTubePlayer({
 
         return () => {
             cancelled = true;
+            isReady = false;
             document.removeEventListener(
                 "visibilitychange",
                 handleVisibilityChange,
             );
+            document.removeEventListener("keydown", handleKeyDown);
             stopTimer();
             player?.destroy();
         };

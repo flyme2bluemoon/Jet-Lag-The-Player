@@ -82,6 +82,7 @@ Routes, static params, episode navigation, and page metadata are then provided a
 - Use `compareTimestamps(season, left, right)` from `@/lib/timestamps` for visibility windows, sorting, and event-derived state across episodes. It compares `{ episode, at }` using `season.episodes` order and throws for an unknown episode.
 - Use `isTimestampInRange(season, current, start, end)` from `@/lib/timestamps` for half-open visibility windows where the start is included and the end is excluded.
 - Use `formatEpisodeLabel(episode)` and `formatTimestamp(seconds)` from `@/lib/timestamps` for compact episode metadata such as `Ep. 1 · 4:05`; episode values should be standard `episode-<n>` slugs or `finale`.
+- `@/seasons/season-18/tracker-map-utils` centralizes Season 18's pure tracker geometry, coordinate bounds, route resolution, colocation checks, and endpoint-label placement. Keep React and MapLibre lifecycle logic in `tracker-card.tsx`; pass resolved coordinate arrays into these helpers.
 - Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
 
 ### Maps and travel visuals

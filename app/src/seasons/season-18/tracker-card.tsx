@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
+} from "react";
 
 import {
     FlightRoute,
-    generateArcCoordinates,
     resolveAirport,
 } from "@/components/ui/flight";
 import {
@@ -33,6 +38,21 @@ import {
     type ResolvedEndpointLabel,
     type TrackerInterval,
 } from "./tracker-data";
+import {
+    coordinatesAreColocated,
+    coordinatesMatch,
+    getAverageCoordinate,
+    getCoordinateBounds,
+    getEndpointLabelDirection,
+    getEndpointLabelPlacement,
+    getFullTrajectoryCoordinates,
+    getTrajectoryDistanceMiles,
+    getTrajectoryLabelMinZoom,
+    LABEL_MAX_ZOOM,
+    MAP_MIN_ZOOM,
+    type EndpointLabelDirection,
+    type EndpointLabelPlacement,
+} from "./tracker-map-utils";
 
 type TrackerCardProps = {
     episodeSlug: string;
@@ -66,6 +86,7 @@ type ResolvedTeamState = {
     };
     position: Coordinate;
     trajectory: TrackerTrajectory | null;
+    fullTrajectoryCoordinates: readonly Coordinate[];
     trajectoryCoordinates: readonly Coordinate[];
     originCoordinate: Coordinate | null;
     destinationCoordinate: Coordinate | null;
@@ -74,6 +95,7 @@ type ResolvedTeamState = {
 
 type ResolvedTrajectory = Pick<
     ResolvedTeamState,
+    | "fullTrajectoryCoordinates"
     | "trajectoryCoordinates"
     | "originCoordinate"
     | "destinationCoordinate"
@@ -84,16 +106,6 @@ type ResolvedTrajectory = Pick<
 type TeamFocusRequest = {
     state: ResolvedTeamState;
     requestId: number;
-};
-
-type EndpointLabelDirection = {
-    east: number;
-    north: number;
-};
-
-type EndpointLabelPlacement = {
-    anchor: "top" | "bottom" | "left" | "right";
-    offset: [number, number];
 };
 
 type TransitEndpoint = {
@@ -108,14 +120,6 @@ type TransitEndpoint = {
 const TEAM_ORDER = seasonEighteenTeamIds;
 const PIN_PROXIMITY_PX = 72;
 const PIN_TILT_DEGREES = 8;
-const COLOCATED_MARKER_DISTANCE_MILES = 0.5;
-const MAP_MIN_ZOOM = 3;
-const LABEL_MAX_ZOOM = 8;
-const LABEL_MIN_ZOOM = MAP_MIN_ZOOM;
-const LABEL_REFERENCE_DISTANCE_MILES = 10;
-const LABEL_DIRECTION_SAMPLE_FRACTION = 0.05;
-const LABEL_DIRECTION_MIN_SAMPLE_MILES = 0.25;
-const EARTH_RADIUS_MILES = 3_958.8;
 const CAMERA_INTERACTION_GRACE_MS = 15_000;
 const TRACKER_UPDATE_INTERVAL_SECONDS = 0.5;
 const PIN_POSITION_TRANSITION_MS = 500;
@@ -155,47 +159,6 @@ function getMapStage(episodeSlug: string, currentTime: number): MapStage {
     return MAP_STAGES.split;
 }
 
-function degreesToRadians(degrees: number) {
-    return degrees * Math.PI / 180;
-}
-
-function getSegmentDistanceMiles(start: Coordinate, end: Coordinate) {
-    const startLatitude = degreesToRadians(start[1]);
-    const endLatitude = degreesToRadians(end[1]);
-    const latitudeDelta = endLatitude - startLatitude;
-    const longitudeDelta = degreesToRadians(end[0] - start[0]);
-    const haversine = (
-        Math.sin(latitudeDelta / 2) ** 2
-        + Math.cos(startLatitude)
-        * Math.cos(endLatitude)
-        * Math.sin(longitudeDelta / 2) ** 2
-    );
-
-    return 2 * EARTH_RADIUS_MILES * Math.asin(
-        Math.sqrt(Math.min(1, haversine)),
-    );
-}
-
-function coordinatesAreColocated(left: Coordinate, right: Coordinate) {
-    return getSegmentDistanceMiles(left, right)
-        <= COLOCATED_MARKER_DISTANCE_MILES;
-}
-
-function getAverageCoordinate(states: readonly ResolvedTeamState[]): Coordinate {
-    const totals = states.reduce<Coordinate>(
-        ([longitude, latitude], state) => [
-            longitude + state.position[0],
-            latitude + state.position[1],
-        ],
-        [0, 0] as Coordinate,
-    );
-
-    return [
-        totals[0] / states.length,
-        totals[1] / states.length,
-    ];
-}
-
 function getUniqueTeamStates(states: readonly ResolvedTeamState[]) {
     const byTeam = new globalThis.Map(
         states.map((state) => [state.event.team, state]),
@@ -208,7 +171,7 @@ function getUniqueTeamStates(states: readonly ResolvedTeamState[]) {
 }
 
 function getTeamColors(states: readonly ResolvedTeamState[]) {
-    return getUniqueTeamStates(states).map((state) =>
+    return states.map((state) =>
         seasonEighteenTeams[state.event.team].color);
 }
 
@@ -223,172 +186,6 @@ function endpointMatchesStationaryState(
     return !state.trajectory
         && endpoint.label === getStationaryLabel(state)
         && coordinatesAreColocated(endpoint.coordinate, state.position);
-}
-
-function getTrajectoryCoordinates(state: ResolvedTeamState) {
-    if (!state.trajectory) return [];
-
-    return state.trajectory.kind === "flight"
-        ? generateArcCoordinates(
-            resolveAirport(state.trajectory.from),
-            resolveAirport(state.trajectory.to),
-        )
-        : state.trajectory.coordinates;
-}
-
-function getTrajectoryDistanceMiles(coordinates: readonly Coordinate[]) {
-    return coordinates.slice(1).reduce(
-        (total, coordinate, index) =>
-            total + getSegmentDistanceMiles(coordinates[index], coordinate),
-        0,
-    );
-}
-
-function getTrajectoryLabelMinZoom(distanceMiles: number) {
-    if (distanceMiles <= 0) return LABEL_MAX_ZOOM;
-
-    return Math.max(
-        LABEL_MIN_ZOOM,
-        Math.min(
-            LABEL_MAX_ZOOM,
-            LABEL_MAX_ZOOM - Math.log2(
-                distanceMiles / LABEL_REFERENCE_DISTANCE_MILES,
-            ),
-        ),
-    );
-}
-
-function getEndpointDirectionReference(
-    coordinates: readonly Coordinate[],
-    endpoint: "origin" | "destination",
-    sampleDistanceMiles: number,
-) {
-    let traveledMiles = 0;
-
-    if (endpoint === "origin") {
-        for (let index = 1; index < coordinates.length; index += 1) {
-            traveledMiles += getSegmentDistanceMiles(
-                coordinates[index - 1],
-                coordinates[index],
-            );
-            if (traveledMiles >= sampleDistanceMiles) {
-                return coordinates[index];
-            }
-        }
-        return coordinates[coordinates.length - 1];
-    }
-
-    for (let index = coordinates.length - 2; index >= 0; index -= 1) {
-        traveledMiles += getSegmentDistanceMiles(
-            coordinates[index + 1],
-            coordinates[index],
-        );
-        if (traveledMiles >= sampleDistanceMiles) {
-            return coordinates[index];
-        }
-    }
-    return coordinates[0];
-}
-
-function getEndpointLabelDirection(
-    coordinates: readonly Coordinate[],
-    endpoint: "origin" | "destination",
-    trajectoryDistanceMiles: number,
-): EndpointLabelDirection | null {
-    if (coordinates.length < 2 || trajectoryDistanceMiles <= 0) return null;
-
-    const endpointCoordinate = endpoint === "origin"
-        ? coordinates[0]
-        : coordinates[coordinates.length - 1];
-    const sampleDistanceMiles = Math.min(
-        trajectoryDistanceMiles,
-        Math.max(
-            LABEL_DIRECTION_MIN_SAMPLE_MILES,
-            trajectoryDistanceMiles * LABEL_DIRECTION_SAMPLE_FRACTION,
-        ),
-    );
-    const adjacentCoordinate = getEndpointDirectionReference(
-        coordinates,
-        endpoint,
-        sampleDistanceMiles,
-    );
-    const latitudeScale = Math.cos(degreesToRadians(endpointCoordinate[1]));
-    const east = (endpointCoordinate[0] - adjacentCoordinate[0]) * latitudeScale;
-    const north = endpointCoordinate[1] - adjacentCoordinate[1];
-    const magnitude = Math.hypot(east, north);
-
-    return magnitude === 0 ? null : {
-        east: east / magnitude,
-        north: north / magnitude,
-    };
-}
-
-function getEndpointLabelPlacement(
-    directions: readonly EndpointLabelDirection[],
-    fallbackRow: number,
-    avoidPinAbove = false,
-): EndpointLabelPlacement {
-    if (directions.length === 0) {
-        return fallbackRow === 0
-            ? { anchor: "bottom", offset: [0, -12] }
-            : { anchor: "top", offset: [0, 12] };
-    }
-
-    const above = {
-        direction: { east: 0, north: 1 },
-        placement: { anchor: "bottom", offset: [0, -12] },
-    } satisfies {
-        direction: EndpointLabelDirection;
-        placement: EndpointLabelPlacement;
-    };
-    const below = {
-        direction: { east: 0, north: -1 },
-        placement: { anchor: "top", offset: [0, 12] },
-    } satisfies {
-        direction: EndpointLabelDirection;
-        placement: EndpointLabelPlacement;
-    };
-    const left = {
-        direction: { east: -1, north: 0 },
-        placement: { anchor: "right", offset: [-12, 0] },
-    } satisfies {
-        direction: EndpointLabelDirection;
-        placement: EndpointLabelPlacement;
-    };
-    const right = {
-        direction: { east: 1, north: 0 },
-        placement: { anchor: "left", offset: [12, 0] },
-    } satisfies {
-        direction: EndpointLabelDirection;
-        placement: EndpointLabelPlacement;
-    };
-    const preferredCandidates =
-        fallbackRow === 0
-            ? [above, below, left, right]
-            : [below, above, right, left];
-    const candidates = avoidPinAbove
-        ? preferredCandidates.filter((candidate) => candidate !== above)
-        : preferredCandidates;
-
-    return candidates.reduce(
-        (best, candidate) => {
-            const score = Math.min(
-                ...directions.map(
-                    (direction) =>
-                        candidate.direction.east * direction.east +
-                        candidate.direction.north * direction.north,
-                ),
-            );
-
-            return score > best.score
-                ? { placement: candidate.placement, score }
-                : best;
-        },
-        {
-            placement: candidates[0].placement,
-            score: Number.NEGATIVE_INFINITY,
-        },
-    ).placement;
 }
 
 function TrackerCamera({
@@ -477,10 +274,6 @@ function TrackerCamera({
         }
 
         const visibleBounds = map.getBounds();
-        const coordinatesMatch = (
-            left: Coordinate | null,
-            right: Coordinate | null,
-        ) => left?.[0] === right?.[0] && left?.[1] === right?.[1];
         const trackerCoordinates = changedStates.flatMap(({ state, previousState }) => [
             state.position,
             ...(
@@ -505,20 +298,11 @@ function TrackerCamera({
         }
 
         const currentCenter = map.getCenter().toArray() as Coordinate;
-        const cameraCoordinates = [currentCenter, ...trackerCoordinates];
-        const bounds = cameraCoordinates.slice(1).reduce<[Coordinate, Coordinate]>(
-            ([southwest, northeast], coordinate) => [
-                [
-                    Math.min(southwest[0], coordinate[0]),
-                    Math.min(southwest[1], coordinate[1]),
-                ],
-                [
-                    Math.max(northeast[0], coordinate[0]),
-                    Math.max(northeast[1], coordinate[1]),
-                ],
-            ],
-            [currentCenter, currentCenter],
-        );
+        const bounds = getCoordinateBounds([
+            currentCenter,
+            ...trackerCoordinates,
+        ]);
+        if (!bounds) return;
 
         map.fitBounds(bounds, {
             padding: 56,
@@ -552,29 +336,8 @@ function TeamFocusController({
             return;
         }
 
-        const coordinates = state.trajectory.kind === "flight"
-            ? generateArcCoordinates(
-                resolveAirport(state.trajectory.from),
-                resolveAirport(state.trajectory.to),
-            )
-            : state.trajectory.coordinates;
-        const [firstCoordinate, ...remainingCoordinates] = coordinates;
-
-        if (!firstCoordinate) return;
-
-        const bounds = remainingCoordinates.reduce<[Coordinate, Coordinate]>(
-            ([southwest, northeast], coordinate) => [
-                [
-                    Math.min(southwest[0], coordinate[0]),
-                    Math.min(southwest[1], coordinate[1]),
-                ],
-                [
-                    Math.max(northeast[0], coordinate[0]),
-                    Math.max(northeast[1], coordinate[1]),
-                ],
-            ],
-            [firstCoordinate, firstCoordinate],
-        );
+        const bounds = getCoordinateBounds(state.fullTrajectoryCoordinates);
+        if (!bounds) return;
 
         map.fitBounds(bounds, {
             padding: { top: 72, right: 56, bottom: 72, left: 56 },
@@ -592,18 +355,14 @@ function resolveTrajectory(
     if (!trajectory) {
         return {
             position: null,
+            fullTrajectoryCoordinates: [],
             trajectoryCoordinates: [],
             originCoordinate: null,
             destinationCoordinate: null,
         };
     }
 
-    const fullCoordinates = trajectory.kind === "flight"
-        ? generateArcCoordinates(
-            resolveAirport(trajectory.from),
-            resolveAirport(trajectory.to),
-        )
-        : trajectory.coordinates;
+    const fullCoordinates = getFullTrajectoryCoordinates(trajectory);
     const position = getPointAlongPath(fullCoordinates, trajectory.positionProgress);
     const trajectoryCoordinates = trajectory.revealProgressOnly
         ? cropPath(fullCoordinates, trajectory.positionProgress)
@@ -611,6 +370,7 @@ function resolveTrajectory(
 
     return {
         position,
+        fullTrajectoryCoordinates: fullCoordinates,
         trajectoryCoordinates,
         originCoordinate: fullCoordinates[0],
         destinationCoordinate: trajectory.destinationVisible === false
@@ -675,6 +435,49 @@ function getColocatedStateGroups(states: ResolvedTeamState[]) {
     }, []);
 }
 
+function TrackerMarkerLabel({
+    coordinate,
+    placement,
+    color,
+    positionTransitionDuration,
+    contentClassName,
+    className,
+    children,
+}: {
+    coordinate: Coordinate;
+    placement: EndpointLabelPlacement;
+    color: string | null;
+    positionTransitionDuration?: number;
+    contentClassName?: string;
+    className?: string;
+    children: ReactNode;
+}) {
+    return (
+        <MapMarker
+            longitude={coordinate[0]}
+            latitude={coordinate[1]}
+            positionTransitionDuration={positionTransitionDuration}
+            anchor={placement.anchor}
+            offset={placement.offset}
+        >
+            <MarkerContent className={cn("pointer-events-none", contentClassName)}>
+                <div
+                    className={cn(
+                        "w-max rounded-md border border-border bg-card text-center text-card-foreground",
+                        className,
+                    )}
+                    style={color ? {
+                        backgroundColor: `color-mix(in srgb, ${color} 28%, var(--color-card))`,
+                        borderColor: `color-mix(in srgb, ${color} 58%, var(--color-border))`,
+                    } : undefined}
+                >
+                    {children}
+                </div>
+            </MarkerContent>
+        </MapMarker>
+    );
+}
+
 function TeamPin({
     states,
     associatedEndpoints,
@@ -686,7 +489,9 @@ function TeamPin({
     rotation: number;
     showLabel: boolean;
 }) {
-    const position = getAverageCoordinate(states);
+    const position = getAverageCoordinate(
+        states.map((state) => state.position),
+    );
     const stationaryStates = states.filter((state) => !state.trajectory);
     const markerStates = getUniqueTeamStates(states);
     const labelStates = getUniqueTeamStates([
@@ -763,25 +568,16 @@ function TeamPin({
                 </MarkerContent>
             </MapMarker>
             {showLabel && labelState ? (
-                <MapMarker
-                    longitude={position[0]}
-                    latitude={position[1]}
+                <TrackerMarkerLabel
+                    coordinate={position}
                     positionTransitionDuration={PIN_POSITION_TRANSITION_MS}
-                    anchor={labelPlacement.anchor}
-                    offset={labelPlacement.offset}
+                    placement={labelPlacement}
+                    color={labelColor}
+                    contentClassName="z-30"
+                    className="max-w-48 px-2 py-1 font-sans text-xs font-semibold leading-tight shadow-sm"
                 >
-                    <MarkerContent className="pointer-events-none z-30">
-                        <div
-                            className="w-max max-w-48 rounded-md border border-border bg-card px-2 py-1 text-center font-sans text-xs font-semibold leading-tight text-card-foreground shadow-sm"
-                            style={labelColor ? {
-                                backgroundColor: `color-mix(in srgb, ${labelColor} 28%, var(--color-card))`,
-                                borderColor: `color-mix(in srgb, ${labelColor} 58%, var(--color-border))`,
-                            } : undefined}
-                        >
-                            {getStationaryLabel(labelState)}
-                        </div>
-                    </MarkerContent>
-                </MapMarker>
+                    {getStationaryLabel(labelState)}
+                </TrackerMarkerLabel>
             ) : null}
         </>
     );
@@ -881,26 +677,17 @@ function TransitEndpointMarker({
                 </MarkerContent>
             </MapMarker>
             {showLabel ? (
-                <MapMarker
-                    longitude={coordinate[0]}
-                    latitude={coordinate[1]}
-                    anchor={labelPlacement.anchor}
-                    offset={labelPlacement.offset}
+                <TrackerMarkerLabel
+                    coordinate={coordinate}
+                    placement={labelPlacement}
+                    color={labelColor}
+                    contentClassName="z-20"
+                    className="max-w-44 px-2 py-1.5 shadow-md"
                 >
-                    <MarkerContent className="pointer-events-none z-20">
-                        <div
-                            className="w-max max-w-44 rounded-md border border-border bg-card px-2 py-1.5 text-center shadow-md"
-                            style={labelColor ? {
-                                backgroundColor: `color-mix(in srgb, ${labelColor} 28%, var(--color-card))`,
-                                borderColor: `color-mix(in srgb, ${labelColor} 58%, var(--color-border))`,
-                            } : undefined}
-                        >
-                            <p className="whitespace-normal wrap-break-word font-sans text-xs font-semibold leading-tight text-card-foreground">
-                                {label}
-                            </p>
-                        </div>
-                    </MarkerContent>
-                </MapMarker>
+                    <p className="whitespace-normal wrap-break-word font-sans text-xs font-semibold leading-tight">
+                        {label}
+                    </p>
+                </TrackerMarkerLabel>
             ) : null}
         </>
     );
@@ -916,20 +703,19 @@ function getTransitEndpoints(states: ResolvedTeamState[]) {
             return;
         }
 
-        const trajectoryCoordinates = getTrajectoryCoordinates(state);
         const trajectoryDistanceMiles = getTrajectoryDistanceMiles(
-            trajectoryCoordinates,
+            state.fullTrajectoryCoordinates,
         );
         const trajectoryLabelMinZoom = getTrajectoryLabelMinZoom(
             trajectoryDistanceMiles,
         );
         const originLabelDirection = getEndpointLabelDirection(
-            trajectoryCoordinates,
+            state.fullTrajectoryCoordinates,
             "origin",
             trajectoryDistanceMiles,
         );
         const destinationLabelDirection = getEndpointLabelDirection(
-            trajectoryCoordinates,
+            state.fullTrajectoryCoordinates,
             "destination",
             trajectoryDistanceMiles,
         );
@@ -1219,6 +1005,7 @@ export function TrackerCard({
             trajectory,
             position: resolved.position ?? stationaryPosition
                 ?? trackerIntervalFallbackPosition(interval),
+            fullTrajectoryCoordinates: resolved.fullTrajectoryCoordinates,
             trajectoryCoordinates: resolved.trajectoryCoordinates,
             originCoordinate: resolved.originCoordinate,
             destinationCoordinate: resolved.destinationCoordinate,

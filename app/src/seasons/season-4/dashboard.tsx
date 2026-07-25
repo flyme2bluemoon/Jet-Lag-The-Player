@@ -9,7 +9,7 @@ import { ClaimsCard } from "./claims-card";
 import { BattleStatusCard } from "./battle-status-card";
 import { PowerupsCard } from "./powerups-card";
 
-const WIDE_COLUMN_RATIO = [3, 4, 3] as const;
+const WIDE_COLUMN_RATIO = [3, 3, 4] as const;
 
 export function SeasonFourDashboard({ episodeSlug, label, title, videoId }: EpisodeDashboardProps) {
     const [currentTime, setCurrentTime] = useState(0);
@@ -18,24 +18,24 @@ export function SeasonFourDashboard({ episodeSlug, label, title, videoId }: Epis
         <DashboardGrid
             wideColumnRatio={WIDE_COLUMN_RATIO}
             video={
-                <>
-                    <YouTubePlayer
-                        label={label}
-                        title={title}
-                        videoId={videoId}
-                        onTimeChange={setCurrentTime}
-                    />
-                    <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
-                </>
+                <YouTubePlayer
+                    label={label}
+                    title={title}
+                    videoId={videoId}
+                    onTimeChange={setCurrentTime}
+                />
             }
             left={
-                <ClaimsCard episodeSlug={episodeSlug} currentTime={currentTime} />
+                <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
             }
-            right={
+            middle={
                 <>
                     <BattleStatusCard episodeSlug={episodeSlug} currentTime={currentTime} />
                     <PowerupsCard episodeSlug={episodeSlug} currentTime={currentTime} />
                 </>
+            }
+            right={
+                <ClaimsCard episodeSlug={episodeSlug} currentTime={currentTime} />
             }
         />
     );

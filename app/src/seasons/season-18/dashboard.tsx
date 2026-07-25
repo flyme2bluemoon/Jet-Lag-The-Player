@@ -9,7 +9,7 @@ import { GameBoardCard } from "./game-board-card";
 import { TrackerCard } from "./tracker-card";
 import { hasTrackerData } from "./tracker-data";
 
-const WIDE_COLUMN_RATIO = [8, 9, 7] as const;
+const WIDE_COLUMN_RATIO = [3, 3, 4] as const;
 
 export function SeasonEighteenDashboard({
     episodeSlug,
@@ -22,26 +22,26 @@ export function SeasonEighteenDashboard({
         <DashboardGrid
             wideColumnRatio={WIDE_COLUMN_RATIO}
             video={
-                <>
-                    <YouTubePlayer
-                        label={label}
-                        title={title}
-                        videoId={videoId}
-                        onTimeChange={setCurrentTime}
-                    />
-                    <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
-                </>
+                <YouTubePlayer
+                    label={label}
+                    title={title}
+                    videoId={videoId}
+                    onTimeChange={setCurrentTime}
+                />
             }
             left={
-                <GameBoardCard episodeSlug={episodeSlug} currentTime={currentTime} />
-            }
-            right={
                 hasTrackerData(episodeSlug) ? (
                     <TrackerCard
                         episodeSlug={episodeSlug}
                         currentTime={currentTime}
                     />
                 ) : null
+            }
+            middle={
+                <BudgetCard episodeSlug={episodeSlug} currentTime={currentTime} />
+            }
+            right={
+                <GameBoardCard episodeSlug={episodeSlug} currentTime={currentTime} />
             }
         />
     );

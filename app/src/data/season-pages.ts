@@ -1,3 +1,4 @@
+import { seasonOne } from "./season-1";
 import { seasonFour } from "./season-4";
 import { seasonEighteen } from "./season-18";
 
@@ -26,7 +27,7 @@ export type SeasonPage = {
   episodes: readonly Episode[];
 };
 
-export const seasonPages = [seasonFour, seasonEighteen] as const satisfies readonly SeasonPage[];
+export const seasonPages = [seasonOne, seasonFour, seasonEighteen] as const satisfies readonly SeasonPage[];
 
 export type SeasonSlug = (typeof seasonPages)[number]["slug"];
 type ConfiguredEpisode = (typeof seasonPages)[number]["episodes"][number];

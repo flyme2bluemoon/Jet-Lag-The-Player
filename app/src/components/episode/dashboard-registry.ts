@@ -8,6 +8,11 @@ import type { EpisodeDashboardProps } from "./types";
 type DashboardComponent = ComponentType<EpisodeDashboardProps>;
 
 export const dashboardRegistry: Partial<Record<SeasonSlug, DashboardComponent>> = {
+    "season-1": dynamic(() =>
+        import("@/seasons/season-1/dashboard").then(
+            (module) => module.SeasonOneDashboard,
+        ),
+    ),
     "season-4": dynamic(() =>
         import("@/seasons/season-4/dashboard").then(
             (module) => module.SeasonFourDashboard,

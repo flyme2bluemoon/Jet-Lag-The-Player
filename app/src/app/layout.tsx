@@ -45,7 +45,7 @@ export default function RootLayout({
         <div className="flex-1">{children}</div>
         <SiteFooter />
         <Analytics />
-        <SpeedInsights/>
+        <SpeedInsights sampleRate={0.25}/>
       </body>
     </html>
   );

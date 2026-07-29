@@ -83,6 +83,7 @@ Routes, static params, episode navigation, and page metadata are then provided a
 - Use `isTimestampInRange(season, current, start, end)` from `@/lib/timestamps` for half-open visibility windows where the start is included and the end is excluded.
 - Use `formatEpisodeLabel(episode)` and `formatTimestamp(seconds)` from `@/lib/timestamps` for compact episode metadata such as `Ep. 1 · 4:05`; episode values should be standard `episode-<n>` slugs or `finale`.
 - `@/seasons/season-18/tracker-map-utils` centralizes Season 18's pure tracker geometry, coordinate bounds, route resolution, colocation checks, and endpoint-label placement. Keep React and MapLibre lifecycle logic in `tracker-card.tsx`; pass resolved coordinate arrays into these helpers.
+- `useUsStatesGeoJson()` and `loadUsStatesGeoJson()` from `@/lib/us-states-geojson` share one client-side fetch and parsed object for `/geojson/us-states.geojson`. Use the hook in React components instead of fetching the file independently; it returns `null` while loading. The asset is cached as immutable, so publish changed geometry under a new filename.
 - Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
 
 ### Maps and travel visuals

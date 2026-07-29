@@ -1,7 +1,8 @@
 "use client";
 
 import type MapLibreGL from "maplibre-gl";
-import { useEffect, useId, useMemo, useState } from "react";
+import type { Position } from "geojson";
+import { useEffect, useId, useMemo } from "react";
 import { Check, Hexagon, LockKeyhole, Star } from "lucide-react";
 import {
     Accordion,
@@ -29,6 +30,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatEpisodeLabel, formatTimestamp } from "@/lib/timestamps";
 import {
+    useUsStatesGeoJson,
+    type UsStateGeometry,
+    type UsStatesGeoJson,
+} from "@/lib/us-states-geojson";
+import {
     getGameBoardState,
     seasonEighteenCards,
     type BoardRegion,
@@ -44,7 +50,6 @@ import {
     type TeamId,
 } from "./team-data";
 
-const US_STATES_GEOJSON = "/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/geojson/canada.geojson";
 const PUBLIC_HAND_SIZE = 6;
 const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
@@ -81,7 +86,8 @@ export function GameBoardCard({
         () => getGameBoardState(episodeSlug, currentTime),
         [currentTime, episodeSlug],
     );
-    const stateOutlinePaths = useStateOutlinePaths();
+    const usStatesGeoJson = useUsStatesGeoJson();
+    const stateOutlinePaths = useStateOutlinePaths(usStatesGeoJson);
 
     return (
         <section
@@ -108,7 +114,10 @@ export function GameBoardCard({
                     dragRotate={false}
                     touchPitch={false}
                 >
-                    <GameBoardMapLayers game={game} />
+                    <GameBoardMapLayers
+                        game={game}
+                        usStatesGeoJson={usStatesGeoJson}
+                    />
                 </Map>
             </div>
 
@@ -130,7 +139,13 @@ export function GameBoardCard({
     );
 }
 
-function GameBoardMapLayers({ game }: { game: GameBoardState }) {
+function GameBoardMapLayers({
+    game,
+    usStatesGeoJson,
+}: {
+    game: GameBoardState;
+    usStatesGeoJson: UsStatesGeoJson | null;
+}) {
     const { isLoaded, map, resolvedTheme } = useMap();
     const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const statuses = useMemo(() => getRegionStatuses(game), [game]);
@@ -230,24 +245,31 @@ function GameBoardMapLayers({ game }: { game: GameBoardState }) {
                     }
                     : false}
             />
-            <MapGeoJSON
-                id="season-eighteen-states"
-                data={US_STATES_GEOJSON}
-                fillPaint={{
-                    "fill-color": fillColor,
-                    "fill-opacity": fillOpacity,
-                }}
-                linePaint={{ "line-color": stateLineColor, "line-width": 1 }}
-            />
-            <MapGeoJSON
-                id="season-eighteen-private-overlap"
-                data={US_STATES_GEOJSON}
-                fillPaint={{
-                    "fill-pattern": stripeFillPattern,
-                    "fill-opacity": 0.96,
-                }}
-                linePaint={false}
-            />
+            {usStatesGeoJson && (
+                <>
+                    <MapGeoJSON
+                        id="season-eighteen-states"
+                        data={usStatesGeoJson}
+                        fillPaint={{
+                            "fill-color": fillColor,
+                            "fill-opacity": fillOpacity,
+                        }}
+                        linePaint={{
+                            "line-color": stateLineColor,
+                            "line-width": 1,
+                        }}
+                    />
+                    <MapGeoJSON
+                        id="season-eighteen-private-overlap"
+                        data={usStatesGeoJson}
+                        fillPaint={{
+                            "fill-pattern": stripeFillPattern,
+                            "fill-opacity": 0.96,
+                        }}
+                        linePaint={false}
+                    />
+                </>
+            )}
         </>
     );
 }
@@ -834,52 +856,20 @@ function getGameCard(cardKey: Claim["card"]): GameCard {
     return seasonEighteenCards[cardKey];
 }
 
-function useStateOutlinePaths() {
-    const [paths, setPaths] = useState<StateOutlinePaths>({});
+function useStateOutlinePaths(geoJson: UsStatesGeoJson | null) {
+    return useMemo(() => {
+        if (!geoJson) return {};
 
-    useEffect(() => {
-        let cancelled = false;
-
-        async function loadOutlines() {
-            try {
-                const response = await fetch(US_STATES_GEOJSON);
-                if (!response.ok) return;
-                const geojson = await response.json() as OutlineGeoJSON;
-                const nextPaths: StateOutlinePaths = {};
-
-                for (const feature of geojson.features) {
-                    const name = feature.properties.name as BoardRegion;
-                    if (name in regionCardNames) {
-                        nextPaths[name] = geometryToSvgPath(feature.geometry);
-                    }
-                }
-
-                if (!cancelled) setPaths(nextPaths);
-            } catch {
-                if (!cancelled) setPaths({});
+        const paths: StateOutlinePaths = {};
+        for (const feature of geoJson.features) {
+            const name = feature.properties.name as BoardRegion;
+            if (name in regionCardNames) {
+                paths[name] = geometryToSvgPath(feature.geometry);
             }
         }
-
-        void loadOutlines();
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-    return paths;
+        return paths;
+    }, [geoJson]);
 }
-
-type Position = [number, number];
-type PolygonCoordinates = Position[][];
-type OutlineGeometry =
-    | { type: "Polygon"; coordinates: PolygonCoordinates }
-    | { type: "MultiPolygon"; coordinates: PolygonCoordinates[] };
-type OutlineGeoJSON = {
-    features: Array<{
-        properties: { name: string };
-        geometry: OutlineGeometry;
-    }>;
-};
 
 const regionCardNames = Object.fromEntries(
     Object.values(seasonEighteenCards)
@@ -888,7 +878,7 @@ const regionCardNames = Object.fromEntries(
         .map((region) => [region, true]),
 ) as Partial<Record<BoardRegion, boolean>>;
 
-function geometryToSvgPath(geometry: OutlineGeometry) {
+function geometryToSvgPath(geometry: UsStateGeometry) {
     const polygons = geometry.type === "Polygon"
         ? [geometry.coordinates]
         : geometry.coordinates;

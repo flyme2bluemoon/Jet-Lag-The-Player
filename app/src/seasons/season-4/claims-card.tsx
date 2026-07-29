@@ -28,6 +28,10 @@ import {
     formatTimestamp,
 } from "@/lib/timestamps";
 import {
+    useUsStatesGeoJson,
+    type UsStatesGeoJson,
+} from "@/lib/us-states-geojson";
+import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
@@ -46,7 +50,6 @@ import {
 } from "./state-claims";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
-const US_STATES_GEOJSON = "/geojson/us-states.geojson";
 const CANADA_GEOJSON = "/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
 
@@ -58,6 +61,7 @@ type ClaimsCardProps = {
 
 export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
     const [expandedState, setExpandedState] = useState<string | null>(null);
+    const usStatesGeoJson = useUsStatesGeoJson();
     const isFinalScore = isFinalScoreVisible(episodeSlug, currentTime);
     const claims = useMemo(
         () => getStateClaims(episodeSlug, currentTime),
@@ -87,7 +91,10 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                     dragRotate={false}
                     touchPitch={false}
                 >
-                    <ScoreboardMapLayers claims={claims} />
+                    <ScoreboardMapLayers
+                        claims={claims}
+                        usStatesGeoJson={usStatesGeoJson}
+                    />
                 </Map>
             </div>
             <Score
@@ -134,7 +141,13 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
     );
 }
 
-function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClaim> }) {
+function ScoreboardMapLayers({
+    claims,
+    usStatesGeoJson,
+}: {
+    claims: ReadonlyMap<string, StateClaim>;
+    usStatesGeoJson: UsStatesGeoJson | null;
+}) {
     const { resolvedTheme } = useMap();
     const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const fillColor = useMemo(() => {
@@ -174,12 +187,20 @@ function ScoreboardMapLayers({ claims }: { claims: ReadonlyMap<string, StateClai
                 }}
                 linePaint={false}
             />
-            <MapGeoJSON
-                id="season-four-states"
-                data={US_STATES_GEOJSON}
-                fillPaint={{ "fill-color": fillColor, "fill-opacity": 0.96 }}
-                linePaint={{ "line-color": stateLineColor, "line-width": 1 }}
-            />
+            {usStatesGeoJson && (
+                <MapGeoJSON
+                    id="season-four-states"
+                    data={usStatesGeoJson}
+                    fillPaint={{
+                        "fill-color": fillColor,
+                        "fill-opacity": 0.96,
+                    }}
+                    linePaint={{
+                        "line-color": stateLineColor,
+                        "line-width": 1,
+                    }}
+                />
+            )}
             {districtClaim && (
                 <MapMarker longitude={-77.0369} latitude={38.9072}>
                     <MarkerContent>

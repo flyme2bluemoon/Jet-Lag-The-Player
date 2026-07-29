@@ -23,6 +23,7 @@ import {
     type MapFillOpacity,
     type MapLineColor,
 } from "@/components/ui/map";
+import { useMapRegionLabel } from "@/components/episode/map-region-label";
 import {
     MAPLIBRE_COLORS,
     MAPLIBRE_SCOREBOARD_COLORS,
@@ -147,6 +148,11 @@ function GameBoardMapLayers({
     usStatesGeoJson: UsStatesGeoJson | null;
 }) {
     const { isLoaded, map, resolvedTheme } = useMap();
+    const {
+        regionLabelPopup,
+        showOnClick,
+        showOnHover,
+    } = useMapRegionLabel();
     const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const statuses = useMemo(() => getRegionStatuses(game), [game]);
     const stripedRegions = useMemo(
@@ -230,6 +236,7 @@ function GameBoardMapLayers({
             <MapGeoJSON
                 id="season-eighteen-canada"
                 data={CANADA_GEOJSON}
+                interactive={Boolean(canadaStatus)}
                 fillPaint={{
                     "fill-color": canadaStatus
                         ? getStatusColor(canadaStatus)
@@ -244,12 +251,19 @@ function GameBoardMapLayers({
                         "line-width": 1,
                     }
                     : false}
+                onClick={(event) => showOnClick("Canada", event)}
+                onMove={(event) => showOnHover("Canada", event)}
+                onHover={(event) => {
+                    if (!event) showOnHover(null, null);
+                }}
             />
             {usStatesGeoJson && (
                 <>
                     <MapGeoJSON
                         id="season-eighteen-states"
                         data={usStatesGeoJson}
+                        promoteId="name"
+                        interactive
                         fillPaint={{
                             "fill-color": fillColor,
                             "fill-opacity": fillOpacity,
@@ -257,6 +271,20 @@ function GameBoardMapLayers({
                         linePaint={{
                             "line-color": stateLineColor,
                             "line-width": 1,
+                        }}
+                        onClick={(event) => {
+                            const name = event.feature.properties.name;
+                            if (name !== "Puerto Rico") showOnClick(name, event);
+                        }}
+                        onMove={(event) => {
+                            const name = event.feature.properties.name;
+                            showOnHover(
+                                name !== "Puerto Rico" ? name : null,
+                                event,
+                            );
+                        }}
+                        onHover={(event) => {
+                            if (!event) showOnHover(null, null);
                         }}
                     />
                     <MapGeoJSON
@@ -270,6 +298,7 @@ function GameBoardMapLayers({
                     />
                 </>
             )}
+            {regionLabelPopup}
         </>
     );
 }

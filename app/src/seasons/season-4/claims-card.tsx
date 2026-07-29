@@ -17,6 +17,7 @@ import {
     type MapFillColor,
     type MapLineColor,
 } from "@/components/ui/map";
+import { useMapRegionLabel } from "@/components/episode/map-region-label";
 import {
     MAPLIBRE_COLORS,
     MAPLIBRE_SCOREBOARD_COLORS,
@@ -149,6 +150,11 @@ function ScoreboardMapLayers({
     usStatesGeoJson: UsStatesGeoJson | null;
 }) {
     const { resolvedTheme } = useMap();
+    const {
+        regionLabelPopup,
+        showOnClick,
+        showOnHover,
+    } = useMapRegionLabel();
     const colors = MAPLIBRE_SCOREBOARD_COLORS[resolvedTheme];
     const fillColor = useMemo(() => {
         const expression: unknown[] = [
@@ -191,6 +197,8 @@ function ScoreboardMapLayers({
                 <MapGeoJSON
                     id="season-four-states"
                     data={usStatesGeoJson}
+                    promoteId="name"
+                    interactive
                     fillPaint={{
                         "fill-color": fillColor,
                         "fill-opacity": 0.96,
@@ -199,10 +207,28 @@ function ScoreboardMapLayers({
                         "line-color": stateLineColor,
                         "line-width": 1,
                     }}
+                    onClick={(event) => {
+                        const name = event.feature.properties.name;
+                        if (name !== "Puerto Rico") showOnClick(name, event);
+                    }}
+                    onMove={(event) => {
+                        const name = event.feature.properties.name;
+                        showOnHover(
+                            name !== "Puerto Rico" ? name : null,
+                            event,
+                        );
+                    }}
+                    onHover={(event) => {
+                        if (!event) showOnHover(null, null);
+                    }}
                 />
             )}
             {districtClaim && (
-                <MapMarker longitude={-77.0369} latitude={38.9072}>
+                <MapMarker
+                    longitude={-77.0369}
+                    latitude={38.9072}
+                    className="pointer-events-none"
+                >
                     <MarkerContent>
                         <span
                             className="block size-2.5 rounded-full border-2 shadow"
@@ -215,6 +241,7 @@ function ScoreboardMapLayers({
                     </MarkerContent>
                 </MapMarker>
             )}
+            {regionLabelPopup}
         </>
     );
 }

@@ -1364,6 +1364,8 @@ type MapGeoJSONProps<
   fillHoverPaint?: MapFillPaint;
   /** Callback when a feature is clicked. */
   onClick?: (e: MapGeoJSONEvent<P>) => void;
+  /** Callback fired whenever the pointer moves over a feature. */
+  onMove?: (e: MapGeoJSONEvent<P>) => void;
   /** Callback fired when the hovered feature changes; `null` when the cursor leaves. */
   onHover?: (e: MapGeoJSONEvent<P> | null) => void;
   /** Whether features respond to mouse events (default: false). */
@@ -1392,6 +1394,7 @@ function MapGeoJSON<
   linePaint,
   fillHoverPaint,
   onClick,
+  onMove,
   onHover,
   interactive = false,
   beforeId,
@@ -1425,6 +1428,7 @@ function MapGeoJSON<
     [defaults.line, linePaint],
   );
   const emitClick = useEffectEvent((event: MapGeoJSONEvent<P>) => onClick?.(event));
+  const emitMove = useEffectEvent((event: MapGeoJSONEvent<P>) => onMove?.(event));
   const emitHover = useEffectEvent((event: MapGeoJSONEvent<P> | null) => onHover?.(event));
 
   // Add source on mount.
@@ -1542,15 +1546,18 @@ function MapGeoJSON<
       if (!feature) return;
       map.getCanvas().style.cursor = "pointer";
 
-      const featureId = feature.id;
-      if (featureId === hoveredId) return;
-      setHover(featureId ?? null);
-      emitHover({
+      const mapEvent = {
         feature: feature as unknown as MapGeoJSONFeature<P>,
         longitude: e.lngLat.lng,
         latitude: e.lngLat.lat,
         originalEvent: e,
-      });
+      };
+      emitMove(mapEvent);
+
+      const featureId = feature.id;
+      if (featureId === hoveredId) return;
+      setHover(featureId ?? null);
+      emitHover(mapEvent);
     };
 
     const handleMouseLeave = () => {

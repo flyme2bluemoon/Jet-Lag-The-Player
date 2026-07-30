@@ -1024,14 +1024,14 @@ export function TrackerCard({
     };
 
     return (
-        <section className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}>
+        <section className={cn("overflow-hidden rounded-2xl border border-border bg-card ultrawide:flex ultrawide:h-full ultrawide:flex-col", className)}>
             <div className="border-b border-border px-5 py-4 sm:px-7">
                 <h2 className="font-heading text-3xl font-bold uppercase tracking-tight text-card-foreground">
                     Tracker
                 </h2>
             </div>
 
-            <div className="relative h-124 min-h-96 sm:h-144">
+            <div className="relative h-124 min-h-96 sm:h-144 ultrawide:h-auto ultrawide:flex-1">
                 <Map
                     center={mapStage.center}
                     zoom={mapStage.zoom}

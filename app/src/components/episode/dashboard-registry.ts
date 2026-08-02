@@ -13,6 +13,11 @@ export const dashboardRegistry: Partial<Record<SeasonSlug, DashboardComponent>> 
             (module) => module.SeasonFourDashboard,
         ),
     ),
+    "season-9": dynamic(() =>
+        import("@/seasons/season-9/dashboard").then(
+            (module) => module.SeasonNineDashboard,
+        ),
+    ),
     "season-18": dynamic(() =>
         import("@/seasons/season-18/dashboard").then(
             (module) => module.SeasonEighteenDashboard,

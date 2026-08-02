@@ -829,11 +829,17 @@ type MapControlsProps = {
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   /** Show zoom in/out buttons (default: true) */
   showZoom?: boolean;
-  /** Initial camera position used by the reset-view button. Omit to hide it. */
-  resetView?: {
-    center: [number, number];
-    zoom: number;
-  };
+  /** Camera target used by the reset-view button. Omit to hide it. */
+  resetView?:
+    | {
+        center: [number, number];
+        zoom: number;
+      }
+    | {
+        bounds: [[number, number], [number, number]];
+        padding?: number;
+        maxZoom?: number;
+      };
   /** Show compass button to reset bearing (default: false) */
   showCompass?: boolean;
   /** Show locate button to find user's location (default: false) */
@@ -914,6 +920,16 @@ function MapControls({
 
   const handleResetView = useCallback(() => {
     if (!map || !resetView) return;
+
+    if ("bounds" in resetView) {
+      map.resetNorthPitch({ duration: 0 });
+      map.fitBounds(resetView.bounds, {
+        padding: resetView.padding ?? 24,
+        maxZoom: resetView.maxZoom,
+        duration: 600,
+      });
+      return;
+    }
 
     map.easeTo({
       center: resetView.center,

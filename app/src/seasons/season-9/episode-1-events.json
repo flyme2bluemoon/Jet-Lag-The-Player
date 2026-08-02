@@ -1,0 +1,458 @@
+{
+  "format": "jetlag-s9-markup",
+  "version": 1,
+  "exportedAt": "2026-08-02T07:10:25.600Z",
+  "season": {
+    "slug": "season-9",
+    "number": 9,
+    "name": "Hide + Seek"
+  },
+  "events": [
+    {
+      "id": "season-9-initial-adam-hider",
+      "episode": "episode-1",
+      "at": 0,
+      "type": "hider-change",
+      "metadata": {
+        "hider": "adam"
+      }
+    },
+    {
+      "id": "aa8cb5e6-e23f-4959-aed8-d2e0c480d533",
+      "episode": "episode-1",
+      "at": 40,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Lucerne"
+      }
+    },
+    {
+      "id": "f35f0b08-2bab-4348-9e71-41d8e6eb2c94",
+      "episode": "episode-1",
+      "at": 180,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "relative",
+        "questionId": "longitude",
+        "questionLabel": "Longitude",
+        "coins": 40
+      }
+    },
+    {
+      "id": "c019d137-f637-4437-a578-f56fa327f569",
+      "episode": "episode-1",
+      "at": 186,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "f35f0b08-2bab-4348-9e71-41d8e6eb2c94",
+        "questionType": "relative",
+        "questionId": "longitude",
+        "questionLabel": "Longitude"
+      }
+    },
+    {
+      "id": "d1a7b76b-2d6f-45ea-a881-8a4c4b67b429",
+      "episode": "episode-1",
+      "at": 213,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "c019d137-f637-4437-a578-f56fa327f569",
+        "response": "Higher than 8.3093ºE"
+      }
+    },
+    {
+      "id": "aef82b69-eca4-4021-a780-84ca79c90e38",
+      "episode": "episode-1",
+      "at": 306,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "relative",
+        "questionId": "latitude",
+        "questionLabel": "Latitude",
+        "coins": 40
+      }
+    },
+    {
+      "id": "fb22124e-f8f6-4d9e-b384-bce9d3cd6d58",
+      "episode": "episode-1",
+      "at": 310,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "aef82b69-eca4-4021-a780-84ca79c90e38",
+        "questionType": "relative",
+        "questionId": "latitude",
+        "questionLabel": "Latitude"
+      }
+    },
+    {
+      "id": "69022d2b-66f8-434b-a4ab-9d319a8fc2dd",
+      "episode": "episode-1",
+      "at": 316,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "fb22124e-f8f6-4d9e-b384-bce9d3cd6d58",
+        "response": "Lower than 47.0502ºN"
+      }
+    },
+    {
+      "id": "e0248f8b-3ea0-4f30-b050-2179341437e5",
+      "episode": "episode-1",
+      "at": 389,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Train to Arth-Goldau leaves Lucerne"
+      }
+    },
+    {
+      "id": "e53968bb-8fb2-4668-b5dd-248bde20c6bc",
+      "episode": "episode-1",
+      "at": 489,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "photo",
+        "questionId": "five-buildings",
+        "questionLabel": "5 buildings",
+        "coins": 15
+      }
+    },
+    {
+      "id": "6ef1614c-899e-40c8-b66f-e839f49c3665",
+      "episode": "episode-1",
+      "at": 494,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "e53968bb-8fb2-4668-b5dd-248bde20c6bc",
+        "questionType": "photo",
+        "questionId": "five-buildings",
+        "questionLabel": "5 buildings"
+      }
+    },
+    {
+      "id": "a02a7762-a0b4-47fa-9f8e-dd3016abeed1",
+      "episode": "episode-1",
+      "at": 548,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "6ef1614c-899e-40c8-b66f-e839f49c3665",
+        "response": "adam_run-1_five-buildings.jpg"
+      }
+    },
+    {
+      "id": "97128882-7671-4d04-869d-90c58e530401",
+      "episode": "episode-1",
+      "at": 672,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "radar",
+        "questionId": "25-miles",
+        "questionLabel": "25 miles",
+        "coins": 30
+      }
+    },
+    {
+      "id": "018c6eb5-47d3-4d6c-85b9-7625deae856c",
+      "episode": "episode-1",
+      "at": 683,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "97128882-7671-4d04-869d-90c58e530401",
+        "questionType": "radar",
+        "questionId": "25-miles",
+        "questionLabel": "25 miles"
+      }
+    },
+    {
+      "id": "73b5a877-73be-4cfb-a9cf-f626cb00a9df",
+      "episode": "episode-1",
+      "at": 699,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "018c6eb5-47d3-4d6c-85b9-7625deae856c",
+        "response": "Not within 25 mi of Goldau"
+      }
+    },
+    {
+      "id": "4d2ed7f1-160d-415b-849d-0d0ae9a6947a",
+      "episode": "episode-1",
+      "at": 832,
+      "type": "curse-purchased",
+      "metadata": {
+        "diceCount": 2
+      }
+    },
+    {
+      "id": "a4130a73-0f25-4cb2-8935-b13e338583b2",
+      "episode": "episode-1",
+      "at": 858,
+      "type": "curse-dice-rolled",
+      "metadata": {
+        "curseId": "4d2ed7f1-160d-415b-849d-0d0ae9a6947a",
+        "curseTypeId": "william-tell",
+        "curseName": "William Tell Curse",
+        "curseRoll": "7"
+      }
+    },
+    {
+      "id": "b8d46184-ae42-46b9-bef9-92f3425257d0",
+      "episode": "episode-1",
+      "at": 955,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Goschenen"
+      }
+    },
+    {
+      "id": "27534efb-d583-4f9b-a20b-39bd094992c2",
+      "episode": "episode-1",
+      "at": 1022,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Train to Andermatt"
+      }
+    },
+    {
+      "id": "386d7dfd-c587-4fdf-8716-4c16bb316566",
+      "episode": "episode-1",
+      "at": 1104,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Andermatt"
+      }
+    },
+    {
+      "id": "5e61ddff-97b5-4624-8813-06a53ba71e0d",
+      "episode": "episode-1",
+      "at": 1442,
+      "type": "curse-expired",
+      "metadata": {
+        "curseId": "4d2ed7f1-160d-415b-849d-0d0ae9a6947a"
+      }
+    },
+    {
+      "id": "1f5fd38f-49b2-4a69-bab9-6cad868f04c2",
+      "episode": "episode-1",
+      "at": 1494,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "radar",
+        "questionId": "10-miles",
+        "questionLabel": "10 miles",
+        "coins": 30
+      }
+    },
+    {
+      "id": "e8c65f5e-9887-478a-8fe1-127b13eef4c8",
+      "episode": "episode-1",
+      "at": 1496,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "1f5fd38f-49b2-4a69-bab9-6cad868f04c2",
+        "questionType": "radar",
+        "questionId": "10-miles",
+        "questionLabel": "10 miles"
+      }
+    },
+    {
+      "id": "e175a505-540f-4310-9bea-6131ed2dcf66",
+      "episode": "episode-1",
+      "at": 1505,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "e8c65f5e-9887-478a-8fe1-127b13eef4c8",
+        "response": "Within 10 mi of Andermatt"
+      }
+    },
+    {
+      "id": "a1b17a21-46bb-40e1-9501-4831812abb81",
+      "episode": "episode-1",
+      "at": 1570,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "precision",
+        "questionId": "hotel-price",
+        "questionLabel": "Hotel price",
+        "coins": 10
+      }
+    },
+    {
+      "id": "31b6b512-0e5e-4b6c-8d75-2bc9d430cd3f",
+      "episode": "episode-1",
+      "at": 1574,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "a1b17a21-46bb-40e1-9501-4831812abb81",
+        "questionType": "precision",
+        "questionId": "hotel-price",
+        "questionLabel": "Hotel price"
+      }
+    },
+    {
+      "id": "d581338b-ae70-4a0a-94b0-4e41b6b470c6",
+      "episode": "episode-1",
+      "at": 1591,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "31b6b512-0e5e-4b6c-8d75-2bc9d430cd3f",
+        "response": "$100"
+      }
+    },
+    {
+      "id": "f8fa19db-b4e5-4b22-add6-8f477ff6546a",
+      "episode": "episode-1",
+      "at": 1705,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Train leaves to Hospental"
+      }
+    },
+    {
+      "id": "95e573a0-5127-4678-98c1-2bcf17181bd7",
+      "episode": "episode-1",
+      "at": 1722,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Hospental"
+      }
+    },
+    {
+      "id": "ea9eb4e7-11d1-4726-9824-160c99129cfe",
+      "episode": "episode-1",
+      "at": 1758,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "photo",
+        "questionId": "train-station",
+        "questionLabel": "Train station",
+        "coins": 15
+      }
+    },
+    {
+      "id": "28b28318-7924-4ac0-8d9e-eeb022fc7274",
+      "episode": "episode-1",
+      "at": 1794,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "ea9eb4e7-11d1-4726-9824-160c99129cfe",
+        "questionType": "photo",
+        "questionId": "train-station",
+        "questionLabel": "Train station",
+        "responseKind": "veto"
+      }
+    },
+    {
+      "id": "76cbd863-041b-4fa0-8112-87d3d1d37d48",
+      "episode": "episode-1",
+      "at": 1794,
+      "type": "endgame-started",
+      "metadata": {}
+    },
+    {
+      "id": "e7cfced2-67c8-434c-8efe-bb48ae269f70",
+      "episode": "episode-1",
+      "at": 1866,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "precision",
+        "questionId": "photo-straight-up",
+        "questionLabel": "Photo straight up",
+        "coins": 10
+      }
+    },
+    {
+      "id": "b0eae008-3145-4f0d-8875-f6cc4f3ddaa6",
+      "episode": "episode-1",
+      "at": 1868,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "e7cfced2-67c8-434c-8efe-bb48ae269f70",
+        "questionType": "precision",
+        "questionId": "photo-straight-up",
+        "questionLabel": "Photo straight up"
+      }
+    },
+    {
+      "id": "c62606b9-3ebd-4b8e-9891-6a38c1ae19bd",
+      "episode": "episode-1",
+      "at": 1882,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "b0eae008-3145-4f0d-8875-f6cc4f3ddaa6",
+        "response": "adam_run-1_straight-up.jpg"
+      }
+    },
+    {
+      "id": "d59da2bc-f619-436a-81d0-429b58790332",
+      "episode": "episode-1",
+      "at": 1988,
+      "type": "question-asked",
+      "metadata": {
+        "questionType": "precision",
+        "questionId": "selfie",
+        "questionLabel": "Selfie",
+        "coins": 10
+      }
+    },
+    {
+      "id": "a7e34efc-85db-4484-9dc5-03ee1fab0f49",
+      "episode": "episode-1",
+      "at": 1993,
+      "type": "question-response",
+      "metadata": {
+        "questionEventId": "d59da2bc-f619-436a-81d0-429b58790332",
+        "questionType": "precision",
+        "questionId": "selfie",
+        "questionLabel": "Selfie"
+      }
+    },
+    {
+      "id": "4c9f1df4-9b84-40c5-b590-e0f29c814776",
+      "episode": "episode-1",
+      "at": 2000,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "a7e34efc-85db-4484-9dc5-03ee1fab0f49",
+        "response": "adam_run-1_selfie.jpg"
+      }
+    },
+    {
+      "id": "eac23a22-7f5c-4d64-ae2c-d9a6ab4c7ad1",
+      "episode": "episode-1",
+      "at": 2030,
+      "type": "curse-purchased",
+      "metadata": {
+        "diceCount": 1
+      }
+    },
+    {
+      "id": "7f7e6ba4-d029-49e1-9d55-8398618887dd",
+      "episode": "episode-1",
+      "at": 2053,
+      "type": "curse-dice-rolled",
+      "metadata": {
+        "curseId": "eac23a22-7f5c-4d64-ae2c-d9a6ab4c7ad1",
+        "curseTypeId": "swiss-clock",
+        "curseName": "Swiss Clock Curse",
+        "curseRoll": "3"
+      }
+    },
+    {
+      "id": "41ac2433-0e5c-4012-9943-ccfc6df1c392",
+      "episode": "episode-1",
+      "at": 2178,
+      "type": "run-ended",
+      "metadata": {
+        "hider": "adam",
+        "durationSeconds": 16752
+      }
+    },
+    {
+      "id": "ddad5d76-7f91-47a5-af28-dc7add99f9ae",
+      "episode": "episode-1",
+      "at": 2186,
+      "type": "hider-change",
+      "metadata": {
+        "hider": "ben"
+      }
+    }
+  ]
+}

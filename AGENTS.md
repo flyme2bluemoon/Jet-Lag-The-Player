@@ -6,30 +6,32 @@ Jet Lag: The Game is a travel game show in which teams or individual players com
 
 There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use the teams below when creating season graphics. The colors refer to the color palette below. In individual games, “team” and “player” may be used interchangeably.
 
-| Season | Game                          | Team 1                      | Team 2                   | Team 3      |
-| -----: | ----------------------------- | --------------------------- | ------------------------ | ----------- |
-|      1 | Connect Four Across America   | Sam & Brian                 | Ben & Adam               |             |
-|      2 | Circumnavigation              | Sam & Joseph                | Ben & Adam               |             |
-|      3 | Tag Eur It                    | Sam                         | Adam                     | Ben         |
-|      4 | Battle 4 America              | Sam & Brian (jet-lag-green) | Ben & Adam (jet-lag-red) |             |
-|      5 | Race To The End Of The World  | Sam & Toby                  | Ben & Adam               |             |
-|      6 | Capture The Flag Across Japan | Sam & Scotty                | Ben & Adam               |             |
-|      7 | Tag Eur It 2                  | Sam                         | Adam                     | Ben         |
-|      8 | Arctic Escape                 | Sam & Michelle              | Ben & Adam               |             |
-|      9 | Hide + Seek                   | Sam                         | Adam                     | Ben         |
-|     10 | AU$TRALIA                     | Sam & Toby                  | Ben & Adam               |             |
-|     11 | Tag Eur It 3                  | Sam                         | Adam                     | Ben         |
-|     12 | Hide + Seek: Japan            | Sam                         | Adam                     | Ben         |
-|     13 | Schengen Showdown             | Sam & Tom                   | Ben & Adam               |             |
-|   13.5 | Hide and Seek Across NYC      | Sam & Amy                   | Adam & Ben               |             |
-|     14 | SnaKe                         | Sam                         | Adam                     | Ben         |
-|     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian |
-|     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben         |
-|     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |             |
-|     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |             |
+| Season | Game                          | Team 1                      | Team 2                   | Team 3            |
+| -----: | ----------------------------- | --------------------------- | ------------------------ | ----------------- |
+|      1 | Connect Four Across America   | Sam & Brian                 | Ben & Adam               |                   |
+|      2 | Circumnavigation              | Sam & Joseph                | Ben & Adam               |                   |
+|      3 | Tag Eur It                    | Sam                         | Adam                     | Ben               |
+|      4 | Battle 4 America              | Sam & Brian (jet-lag-green) | Ben & Adam (jet-lag-red) |                   |
+|      5 | Race To The End Of The World  | Sam & Toby                  | Ben & Adam               |                   |
+|      6 | Capture The Flag Across Japan | Sam & Scotty                | Ben & Adam               |                   |
+|      7 | Tag Eur It 2                  | Sam                         | Adam                     | Ben               |
+|      8 | Arctic Escape                 | Sam & Michelle              | Ben & Adam               |                   |
+|      9 | Hide + Seek                   | Sam (jet-lag-yellow)        | Adam (jet-lag-green)     | Ben (jet-lag-red) |
+|     10 | AU$TRALIA                     | Sam & Toby                  | Ben & Adam               |                   |
+|     11 | Tag Eur It 3                  | Sam                         | Adam                     | Ben               |
+|     12 | Hide + Seek: Japan            | Sam                         | Adam                     | Ben               |
+|     13 | Schengen Showdown             | Sam & Tom                   | Ben & Adam               |                   |
+|   13.5 | Hide and Seek Across NYC      | Sam & Amy                   | Adam & Ben               |                   |
+|     14 | SnaKe                         | Sam                         | Adam                     | Ben               |
+|     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian       |
+|     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben               |
+|     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |                   |
+|     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |                   |
 
-For Season 4 challenge data, use the [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
-For Season 18 challenge data, use the [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
+For Season 4 challenge data, check out [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
+For Season 9 question bank data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Questions.
+For Season 9 curse data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Curses.
+For Season 18 challenge data, check out [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
 
 ## Repository layout
 

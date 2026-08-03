@@ -21,6 +21,7 @@ const MAX_HIDER_LATITUDE = 47.0502;
 const GOLDAU_STATION: Coordinate = [8.5496, 47.0492];
 const ANDERMATT_STATION: Coordinate = [8.5947, 46.6374];
 const HOSPENTAL_STATION: Coordinate = [8.5696, 46.6195];
+const WINTERTHUR_TOSS_STATION: Coordinate = [8.7093, 47.4898];
 const MAP_MAX_ZOOM = 22;
 const SWITZERLAND_BOUNDS = playableAreaBounds(SWITZERLAND_OUTLINE, null);
 const withinSwitzerland: FilterSpecification = ["within", switzerlandFeature];
@@ -494,19 +495,27 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         ),
         [state.questions],
     );
-    const hasLongitudeConstraint = answeredQuestionIds.has("longitude");
-    const hasLatitudeConstraint = answeredQuestionIds.has("latitude");
-    const hasGoldauRadarMiss = answeredQuestionIds.has("25-miles");
-    const hasAndermattRadarHit = answeredQuestionIds.has("10-miles");
+    const isFirstAdamRun = state.currentHider === "adam"
+        && state.currentRunStartedAt.episode === "episode-1"
+        && state.currentRunStartedAt.at === 0;
+    const hasLongitudeConstraint = isFirstAdamRun && answeredQuestionIds.has("longitude");
+    const hasLatitudeConstraint = isFirstAdamRun && answeredQuestionIds.has("latitude");
+    const hasGoldauRadarMiss = isFirstAdamRun && answeredQuestionIds.has("25-miles");
+    const hasAndermattRadarHit = isFirstAdamRun && answeredQuestionIds.has("10-miles");
+    const endgameStation = state.currentHider === "sam"
+        ? WINTERTHUR_TOSS_STATION
+        : isFirstAdamRun
+            ? HOSPENTAL_STATION
+            : null;
     const hasSearchConstraint = hasLongitudeConstraint
         || hasLatitudeConstraint
         || hasGoldauRadarMiss
         || hasAndermattRadarHit
-        || state.endgame;
+        || (state.endgame && endgameStation !== null);
 
     const mapGeometry = useMemo(() => {
-        const preciseArea = state.endgame
-            ? circleCoordinates(HOSPENTAL_STATION, 0.5)
+        const preciseArea = state.endgame && endgameStation
+            ? circleCoordinates(endgameStation, 0.5)
             : hasAndermattRadarHit
                 ? circleCoordinates(ANDERMATT_STATION, 10)
                 : SWITZERLAND_OUTLINE;
@@ -537,6 +546,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         hasLatitudeConstraint,
         hasLongitudeConstraint,
         hasSearchConstraint,
+        endgameStation,
         state.endgame,
     ]);
 

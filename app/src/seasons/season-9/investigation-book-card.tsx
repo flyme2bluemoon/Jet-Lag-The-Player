@@ -23,6 +23,7 @@ const CATEGORY_STYLES: Record<QuestionCategory, string> = {
     photo: "border-question-photo/35 bg-question-photo/15 text-question-photo dark:border-paper/35 dark:bg-question-photo/20 dark:text-question-photo",
     oddball: "border-question-oddball/35 bg-question-oddball/15 text-question-oddball dark:border-paper/35 dark:bg-question-oddball/20 dark:text-question-oddball",
     precision: "border-question-precision/35 bg-question-precision/15 text-question-precision dark:border-paper/35 dark:bg-question-precision/20 dark:text-question-precision",
+    unknown: "border-control/35 bg-control/10 text-control dark:border-paper/35 dark:bg-paper/10 dark:text-paper",
 };
 
 function getQuestionTitle(question: InvestigationQuestion) {

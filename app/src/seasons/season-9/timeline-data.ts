@@ -3,7 +3,7 @@ import { seasonNine } from "@/data/season-9";
 import { compareTimestamps, formatEpisodeLabel, formatTimestamp, type EpisodeTimestamp } from "@/lib/timestamps";
 
 export type PlayerId = "sam" | "adam" | "ben";
-export type QuestionCategory = "relative" | "radar" | "photo" | "oddball" | "precision";
+export type QuestionCategory = "relative" | "radar" | "photo" | "oddball" | "precision" | "unknown";
 
 type EventMetadata = {
     hider?: PlayerId;
@@ -75,9 +75,14 @@ export type SeasonNineState = {
     leaderboard: readonly CompletedRun[];
 };
 
-const events = (markup.events as readonly SeasonNineEvent[]).toSorted((left, right) =>
-    compareTimestamps(seasonNine, left, right),
-);
+const events = (markup.events as readonly SeasonNineEvent[]).toSorted((left, right) => {
+    const timestampComparison = compareTimestamps(seasonNine, left, right);
+    if (timestampComparison !== 0) return timestampComparison;
+
+    if (left.type === "question-response" && right.type === "question-response-revealed") return -1;
+    if (left.type === "question-response-revealed" && right.type === "question-response") return 1;
+    return 0;
+});
 
 const QUESTION_DESCRIPTIONS: Record<string, string> = {
     longitude: "Is your longitude higher or lower than ours?",
@@ -89,17 +94,50 @@ const QUESTION_DESCRIPTIONS: Record<string, string> = {
     "train-station": "Send a photo of the nearest train station.",
     "photo-straight-up": "Without moving, send a photo with the camera facing straight up.",
     selfie: "Without moving, take a picture facing you at arm’s length.",
+    "five-words": "Send us five words. One of them has to rhyme with your town name.",
+    "political-party": "Did your location vote for the same political party as ours?",
+    "largest-body-of-water": "Send a photo of the largest body of water where you are.",
+    "town-hall": "Send a picture of your town hall.",
+    strava: "Send a Strava map of yourself running ½ mile on local streets.",
+    "tallest-visible-mountain": "Send a photo of the tallest visible mountain based on your sightline.",
+    "street-starting-letter-number": "What is the first letter or number of your nearest street?",
+    "train-station-walking-distance": "How long would it take to walk to the nearest train station?",
+    "geographic-region": "Are you in the same geographic region as us?",
+    canton: "Are you in the same Canton as us?",
+    "5-miles": "Are you within 5 miles of the seekers?",
+    "50-miles": "Are you within 50 miles of the seekers?",
+    mcdonalds: "Send a photo of a McDonald’s.",
+    "train-departure": "Is the next train at your nearest station at an odd or even time?",
+    "bird-facetime": "FaceTime us until you show us a bird.",
+    "street-orientation": "What intercardinal direction does your nearest street run?",
+    "half-mile": "Are you within ½ mile of the seekers?",
+    "feet-from-nearest-road": "Rounded to 5, how many feet are you from the nearest road?",
+    "feet-from-nearest-intersection": "Rounded to 5, how many feet are you from the nearest intersection?",
+    "same-street": "Are you on the same street as us?",
 };
 
 const CURSE_DESCRIPTIONS: Record<string, string> = {
     "william-tell": "Before asking the next question, knock an apple off your partner’s head from 10 feet away.",
     "swiss-clock": "Before asking the next question, clap 15 seconds after your partner starts a timer, within half a second. A failed attempt requires a 10-minute wait.",
+    "cheese-rolling": "Before asking the next question, roll cheese 30 feet in a single roll.",
+    "swiss-cheese": "Before asking the next question, acquire 8 ounces of Swiss cheese and fill its outside holes with other cheeses until it looks solid.",
 };
 
 const RESPONSE_ASSETS: Record<string, string> = {
     "adam_run-1_five-buildings.jpg": "/season-9/responses/adam_run-1_five-buildings.jpg",
     "adam_run-1_straight-up.jpg": "/season-9/responses/adam_run-1_straight-up.jpg",
     "adam_run-1_selfie.jpg": "/season-9/responses/adam_run-1_selfie.jpg",
+    "ben_run1_mountain.jpg": "/season-9/responses/ben_run1_mountain.jpg",
+    "ben_run1_photo-up.jpg": "/season-9/responses/ben_run1_photo-up.jpg",
+    "ben_run1_selfie.jpg": "/season-9/responses/ben_run1_selfie.jpg",
+    "ben_run1_strava.jpg": "/season-9/responses/ben_run1_strava.jpg",
+    "ben_run1_train-station.jpg": "/season-9/responses/ben_run1_train-station.jpg",
+    "ben_run1_water.jpg": "/season-9/responses/ben_run1_water.jpg",
+    "sam_run1_mcd.jpg": "/season-9/responses/sam_run1_mcd.jpg",
+    "sam_run1_photo-up.jpg": "/season-9/responses/sam_run1_photo-up.jpg",
+    "sam_run1_train-station.jpg": "/season-9/responses/sam_run1_train-station.jpg",
+    "adam_run2_train-station.jpg": "/season-9/responses/adam_run2_train-station.jpg",
+    "adam_run2_5buildings.jpg": "/season-9/responses/adam_run2_5buildings.jpg",
 };
 
 const stateCache = new Map<string, SeasonNineState>();
@@ -199,7 +237,7 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
                 const question = questionByResponseEvent.get(required(metadata.questionResponseEventId, "questionResponseEventId"));
                 if (!question) break;
                 const response = required(metadata.response, "response");
-                question.response = RESPONSE_ASSETS[response] ? "Photo received" : response;
+                question.response = /\.(?:jpe?g|png|webp)$/i.test(response) ? "Photo received" : response;
                 question.responseAsset = RESPONSE_ASSETS[response] ?? null;
                 question.status = "answered";
                 break;

@@ -1788,7 +1788,7 @@
     },
     {
       "id": "f1b02526-4e6a-4fac-b9ba-fb483dff7578",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 118,
       "type": "question-asked",
       "metadata": {
@@ -1800,7 +1800,7 @@
     },
     {
       "id": "9cd8b66c-b509-4a5d-bc77-0c94e8a23684",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 129,
       "type": "question-response",
       "metadata": {
@@ -1812,7 +1812,7 @@
     },
     {
       "id": "171096a4-db78-4f06-8f88-424fd897d262",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 143,
       "type": "question-response-revealed",
       "metadata": {
@@ -1822,7 +1822,7 @@
     },
     {
       "id": "ce2c3fcf-64fe-43d5-8604-8b31af974b11",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 168,
       "type": "question-asked",
       "metadata": {
@@ -1834,7 +1834,7 @@
     },
     {
       "id": "b99cd5c3-6c42-4901-8a51-f0d7ef9bb344",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 180,
       "type": "question-response",
       "metadata": {
@@ -1846,7 +1846,7 @@
     },
     {
       "id": "091f07e6-ae68-49ff-9b30-b26815c76716",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 209,
       "type": "question-response-revealed",
       "metadata": {
@@ -1856,7 +1856,7 @@
     },
     {
       "id": "c34befe7-d37d-44e0-bfb1-7fea4aa415a7",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 333,
       "type": "question-asked",
       "metadata": {
@@ -1868,7 +1868,7 @@
     },
     {
       "id": "2ce43ab9-b693-497f-bd87-5eb760740e86",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 339,
       "type": "seekers-location",
       "metadata": {
@@ -1877,7 +1877,7 @@
     },
     {
       "id": "600ce00a-0224-43b4-99f4-b9645f1f0daa",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 346,
       "type": "question-response",
       "metadata": {
@@ -1889,17 +1889,17 @@
     },
     {
       "id": "e60cb9b9-f113-4e4b-9d8b-030693739d9a",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 362,
       "type": "question-response-revealed",
       "metadata": {
         "questionResponseEventId": "600ce00a-0224-43b4-99f4-b9645f1f0daa",
-        "response": "Adam is not with 50 miles of Winterthur"
+        "response": "Adam is not within 50 miles of Winterthur"
       }
     },
     {
       "id": "f8583091-924a-4a8b-ad51-06479baba951",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 418,
       "type": "seekers-location",
       "metadata": {
@@ -1908,7 +1908,7 @@
     },
     {
       "id": "f85bb7f0-1e45-4c0c-9f66-bc9d2aa095af",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 435,
       "type": "seekers-location",
       "metadata": {
@@ -1917,7 +1917,7 @@
     },
     {
       "id": "49fd678f-0502-4b5b-b433-6712edea80f1",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 503,
       "type": "question-asked",
       "metadata": {
@@ -1929,7 +1929,7 @@
     },
     {
       "id": "1e55af2d-08c9-4220-9f7d-ae53793366ab",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 531,
       "type": "question-response",
       "metadata": {
@@ -1941,7 +1941,7 @@
     },
     {
       "id": "8ef03a54-f0ad-42be-a989-6b842ceeecc1",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 556,
       "type": "question-response-revealed",
       "metadata": {
@@ -1951,7 +1951,7 @@
     },
     {
       "id": "959858c5-1940-428d-982c-bfae24984e3d",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 618,
       "type": "seekers-location",
       "metadata": {
@@ -1960,7 +1960,7 @@
     },
     {
       "id": "3300d096-2ffd-4ce7-b2ed-a84dbfd04553",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 643,
       "type": "question-asked",
       "metadata": {
@@ -1972,7 +1972,7 @@
     },
     {
       "id": "a4cb0480-252a-4bdf-83fb-c9c626b8803c",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 646,
       "type": "question-response",
       "metadata": {
@@ -1984,7 +1984,7 @@
     },
     {
       "id": "839c3b9f-edc6-4833-8e87-f9b14fe65044",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 654,
       "type": "question-response-revealed",
       "metadata": {
@@ -1994,7 +1994,7 @@
     },
     {
       "id": "3aed6dee-dbaa-4bcb-8e15-c628332087d9",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 757,
       "type": "question-asked",
       "metadata": {
@@ -2006,7 +2006,7 @@
     },
     {
       "id": "b2fe3623-2ecf-4ebf-823f-6f30f2f3a9f7",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 760,
       "type": "question-response",
       "metadata": {
@@ -2018,7 +2018,7 @@
     },
     {
       "id": "ae79fa78-98e3-4ced-a576-86db495b851b",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 767,
       "type": "question-response-revealed",
       "metadata": {
@@ -2028,7 +2028,7 @@
     },
     {
       "id": "492385e2-2ea0-4914-a2c4-ac7279889aca",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 862,
       "type": "question-asked",
       "metadata": {
@@ -2040,7 +2040,7 @@
     },
     {
       "id": "939e9e4b-8b0b-446a-bfa8-3131889a6423",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 879,
       "type": "question-response",
       "metadata": {
@@ -2052,7 +2052,7 @@
     },
     {
       "id": "21aa6457-1e76-4a16-a487-4b5834731acf",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 890,
       "type": "question-response-revealed",
       "metadata": {
@@ -2062,7 +2062,7 @@
     },
     {
       "id": "9ae7bc47-9193-4cbb-933f-a64f30310f4f",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1068,
       "type": "seekers-location",
       "metadata": {
@@ -2071,7 +2071,7 @@
     },
     {
       "id": "cdfe1b60-1697-4dbd-aee4-f857fd3a91ea",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1172,
       "type": "seekers-location",
       "metadata": {
@@ -2080,7 +2080,7 @@
     },
     {
       "id": "c2243c5c-1671-441a-9732-39b24653dfbc",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1224,
       "type": "question-asked",
       "metadata": {
@@ -2092,7 +2092,7 @@
     },
     {
       "id": "094a3bad-4a4b-4c9e-aad2-d55e7085f013",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1232,
       "type": "question-response",
       "metadata": {
@@ -2104,17 +2104,17 @@
     },
     {
       "id": "e5a204c4-c1dd-40e7-a3d7-a5d68a447b02",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1240,
       "type": "question-response-revealed",
       "metadata": {
         "questionResponseEventId": "094a3bad-4a4b-4c9e-aad2-d55e7085f013",
-        "response": "Adam is not within 25 miles of Solothurn"
+        "response": "Adam is not within 5 miles of Solothurn"
       }
     },
     {
       "id": "2e5c48a1-4439-43bd-a9a0-b7f701a54034",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1270,
       "type": "question-asked",
       "metadata": {
@@ -2126,7 +2126,7 @@
     },
     {
       "id": "103402c8-7fac-47dc-8d7d-eaf1470eae0c",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1272,
       "type": "question-response",
       "metadata": {
@@ -2138,7 +2138,7 @@
     },
     {
       "id": "482e4463-2899-4fc3-9e92-46b1b2e8039d",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1275,
       "type": "question-response-revealed",
       "metadata": {
@@ -2148,7 +2148,7 @@
     },
     {
       "id": "08d64f7f-ef88-4466-96f7-7b25273682a3",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1281,
       "type": "seekers-location",
       "metadata": {
@@ -2157,7 +2157,7 @@
     },
     {
       "id": "02aa0071-e812-4ea2-9556-83b97f8e3349",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1312,
       "type": "seekers-location",
       "metadata": {
@@ -2166,7 +2166,7 @@
     },
     {
       "id": "0e692cce-869c-439a-bf9c-462907ba5bfa",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1377,
       "type": "seekers-location",
       "metadata": {
@@ -2175,7 +2175,7 @@
     },
     {
       "id": "99a4cefd-dcf7-4c06-8bd3-c34cfc5635b9",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1381,
       "type": "seekers-location",
       "metadata": {
@@ -2184,7 +2184,7 @@
     },
     {
       "id": "631d6867-7369-41b9-abda-605d9b896ee8",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1425,
       "type": "seekers-location",
       "metadata": {
@@ -2193,7 +2193,7 @@
     },
     {
       "id": "045404ce-6437-4871-afc3-74ff0407d7f9",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1450,
       "type": "seekers-location",
       "metadata": {
@@ -2202,7 +2202,7 @@
     },
     {
       "id": "4110c97b-485b-418b-9b30-3e6e5c68047b",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1601,
       "type": "question-asked",
       "metadata": {
@@ -2214,7 +2214,7 @@
     },
     {
       "id": "c523c985-4399-4850-b885-fd7a62a7c4dc",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1612,
       "type": "question-response",
       "metadata": {
@@ -2226,7 +2226,7 @@
     },
     {
       "id": "4421bdd0-a2fe-4e63-a938-030300d6d6eb",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1688,
       "type": "seekers-location",
       "metadata": {
@@ -2235,7 +2235,7 @@
     },
     {
       "id": "e3b50589-8653-486d-a463-6294f7fd4fb4",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1713,
       "type": "question-asked",
       "metadata": {
@@ -2247,7 +2247,7 @@
     },
     {
       "id": "5e925331-0c80-4b3b-b90c-456ebfdede63",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1720,
       "type": "question-response",
       "metadata": {
@@ -2259,7 +2259,7 @@
     },
     {
       "id": "64ddf010-6dd1-498c-a3b9-a3c9dbf2fc4c",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1732,
       "type": "seekers-location",
       "metadata": {
@@ -2268,7 +2268,7 @@
     },
     {
       "id": "775ea826-3305-4e9c-a610-959a3d862cc0",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1774,
       "type": "question-response-revealed",
       "metadata": {
@@ -2278,7 +2278,7 @@
     },
     {
       "id": "17224624-a6f8-487c-b62f-8d89b7f52a1f",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1800,
       "type": "question-asked",
       "metadata": {
@@ -2290,7 +2290,7 @@
     },
     {
       "id": "e18db027-ee88-42ba-b42b-e8c2f022d857",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1803,
       "type": "question-response",
       "metadata": {
@@ -2302,7 +2302,7 @@
     },
     {
       "id": "b5f7ed12-be55-467b-82cc-3455e4d73d69",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1890,
       "type": "seekers-location",
       "metadata": {
@@ -2311,7 +2311,7 @@
     },
     {
       "id": "be6a8eda-3b93-4155-9152-76a56a5085a7",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1913,
       "type": "seekers-location",
       "metadata": {
@@ -2320,7 +2320,7 @@
     },
     {
       "id": "3cd82daf-363c-44d2-96f6-d7869bfe50da",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 1939,
       "type": "seekers-location",
       "metadata": {
@@ -2329,12 +2329,12 @@
     },
     {
       "id": "10d8edb0-8e99-4f47-9c45-72045ff938a0",
-      "episode": "episode-5",
+      "episode": "finale",
       "at": 2094,
       "type": "run-ended",
       "metadata": {
         "hider": "adam",
-    "durationSeconds": 34570
+        "durationSeconds": 34570
       }
     }
   ]

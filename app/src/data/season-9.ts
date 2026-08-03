@@ -34,11 +34,11 @@ export const seasonNine = {
             image: "/thumbnails/season-9-episode-4.jpg",
         },
         {
-            slug: "episode-5",
+            slug: "finale",
             label: "Finale",
             title: "We Played Hide And Seek Across Switzerland",
             video: "X13gVRwnKDA",
-            image: "/thumbnails/season-9-episode-5.jpg",
+            image: "/thumbnails/season-9-finale.jpg",
         },
     ],
 } as const satisfies SeasonPage;

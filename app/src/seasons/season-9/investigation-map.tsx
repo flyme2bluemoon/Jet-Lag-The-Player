@@ -22,6 +22,7 @@ const GOLDAU_STATION: Coordinate = [8.5496, 47.0492];
 const ANDERMATT_STATION: Coordinate = [8.5947, 46.6374];
 const HOSPENTAL_STATION: Coordinate = [8.5696, 46.6195];
 const WINTERTHUR_TOSS_STATION: Coordinate = [8.7093, 47.4898];
+const MERLISCHACHEN_STATION: Coordinate = [8.409058, 47.06766];
 const MAP_MAX_ZOOM = 22;
 const SWITZERLAND_BOUNDS = playableAreaBounds(SWITZERLAND_OUTLINE, null);
 const withinSwitzerland: FilterSpecification = ["within", switzerlandFeature];
@@ -504,9 +505,11 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
     const hasAndermattRadarHit = isFirstAdamRun && answeredQuestionIds.has("10-miles");
     const endgameStation = state.currentHider === "sam"
         ? WINTERTHUR_TOSS_STATION
-        : isFirstAdamRun
-            ? HOSPENTAL_STATION
-            : null;
+        : state.currentHider === "ben"
+            ? MERLISCHACHEN_STATION
+            : isFirstAdamRun
+                ? HOSPENTAL_STATION
+                : null;
     const hasSearchConstraint = hasLongitudeConstraint
         || hasLatitudeConstraint
         || hasGoldauRadarMiss
@@ -566,6 +569,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
                     <MapGeoJSON
                         id="season-nine-eliminated-area"
                         data={mapGeometry.eliminatedArea}
+                        beforeId="place_city_r6"
                         fillPaint={{
                             "fill-color": MAPLIBRE_INVESTIGATION_COLORS.eliminated,
                             "fill-opacity": 0.62,

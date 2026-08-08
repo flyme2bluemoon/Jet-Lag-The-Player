@@ -552,7 +552,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         if (!switzerlandMap) return null;
 
         const preciseArea = state.endgame && endgameStation
-            ? circleCoordinates(endgameStation, 0.5)
+            ? circleCoordinates(endgameStation, 1)
             : hasAndermattRadarHit
                 ? circleCoordinates(ANDERMATT_STATION, 10)
                 : switzerlandMap.outline;

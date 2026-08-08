@@ -50,9 +50,6 @@ export function CurrentRunCard({ state }: { state: SeasonNineState }) {
                     <PlayerTile label="Seekers" names={seekers.map((player) => seasonNinePlayers[player].name).join(" + ")} players={seekers} />
                 </div>
 
-                {!state.currentRunActive && (
-                    <p className="text-card-meta mt-4 font-display text-sm font-bold uppercase">Hider found</p>
-                )}
             </div>
         </section>
     );

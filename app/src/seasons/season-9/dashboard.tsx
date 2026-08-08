@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { DashboardGrid } from "@/components/episode/dashboard-grid";
 import type { EpisodeDashboardProps } from "@/components/episode/types";
 import { YouTubePlayer } from "@/components/episode/youtube-player";
+import { CurrentRunCard } from "./current-run-card";
 import { CurseCard } from "./curse-card";
 import { InvestigationBookCard } from "./investigation-book-card";
 import { LeaderboardCard } from "./leaderboard-card";
@@ -20,6 +21,8 @@ export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: Epis
 
     return (
         <DashboardGrid
+            middleStack="left"
+            wideBreakpoint="xl"
             wideColumnRatio={WIDE_COLUMN_RATIO}
             video={
                 <YouTubePlayer
@@ -29,8 +32,13 @@ export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: Epis
                     onTimeChange={setCurrentTime}
                 />
             }
-            left={<LeaderboardCard state={state} />}
-            middle={<CurseCard curse={state.activeCurse} />}
+            left={
+                <>
+                    <CurrentRunCard state={state} />
+                    <CurseCard curse={state.activeCurse} />
+                </>
+            }
+            middle={<LeaderboardCard state={state} />}
             right={<InvestigationBookCard state={state} />}
         />
     );

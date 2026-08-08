@@ -119,14 +119,14 @@ export function InvestigationBookCard({ state }: { state: SeasonNineState }) {
                             const title = getQuestionTitle(question);
                             return (
                                 <li key={question.eventId} className="border-paper/15 bg-paper/3.5 rounded-lg border p-4">
-                                    <div className="flex flex-wrap items-start justify-between gap-2">
-                                        <div>
-                                            <p className="font-heading text-lg leading-none font-bold uppercase">{title}</p>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-heading text-lg leading-tight font-bold break-words uppercase">{title}</p>
                                             {title !== question.description && (
                                                 <p className="text-card-meta mt-2 text-sm leading-relaxed">{question.description}</p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex shrink-0 items-center gap-2">
                                             <span className={cn("rounded-full border px-2 py-1 font-display text-xs font-bold uppercase", CATEGORY_STYLES[question.category])}>{question.category}</span>
                                             <span className="border-paper/20 bg-paper/5 flex items-center gap-1 rounded-full border px-2 py-1 font-display text-xs font-bold">
                                                 <Coins className="size-3" aria-hidden="true" />+{question.coins}

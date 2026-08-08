@@ -219,7 +219,6 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
                 };
                 questions.push(question);
                 questionByEvent.set(event.id, question);
-                coinBalance += coins;
                 break;
             }
             case "question-response": {
@@ -229,6 +228,8 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
                 question.status = metadata.responseKind === "veto" ? "vetoed" : "received";
                 if (metadata.responseKind === "veto") {
                     question.response = "Unavailable — the seekers entered the hiding zone.";
+                } else {
+                    coinBalance += question.coins;
                 }
                 questionByResponseEvent.set(event.id, question);
                 break;

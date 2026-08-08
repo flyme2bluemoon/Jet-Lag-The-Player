@@ -60,6 +60,7 @@ Use a fresh snapshot before interacting with element references, re-snapshot aft
 - Use `font-display` (Barlow Condensed) for prominent or live data: large scores, compact status text, overlines, badges, and short navigation labels.
 - Do not use `font-mono` by default. Reserve it for a deliberate semantic treatment, such as a passport stamp or code-like content.
 - New cards must be synchronized to the YouTube video timestamp through the YouTube IFrame Player API. Cards may be limited to selected episodes when the season requires it.
+- When making changes to components in `app/src/components/episode/` which are shared across all users
 
 ## Season setup and shared helpers
 

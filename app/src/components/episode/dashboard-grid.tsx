@@ -37,7 +37,7 @@ const DEFAULT_WIDE_COLUMN_RATIO = [1, 1.15, 1] as const;
  */
 const WIDE_CLASSES = {
   xl: {
-    grid: "xl:grid-cols-[minmax(0,var(--dashboard-left-track))_minmax(0,var(--dashboard-middle-track))_minmax(0,var(--dashboard-right-track))]",
+    grid: "xl:grid-cols-[minmax(0,var(--dashboard-left-track))_minmax(0,var(--dashboard-middle-track))_minmax(0,var(--dashboard-right-track))] xl:grid-rows-[auto_minmax(0,1fr)]",
     stack: "xl:contents",
     video: "xl:col-span-2 xl:col-start-1",
     left: "xl:col-start-1",
@@ -45,7 +45,7 @@ const WIDE_CLASSES = {
     right: "xl:order-none xl:col-start-3 xl:row-span-2 xl:row-start-1",
   },
   "2xl": {
-    grid: "2xl:grid-cols-[minmax(0,var(--dashboard-left-track))_minmax(0,var(--dashboard-middle-track))_minmax(0,var(--dashboard-right-track))]",
+    grid: "2xl:grid-cols-[minmax(0,var(--dashboard-left-track))_minmax(0,var(--dashboard-middle-track))_minmax(0,var(--dashboard-right-track))] 2xl:grid-rows-[auto_minmax(0,1fr)]",
     stack: "2xl:contents",
     video: "2xl:col-span-2 2xl:col-start-1",
     left: "2xl:col-start-1",

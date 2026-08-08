@@ -5,17 +5,11 @@ import type { FilterSpecification } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
-import switzerlandGeoJson from "../../../public/geojson/switzerland.json";
+import { useSwitzerlandGeoJson } from "@/lib/switzerland-geojson";
 import type { SeasonNineState } from "./timeline-data";
 
 type Coordinate = [number, number];
 
-const switzerlandFeature = (
-    switzerlandGeoJson as GeoJSON.FeatureCollection<GeoJSON.Polygon>
-).features[0]!;
-const SWITZERLAND_OUTLINE = switzerlandFeature.geometry.coordinates[0]!.map(
-    ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
-);
 const MIN_HIDER_LONGITUDE = 8.3093;
 const MAX_HIDER_LATITUDE = 47.0502;
 const GOLDAU_STATION: Coordinate = [8.5496, 47.0492];
@@ -24,64 +18,57 @@ const HOSPENTAL_STATION: Coordinate = [8.5696, 46.6195];
 const WINTERTHUR_TOSS_STATION: Coordinate = [8.7093, 47.4898];
 const MERLISCHACHEN_STATION: Coordinate = [8.409058, 47.06766];
 const MAP_MAX_ZOOM = 22;
-const SWITZERLAND_BOUNDS = playableAreaBounds(SWITZERLAND_OUTLINE, null);
-const withinSwitzerland: FilterSpecification = ["within", switzerlandFeature];
 const COUNTRY_LABEL_LAYER_IDS = ["place_country_1", "place_country_2"] as const;
-const SWISS_CITY_FILTERS: Record<string, FilterSpecification> = {
-    place_city_r6: [
-        "all",
-        ["==", ["get", "class"], "city"],
-        [">=", ["number", ["get", "rank"], 0], 6],
-        withinSwitzerland,
-    ],
-    place_city_r5: [
-        "all",
-        ["==", ["get", "class"], "city"],
-        [">=", ["number", ["get", "rank"], 0], 0],
-        ["<=", ["number", ["get", "rank"], 0], 5],
-        withinSwitzerland,
-    ],
-    place_city_dot_r7: [
-        "all",
-        ["==", ["get", "class"], "city"],
-        ["<=", ["number", ["get", "rank"], 0], 7],
-        withinSwitzerland,
-    ],
-    place_city_dot_r4: [
-        "all",
-        ["==", ["get", "class"], "city"],
-        ["<=", ["number", ["get", "rank"], 0], 4],
-        withinSwitzerland,
-    ],
-    place_city_dot_r2: [
-        "all",
-        ["==", ["get", "class"], "city"],
-        ["<=", ["number", ["get", "rank"], 0], 2],
-        withinSwitzerland,
-    ],
-    place_city_dot_z7: [
-        "all",
-        ["!", ["has", "capital"]],
-        ["!", ["in", ["get", "class"], ["literal", ["country", "state"]]]],
-        withinSwitzerland,
-    ],
-    place_capital_dot_z7: [
-        "all",
-        [">", ["number", ["get", "capital"], 0], 0],
-        withinSwitzerland,
-    ],
-};
-const SWITZERLAND_MASK: GeoJSON.Feature<GeoJSON.Polygon, { id: string }> = {
-    type: "Feature",
-    properties: { id: "season-nine-switzerland-mask" },
-    geometry: {
-        type: "Polygon",
-        coordinates: [
-            [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]],
-            orientedRing(SWITZERLAND_OUTLINE, true),
+function swissCityFilters(
+    switzerlandFeature: GeoJSON.Feature<GeoJSON.Polygon>,
+): Record<string, FilterSpecification> {
+    const withinSwitzerland: FilterSpecification = ["within", switzerlandFeature];
+
+    return {
+        place_city_r6: [
+            "all",
+            ["==", ["get", "class"], "city"],
+            [">=", ["number", ["get", "rank"], 0], 6],
+            withinSwitzerland,
         ],
-    },
-};
+        place_city_r5: [
+            "all",
+            ["==", ["get", "class"], "city"],
+            [">=", ["number", ["get", "rank"], 0], 0],
+            ["<=", ["number", ["get", "rank"], 0], 5],
+            withinSwitzerland,
+        ],
+        place_city_dot_r7: [
+            "all",
+            ["==", ["get", "class"], "city"],
+            ["<=", ["number", ["get", "rank"], 0], 7],
+            withinSwitzerland,
+        ],
+        place_city_dot_r4: [
+            "all",
+            ["==", ["get", "class"], "city"],
+            ["<=", ["number", ["get", "rank"], 0], 4],
+            withinSwitzerland,
+        ],
+        place_city_dot_r2: [
+            "all",
+            ["==", ["get", "class"], "city"],
+            ["<=", ["number", ["get", "rank"], 0], 2],
+            withinSwitzerland,
+        ],
+        place_city_dot_z7: [
+            "all",
+            ["!", ["has", "capital"]],
+            ["!", ["in", ["get", "class"], ["literal", ["country", "state"]]]],
+            withinSwitzerland,
+        ],
+        place_capital_dot_z7: [
+            "all",
+            [">", ["number", ["get", "capital"], 0], 0],
+            withinSwitzerland,
+        ],
+    };
+}
 
 function closeRing(coordinates: Coordinate[]) {
     const first = coordinates[0];
@@ -364,12 +351,15 @@ function playableAreaBounds(candidateArea: Coordinate[], excludedArea: Coordinat
     ] as [[number, number], [number, number]];
 }
 
-function switzerlandBoundarySegment([longitude, latitude]: Coordinate) {
+function switzerlandBoundarySegment(
+    [longitude, latitude]: Coordinate,
+    switzerlandOutline: Coordinate[],
+) {
     const tolerance = 1e-8;
 
-    for (let segment = 0; segment < SWITZERLAND_OUTLINE.length; segment += 1) {
-        const start = SWITZERLAND_OUTLINE[segment]!;
-        const end = SWITZERLAND_OUTLINE[(segment + 1) % SWITZERLAND_OUTLINE.length]!;
+    for (let segment = 0; segment < switzerlandOutline.length; segment += 1) {
+        const start = switzerlandOutline[segment]!;
+        const end = switzerlandOutline[(segment + 1) % switzerlandOutline.length]!;
         const vector = subtractCoordinates(end, start);
         const pointVector = subtractCoordinates([longitude, latitude], start);
         const lengthSquared = vector[0] ** 2 + vector[1] ** 2;
@@ -389,14 +379,17 @@ function switzerlandBoundarySegment([longitude, latitude]: Coordinate) {
  * Converts a playable ring that touches Switzerland's edge into the complementary
  * eliminated exterior ring. This avoids invalid GeoJSON holes that touch their shell.
  */
-function eliminatedBoundaryFromPlayableArea(playableArea: Coordinate[]) {
+function eliminatedBoundaryFromPlayableArea(
+    playableArea: Coordinate[],
+    switzerlandOutline: Coordinate[],
+) {
     const boundaryEdges = playableArea.map((coordinate, index) => {
         const next = playableArea[(index + 1) % playableArea.length]!;
         const midpoint: Coordinate = [
             (coordinate[0] + next[0]) / 2,
             (coordinate[1] + next[1]) / 2,
         ];
-        return switzerlandBoundarySegment(midpoint) !== null;
+        return switzerlandBoundarySegment(midpoint, switzerlandOutline) !== null;
     });
     const boundaryEdge = boundaryEdges.findIndex(Boolean);
     if (boundaryEdge === -1 || boundaryEdges.every(Boolean)) return null;
@@ -420,12 +413,12 @@ function eliminatedBoundaryFromPlayableArea(playableArea: Coordinate[]) {
 
     const chainStart = internalChain[0]!;
     const chainEnd = internalChain.at(-1)!;
-    const startSegment = switzerlandBoundarySegment(chainStart);
-    const endSegment = switzerlandBoundarySegment(chainEnd);
+    const startSegment = switzerlandBoundarySegment(chainStart, switzerlandOutline);
+    const endSegment = switzerlandBoundarySegment(chainEnd, switzerlandOutline);
     if (startSegment === null || endSegment === null) return null;
 
     const complementarySwissPath = forwardRingPath(
-        SWITZERLAND_OUTLINE,
+        switzerlandOutline,
         startSegment,
         chainStart,
         endSegment,
@@ -438,11 +431,15 @@ function eliminatedBoundaryFromPlayableArea(playableArea: Coordinate[]) {
 function eliminatedAreaFeature(
     candidateArea: Coordinate[],
     radarMissCircle: Coordinate[] | null,
+    switzerlandOutline: Coordinate[],
 ): GeoJSON.Feature<GeoJSON.Polygon, { id: string }> {
     const playableArea = radarMissCircle
         ? playableBoundaryAfterExclusion(candidateArea, radarMissCircle) ?? candidateArea
         : candidateArea;
-    const eliminatedBoundary = eliminatedBoundaryFromPlayableArea(playableArea);
+    const eliminatedBoundary = eliminatedBoundaryFromPlayableArea(
+        playableArea,
+        switzerlandOutline,
+    );
 
     return {
         type: "Feature",
@@ -452,14 +449,34 @@ function eliminatedAreaFeature(
             coordinates: eliminatedBoundary
                 ? [orientedRing(eliminatedBoundary, false)]
                 : [
-                    orientedRing(SWITZERLAND_OUTLINE, false),
+                    orientedRing(switzerlandOutline, false),
                     orientedRing(playableArea, true),
                 ],
         },
     };
 }
 
-function SwitzerlandMask() {
+function createSwitzerlandMask(switzerlandOutline: Coordinate[]) {
+    return {
+        type: "Feature",
+        properties: { id: "season-nine-switzerland-mask" },
+        geometry: {
+            type: "Polygon",
+            coordinates: [
+                [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]],
+                orientedRing(switzerlandOutline, true),
+            ],
+        },
+    } satisfies GeoJSON.Feature<GeoJSON.Polygon, { id: string }>;
+}
+
+function SwitzerlandMask({
+    mask,
+    cityFilters,
+}: {
+    mask: GeoJSON.Feature<GeoJSON.Polygon, { id: string }>;
+    cityFilters: Record<string, FilterSpecification>;
+}) {
     const { map, isLoaded, resolvedTheme } = useMap();
 
     useEffect(() => {
@@ -468,15 +485,15 @@ function SwitzerlandMask() {
         for (const layerId of COUNTRY_LABEL_LAYER_IDS) {
             if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", "none");
         }
-        for (const [layerId, filter] of Object.entries(SWISS_CITY_FILTERS)) {
+        for (const [layerId, filter] of Object.entries(cityFilters)) {
             if (map.getLayer(layerId)) map.setFilter(layerId, filter);
         }
-    }, [isLoaded, map]);
+    }, [cityFilters, isLoaded, map]);
 
     return (
         <MapGeoJSON
             id="season-nine-switzerland-mask"
-            data={SWITZERLAND_MASK}
+            data={mask}
             beforeId="place_city_r6"
             fillPaint={{
                 "fill-color": MAPLIBRE_INVESTIGATION_COLORS.outside[resolvedTheme],
@@ -488,6 +505,21 @@ function SwitzerlandMask() {
 }
 
 export function InvestigationMap({ state }: { state: SeasonNineState }) {
+    const switzerlandGeoJson = useSwitzerlandGeoJson();
+    const switzerlandMap = useMemo(() => {
+        const feature = switzerlandGeoJson?.features[0];
+        if (!feature) return null;
+
+        const outline = feature.geometry.coordinates[0]!.map(
+            ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
+        );
+        return {
+            bounds: playableAreaBounds(outline, null),
+            cityFilters: swissCityFilters(feature),
+            mask: createSwitzerlandMask(outline),
+            outline,
+        };
+    }, [switzerlandGeoJson]);
     const answeredQuestionIds = useMemo(
         () => new Set(
             state.questions
@@ -517,11 +549,13 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         || (state.endgame && endgameStation !== null);
 
     const mapGeometry = useMemo(() => {
+        if (!switzerlandMap) return null;
+
         const preciseArea = state.endgame && endgameStation
             ? circleCoordinates(endgameStation, 0.5)
             : hasAndermattRadarHit
                 ? circleCoordinates(ANDERMATT_STATION, 10)
-                : SWITZERLAND_OUTLINE;
+                : switzerlandMap.outline;
         const constrainedArea = applyDirectionalHints(
             preciseArea,
             hasLongitudeConstraint,
@@ -530,7 +564,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         if (constrainedArea.length < 3) {
             return {
                 eliminatedArea: null,
-                playableBounds: playableAreaBounds(SWITZERLAND_OUTLINE, null),
+                playableBounds: switzerlandMap.bounds,
             };
         }
 
@@ -539,7 +573,11 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
             : null;
         return {
             eliminatedArea: hasSearchConstraint
-                ? eliminatedAreaFeature(constrainedArea, radarMissCircle)
+                ? eliminatedAreaFeature(
+                    constrainedArea,
+                    radarMissCircle,
+                    switzerlandMap.outline,
+                )
                 : null,
             playableBounds: playableAreaBounds(constrainedArea, radarMissCircle),
         };
@@ -551,40 +589,46 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         hasSearchConstraint,
         endgameStation,
         state.endgame,
+        switzerlandMap,
     ]);
 
     return (
         <div className="bg-map-canvas relative h-72 overflow-hidden">
-            <Map
-                bounds={SWITZERLAND_BOUNDS}
-                fitBoundsOptions={{ padding: 24 }}
-                minZoom={5.5}
-                maxZoom={MAP_MAX_ZOOM}
-                attributionControl={false}
-                dragRotate={false}
-                touchPitch={false}
-            >
-                <SwitzerlandMask />
-                {mapGeometry.eliminatedArea && (
-                    <MapGeoJSON
-                        id="season-nine-eliminated-area"
-                        data={mapGeometry.eliminatedArea}
-                        beforeId="place_city_r6"
-                        fillPaint={{
-                            "fill-color": MAPLIBRE_INVESTIGATION_COLORS.eliminated,
-                            "fill-opacity": 0.62,
-                        }}
-                        linePaint={false}
+            {switzerlandMap && mapGeometry && (
+                <Map
+                    bounds={switzerlandMap.bounds}
+                    fitBoundsOptions={{ padding: 24 }}
+                    minZoom={5.5}
+                    maxZoom={MAP_MAX_ZOOM}
+                    attributionControl={false}
+                    dragRotate={false}
+                    touchPitch={false}
+                >
+                    <SwitzerlandMask
+                        mask={switzerlandMap.mask}
+                        cityFilters={switzerlandMap.cityFilters}
                     />
-                )}
-                <MapControls
-                    resetView={{
-                        bounds: mapGeometry.playableBounds,
-                        padding: 24,
-                        maxZoom: MAP_MAX_ZOOM,
-                    }}
-                />
-            </Map>
+                    {mapGeometry.eliminatedArea && (
+                        <MapGeoJSON
+                            id="season-nine-eliminated-area"
+                            data={mapGeometry.eliminatedArea}
+                            beforeId="place_city_r6"
+                            fillPaint={{
+                                "fill-color": MAPLIBRE_INVESTIGATION_COLORS.eliminated,
+                                "fill-opacity": 0.62,
+                            }}
+                            linePaint={false}
+                        />
+                    )}
+                    <MapControls
+                        resetView={{
+                            bounds: mapGeometry.playableBounds,
+                            padding: 24,
+                            maxZoom: MAP_MAX_ZOOM,
+                        }}
+                    />
+                </Map>
+            )}
         </div>
     );
 }

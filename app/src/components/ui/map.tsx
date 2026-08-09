@@ -57,6 +57,13 @@ const blankMapStyle: MapLibreGL.StyleSpecification = {
   ],
 };
 
+// Prevent equivalent inline style objects from triggering a full map style reload.
+function useStableValue<T>(value: T): T {
+  const key = useMemo(() => JSON.stringify(value) ?? "", [value]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => value, [key]);
+}
+
 function mergeHoverPaint<T extends Record<string, unknown>>(
   paint: T,
   hoverPaint: T | undefined,
@@ -249,8 +256,10 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   const [mapInstance, setMapInstance] = useState<MapLibreGL.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
+  const [pendingStyle, setPendingStyle] = useState<MapStyleOption | null>(null);
   const currentStyleRef = useRef<MapStyleOption | null>(null);
-  const styleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const appliedStyleRef = useRef<MapStyleOption | null>(null);
+  const styleSwapInFlightRef = useRef(false);
   const internalUpdateRef = useRef(false);
   const resolvedTheme = useResolvedTheme(themeProp);
 
@@ -259,30 +268,25 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     onViewportChange?.(nextViewport);
   });
 
+  const stableStyles = useStableValue(styles);
+
   const mapStyles = useMemo(() => {
     // Explicit styles win. Otherwise `blank` opts into the transparent
     // tile-less basemap; with neither, fall back to the Carto defaults.
-    if (styles) {
+    if (stableStyles) {
       return {
-        dark: styles.dark ?? defaultStyles.dark,
-        light: styles.light ?? defaultStyles.light,
+        dark: stableStyles.dark ?? defaultStyles.dark,
+        light: stableStyles.light ?? defaultStyles.light,
       };
     }
     if (blank) {
       return { dark: blankMapStyle, light: blankMapStyle };
     }
     return defaultStyles;
-  }, [styles, blank]);
+  }, [stableStyles, blank]);
 
   // Expose the map instance to the parent component
   useImperativeHandle(ref, () => mapInstance as MapLibreGL.Map, [mapInstance]);
-
-  const clearStyleTimeout = useCallback(() => {
-    if (styleTimeoutRef.current) {
-      clearTimeout(styleTimeoutRef.current);
-      styleTimeoutRef.current = null;
-    }
-  }, []);
 
   // Initialize the map
   useEffect(() => {
@@ -303,17 +307,12 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       ...viewport,
     });
 
-    const styleDataHandler = () => {
-      clearStyleTimeout();
-      // Delay to ensure style is fully processed before allowing layer operations
-      // This is a workaround to avoid race conditions with the style loading
-      // else we have to force update every layer on setStyle change
-      styleTimeoutRef.current = setTimeout(() => {
-        setIsStyleLoaded(true);
-        if (projection) {
-          map.setProjection(projection);
-        }
-      }, 100);
+    // `styledata` fires throughout style parsing and can run before the style
+    // is ready for custom sources and layers. `style.load` is the lifecycle
+    // boundary MapLibre guarantees after initial and replacement styles.
+    const styleLoadHandler = () => {
+      styleSwapInFlightRef.current = false;
+      setIsStyleLoaded(true);
     };
     const loadHandler = () => setIsLoaded(true);
 
@@ -324,14 +323,13 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     };
 
     map.on("load", loadHandler);
-    map.on("styledata", styleDataHandler);
+    map.on("style.load", styleLoadHandler);
     map.on("move", handleMove);
     setMapInstance(map);
 
     return () => {
-      clearStyleTimeout();
       map.off("load", loadHandler);
-      map.off("styledata", styleDataHandler);
+      map.off("style.load", styleLoadHandler);
       map.off("move", handleMove);
       map.remove();
       setIsLoaded(false);
@@ -369,7 +367,8 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     internalUpdateRef.current = false;
   }, [mapInstance, isControlled, viewport]);
 
-  // Handle style change
+  // Handle style change: close the gate (so layer children tear down and
+  // re-add on the incoming style) - the swap itself is staged to the effect below.
   useEffect(() => {
     if (!mapInstance || !resolvedTheme) return;
 
@@ -378,16 +377,28 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
 
     if (currentStyleRef.current === newStyle) return;
 
-    clearStyleTimeout();
     currentStyleRef.current = newStyle;
     setIsStyleLoaded(false);
+    setPendingStyle(newStyle);
+  }, [mapInstance, resolvedTheme, mapStyles]);
 
-    mapInstance.setStyle(newStyle, { diff: true });
-  }, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
+  useEffect(() => {
+    if (!mapInstance || !pendingStyle) return;
+    // Guard with a ref rather than clearing `pendingStyle`: resetting state
+    // from inside an effect would trigger a cascading render.
+    if (appliedStyleRef.current === pendingStyle) return;
+
+    appliedStyleRef.current = pendingStyle;
+    styleSwapInFlightRef.current = true;
+    // Full reload (no diff) so `style.load` fires deterministically. A
+    // successful diff would never fire it, leaving isStyleLoaded stuck false.
+    mapInstance.setStyle(pendingStyle, { diff: false });
+  }, [mapInstance, pendingStyle]);
 
   // Sync projection when the prop changes after mount.
   useEffect(() => {
     if (!mapInstance || !isStyleLoaded || !projection) return;
+    if (styleSwapInFlightRef.current) return;
     mapInstance.setProjection(projection);
   }, [mapInstance, isStyleLoaded, projection]);
 
@@ -945,28 +956,30 @@ function MapControls({
   }, [map]);
 
   const handleLocate = useCallback(() => {
+    if (!("geolocation" in navigator)) return;
     setWaitingForLocation(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords = {
-            longitude: pos.coords.longitude,
-            latitude: pos.coords.latitude,
-          };
-          map?.flyTo({
-            center: [coords.longitude, coords.latitude],
-            zoom: 14,
-            duration: 1500,
-          });
-          onLocate?.(coords);
-          setWaitingForLocation(false);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setWaitingForLocation(false);
-        },
-      );
-    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          longitude: pos.coords.longitude,
+          latitude: pos.coords.latitude,
+        };
+        map?.flyTo({
+          center: [coords.longitude, coords.latitude],
+          zoom: 14,
+          duration: 1500,
+        });
+        onLocate?.(coords);
+        setWaitingForLocation(false);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setWaitingForLocation(false);
+      },
+      // Without a timeout the spec default is Infinity: a dismissed permission
+      // prompt would leave the button disabled forever.
+      { timeout: 10000 },
+    );
   }, [map, onLocate]);
 
   const handleFullscreen = useCallback(() => {

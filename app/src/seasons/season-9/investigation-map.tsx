@@ -5,6 +5,7 @@ import type { FilterSpecification } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
+import { useGeoJson } from "@/lib/geojson";
 import { useSwitzerlandGeoJson } from "@/lib/switzerland-geojson";
 import type { SeasonNineState } from "./timeline-data";
 
@@ -12,13 +13,92 @@ type Coordinate = [number, number];
 
 const MIN_HIDER_LONGITUDE = 8.3093;
 const MAX_HIDER_LATITUDE = 47.0502;
-const GOLDAU_STATION: Coordinate = [8.5496, 47.0492];
-const ANDERMATT_STATION: Coordinate = [8.5947, 46.6374];
+const MEGGEN_STATION: Coordinate = [8.38306, 47.05015];
+const SAM_MEGGEN_LONGITUDE_EVENT_ID = "47d454a3-2b4c-41a4-9bd9-019d41f92123";
+const SAM_PLATEAU_REGION_EVENT_ID = "7752ab74-3e56-4059-9f2f-c2279f090382";
+const ARTH_GOLDAU_STATION: Coordinate = [8.54965, 47.04913];
+const ANDERMATT_STATION: Coordinate = [8.59333, 46.63684];
+const STEINEN_STATION: Coordinate = [8.60747, 47.04769];
+const GISIKON_ROOT_STATION: Coordinate = [8.39472, 47.12118];
+const WINTERTHUR_STATION: Coordinate = [8.72397, 47.50031];
+const BERN_STATION: Coordinate = [7.43996, 46.94891];
+const SOLOTHURN_STATION: Coordinate = [7.54268, 47.20425];
+const STADION_SCHUETZENWIESE: Coordinate = [8.71813, 47.50075];
 const HOSPENTAL_STATION: Coordinate = [8.5696, 46.6195];
-const WINTERTHUR_TOSS_STATION: Coordinate = [8.7093, 47.4898];
+const WINTERTHUR_TOESS_STATION: Coordinate = [8.7093, 47.4898];
 const MERLISCHACHEN_STATION: Coordinate = [8.409058, 47.06766];
 const MAP_MAX_ZOOM = 22;
 const COUNTRY_LABEL_LAYER_IDS = ["place_country_1", "place_country_2"] as const;
+const CENTRE_PARTY_CANTONS_URL = "/geojson/centre-party-cantons.json";
+const NON_MITTELLAND_REGIONS_URL = "/geojson/non-mittelland-regions.json";
+type CentrePartyCantons = GeoJSON.FeatureCollection<
+    GeoJSON.Polygon | GeoJSON.MultiPolygon,
+    { id: number; name: string }
+>;
+type NonMittellandRegions = GeoJSON.FeatureCollection<
+    GeoJSON.Polygon | GeoJSON.MultiPolygon,
+    { id: number; region: string; subregion: string }
+>;
+
+type RadarConstraintDefinition = {
+    center: Coordinate;
+    radiusMiles: number;
+    result: "hit" | "miss";
+};
+
+const RADAR_CONSTRAINTS_BY_EVENT_ID: Readonly<Record<string, RadarConstraintDefinition>> = {
+    "97128882-7671-4d04-869d-90c58e530401": {
+        center: ARTH_GOLDAU_STATION,
+        radiusMiles: 25,
+        result: "miss",
+    },
+    "1f5fd38f-49b2-4a69-bab9-6cad868f04c2": {
+        center: ANDERMATT_STATION,
+        radiusMiles: 10,
+        result: "hit",
+    },
+    "50fb97fd-1dbd-4674-bd9a-6fb909e9bcb2": {
+        center: STEINEN_STATION,
+        radiusMiles: 25,
+        result: "hit",
+    },
+    "5b99c4ce-933f-4cf2-b01c-b46b0e6779e1": {
+        center: GISIKON_ROOT_STATION,
+        radiusMiles: 25,
+        result: "miss",
+    },
+    "d26f2a5e-c47d-4fa5-8e30-f1f22710b67c": {
+        center: WINTERTHUR_STATION,
+        radiusMiles: 5,
+        result: "hit",
+    },
+    "6ab7d123-8c75-4f62-8777-95fee10fa23f": {
+        center: STADION_SCHUETZENWIESE,
+        radiusMiles: 0.5,
+        result: "miss",
+    },
+    "c34befe7-d37d-44e0-bfb1-7fea4aa415a7": {
+        center: WINTERTHUR_STATION,
+        radiusMiles: 50,
+        result: "miss",
+    },
+    "3300d096-2ffd-4ce7-b2ed-a84dbfd04553": {
+        center: BERN_STATION,
+        radiusMiles: 10,
+        result: "miss",
+    },
+    "492385e2-2ea0-4914-a2c4-ac7279889aca": {
+        center: BERN_STATION,
+        radiusMiles: 25,
+        result: "hit",
+    },
+    "c2243c5c-1671-441a-9732-39b24653dfbc": {
+        center: SOLOTHURN_STATION,
+        radiusMiles: 5,
+        result: "miss",
+    },
+};
+
 function swissCityFilters(
     switzerlandFeature: GeoJSON.Feature<GeoJSON.Polygon>,
 ): Record<string, FilterSpecification> {
@@ -134,13 +214,15 @@ function clipPolygon(coordinates: Coordinate[], edge: ClippingEdge) {
     return clipped;
 }
 
-const eastOfLongitude: ClippingEdge = {
-    includes: ([longitude]) => longitude >= MIN_HIDER_LONGITUDE,
-    intersection: ([fromLongitude, fromLatitude], [toLongitude, toLatitude]) => {
-        const progress = (MIN_HIDER_LONGITUDE - fromLongitude) / (toLongitude - fromLongitude);
-        return [MIN_HIDER_LONGITUDE, fromLatitude + (toLatitude - fromLatitude) * progress];
-    },
-};
+function eastOfLongitude(minimumLongitude: number): ClippingEdge {
+    return {
+        includes: ([longitude]) => longitude >= minimumLongitude,
+        intersection: ([fromLongitude, fromLatitude], [toLongitude, toLatitude]) => {
+            const progress = (minimumLongitude - fromLongitude) / (toLongitude - fromLongitude);
+            return [minimumLongitude, fromLatitude + (toLatitude - fromLatitude) * progress];
+        },
+    };
+}
 
 const southOfLatitude: ClippingEdge = {
     includes: ([, latitude]) => latitude <= MAX_HIDER_LATITUDE,
@@ -152,11 +234,13 @@ const southOfLatitude: ClippingEdge = {
 
 function applyDirectionalHints(
     coordinates: Coordinate[],
-    hasLongitudeConstraint: boolean,
+    minimumLongitude: number | null,
     hasLatitudeConstraint: boolean,
 ) {
     let result = coordinates;
-    if (hasLongitudeConstraint) result = clipPolygon(result, eastOfLongitude);
+    if (minimumLongitude !== null) {
+        result = clipPolygon(result, eastOfLongitude(minimumLongitude));
+    }
     if (hasLatitudeConstraint) result = clipPolygon(result, southOfLatitude);
     return result;
 }
@@ -169,62 +253,188 @@ function subtractCoordinates([leftX, leftY]: Coordinate, [rightX, rightY]: Coord
     return [leftX - rightX, leftY - rightY];
 }
 
-function containsCoordinate([longitude, latitude]: Coordinate, polygon: Coordinate[]) {
-    let isInside = false;
-
-    for (let index = 0, previousIndex = polygon.length - 1; index < polygon.length; previousIndex = index, index += 1) {
-        const [currentLongitude, currentLatitude] = polygon[index]!;
-        const [previousLongitude, previousLatitude] = polygon[previousIndex]!;
-        const crossesLatitude = currentLatitude > latitude !== previousLatitude > latitude;
-        const crossingLongitude = (previousLongitude - currentLongitude)
-            * (latitude - currentLatitude)
-            / (previousLatitude - currentLatitude)
-            + currentLongitude;
-
-        if (crossesLatitude && longitude < crossingLongitude) isInside = !isInside;
-    }
-
-    return isInside;
-}
-
-type RingIntersection = {
-    coordinate: Coordinate;
-    candidateSegment: number;
-    candidateProgress: number;
-    excludedSegment: number;
-    excludedProgress: number;
+type BoundarySegment = {
+    start: Coordinate;
+    end: Coordinate;
+    cuts: number[];
+    bounds: ReturnType<typeof polygonBounds>;
 };
 
-function segmentIntersection(
-    candidateStart: Coordinate,
-    candidateEnd: Coordinate,
-    excludedStart: Coordinate,
-    excludedEnd: Coordinate,
-) {
-    const candidateVector = subtractCoordinates(candidateEnd, candidateStart);
-    const excludedVector = subtractCoordinates(excludedEnd, excludedStart);
-    const denominator = crossProduct(candidateVector, excludedVector);
+function segmentIntersection(left: BoundarySegment, right: BoundarySegment) {
+    const leftVector = subtractCoordinates(left.end, left.start);
+    const rightVector = subtractCoordinates(right.end, right.start);
+    const denominator = crossProduct(leftVector, rightVector);
     if (Math.abs(denominator) < 1e-12) return null;
 
-    const startsDelta = subtractCoordinates(excludedStart, candidateStart);
-    const candidateProgress = crossProduct(startsDelta, excludedVector) / denominator;
-    const excludedProgress = crossProduct(startsDelta, candidateVector) / denominator;
+    const startsDelta = subtractCoordinates(right.start, left.start);
+    const leftProgress = crossProduct(startsDelta, rightVector) / denominator;
+    const rightProgress = crossProduct(startsDelta, leftVector) / denominator;
     const tolerance = 1e-10;
     if (
-        candidateProgress < -tolerance
-        || candidateProgress > 1 + tolerance
-        || excludedProgress < -tolerance
-        || excludedProgress > 1 + tolerance
+        leftProgress < -tolerance
+        || leftProgress > 1 + tolerance
+        || rightProgress < -tolerance
+        || rightProgress > 1 + tolerance
     ) return null;
 
     return {
-        coordinate: [
-            candidateStart[0] + candidateVector[0] * candidateProgress,
-            candidateStart[1] + candidateVector[1] * candidateProgress,
-        ] as Coordinate,
-        candidateProgress,
-        excludedProgress,
+        leftProgress: Math.max(0, Math.min(1, leftProgress)),
+        rightProgress: Math.max(0, Math.min(1, rightProgress)),
     };
+}
+
+function polygonBounds(polygon: Coordinate[]) {
+    return polygon.reduce(
+        (bounds, [longitude, latitude]) => ({
+            minLongitude: Math.min(bounds.minLongitude, longitude),
+            minLatitude: Math.min(bounds.minLatitude, latitude),
+            maxLongitude: Math.max(bounds.maxLongitude, longitude),
+            maxLatitude: Math.max(bounds.maxLatitude, latitude),
+        }),
+        {
+            minLongitude: Infinity,
+            minLatitude: Infinity,
+            maxLongitude: -Infinity,
+            maxLatitude: -Infinity,
+        },
+    );
+}
+
+function createPolygonContainmentIndex(
+    polygon: Coordinate[],
+    bounds: ReturnType<typeof polygonBounds>,
+) {
+    const rowCount = 64;
+    const height = bounds.maxLatitude - bounds.minLatitude || 1;
+    const rows = Array.from({ length: rowCount }, () => [] as number[]);
+    const rowForLatitude = (latitude: number) => Math.max(0, Math.min(
+        rowCount - 1,
+        Math.floor((latitude - bounds.minLatitude) / height * rowCount),
+    ));
+
+    polygon.forEach((coordinate, index) => {
+        const next = polygon[(index + 1) % polygon.length]!;
+        const minRow = rowForLatitude(Math.min(coordinate[1], next[1]));
+        const maxRow = rowForLatitude(Math.max(coordinate[1], next[1]));
+        for (let row = minRow; row <= maxRow; row += 1) rows[row]!.push(index);
+    });
+
+    return ([longitude, latitude]: Coordinate) => {
+        if (
+            longitude < bounds.minLongitude
+            || longitude > bounds.maxLongitude
+            || latitude < bounds.minLatitude
+            || latitude > bounds.maxLatitude
+        ) return false;
+
+        let isInside = false;
+        for (const index of rows[rowForLatitude(latitude)]!) {
+            const [currentLongitude, currentLatitude] = polygon[index]!;
+            const [nextLongitude, nextLatitude] = polygon[(index + 1) % polygon.length]!;
+            const crossesLatitude = currentLatitude > latitude !== nextLatitude > latitude;
+            const crossingLongitude = (nextLongitude - currentLongitude)
+                * (latitude - currentLatitude)
+                / (nextLatitude - currentLatitude)
+                + currentLongitude;
+            if (crossesLatitude && longitude < crossingLongitude) isInside = !isInside;
+        }
+        return isInside;
+    };
+}
+
+function boundsOverlap(left: ReturnType<typeof polygonBounds>, right: ReturnType<typeof polygonBounds>) {
+    return left.minLongitude <= right.maxLongitude
+        && left.maxLongitude >= right.minLongitude
+        && left.minLatitude <= right.maxLatitude
+        && left.maxLatitude >= right.minLatitude;
+}
+
+function polygonSegments(polygon: Coordinate[]) {
+    return polygon.map((start, index) => {
+        const end = polygon[(index + 1) % polygon.length]!;
+        return {
+            start,
+            end,
+            cuts: [0, 1],
+            bounds: {
+                minLongitude: Math.min(start[0], end[0]),
+                minLatitude: Math.min(start[1], end[1]),
+                maxLongitude: Math.max(start[0], end[0]),
+                maxLatitude: Math.max(start[1], end[1]),
+            },
+        };
+    });
+}
+
+function coordinateAt(segment: BoundarySegment, progress: number): Coordinate {
+    return [
+        segment.start[0] + (segment.end[0] - segment.start[0]) * progress,
+        segment.start[1] + (segment.end[1] - segment.start[1]) * progress,
+    ];
+}
+
+function coordinateKey([longitude, latitude]: Coordinate) {
+    return `${longitude.toFixed(8)},${latitude.toFixed(8)}`;
+}
+
+type BoundaryPolygon = {
+    bounds: ReturnType<typeof polygonBounds>;
+    contains: (coordinate: Coordinate) => boolean;
+    coordinates: Coordinate[];
+    segments: BoundarySegment[];
+};
+
+function addPolygonIntersections(left: BoundaryPolygon, right: BoundaryPolygon) {
+    const columnCount = 32;
+    const rowCount = 32;
+    const width = right.bounds.maxLongitude - right.bounds.minLongitude || 1;
+    const height = right.bounds.maxLatitude - right.bounds.minLatitude || 1;
+    const buckets = new globalThis.Map<string, number[]>();
+    const cellRange = (bounds: ReturnType<typeof polygonBounds>) => ({
+        minColumn: Math.max(0, Math.floor(
+            (bounds.minLongitude - right.bounds.minLongitude) / width * columnCount,
+        )),
+        maxColumn: Math.min(columnCount - 1, Math.floor(
+            (bounds.maxLongitude - right.bounds.minLongitude) / width * columnCount,
+        )),
+        minRow: Math.max(0, Math.floor(
+            (bounds.minLatitude - right.bounds.minLatitude) / height * rowCount,
+        )),
+        maxRow: Math.min(rowCount - 1, Math.floor(
+            (bounds.maxLatitude - right.bounds.minLatitude) / height * rowCount,
+        )),
+    });
+
+    right.segments.forEach((segment, segmentIndex) => {
+        const range = cellRange(segment.bounds);
+        for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
+            for (let row = range.minRow; row <= range.maxRow; row += 1) {
+                const key = `${column}:${row}`;
+                buckets.set(key, [...buckets.get(key) ?? [], segmentIndex]);
+            }
+        }
+    });
+
+    for (const leftSegment of left.segments) {
+        const range = cellRange(leftSegment.bounds);
+        const candidates = new Set<number>();
+        for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
+            for (let row = range.minRow; row <= range.maxRow; row += 1) {
+                for (const segmentIndex of buckets.get(`${column}:${row}`) ?? []) {
+                    candidates.add(segmentIndex);
+                }
+            }
+        }
+
+        for (const segmentIndex of candidates) {
+            const rightSegment = right.segments[segmentIndex]!;
+            if (!boundsOverlap(leftSegment.bounds, rightSegment.bounds)) continue;
+            const intersection = segmentIntersection(leftSegment, rightSegment);
+            if (!intersection) continue;
+            leftSegment.cuts.push(intersection.leftProgress);
+            rightSegment.cuts.push(intersection.rightProgress);
+        }
+    }
 }
 
 function forwardRingPath(
@@ -246,104 +456,9 @@ function forwardRingPath(
     return path;
 }
 
-function pathSample(path: Coordinate[]) {
-    const middle = Math.max(0, Math.floor((path.length - 1) / 2));
-    const start = path[middle]!;
-    const end = path[Math.min(middle + 1, path.length - 1)]!;
-    return [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2] as Coordinate;
-}
-
-/** Traces the single remaining boundary when an excluded convex area cuts into a candidate polygon. */
-function playableBoundaryAfterExclusion(candidate: Coordinate[], excluded: Coordinate[]) {
-    const intersections: RingIntersection[] = [];
-
-    for (let candidateSegment = 0; candidateSegment < candidate.length; candidateSegment += 1) {
-        const candidateStart = candidate[candidateSegment]!;
-        const candidateEnd = candidate[(candidateSegment + 1) % candidate.length]!;
-
-        for (let excludedSegment = 0; excludedSegment < excluded.length; excludedSegment += 1) {
-            const intersection = segmentIntersection(
-                candidateStart,
-                candidateEnd,
-                excluded[excludedSegment]!,
-                excluded[(excludedSegment + 1) % excluded.length]!,
-            );
-            if (!intersection) continue;
-
-            const isDuplicate = intersections.some(({ coordinate }) =>
-                Math.abs(coordinate[0] - intersection.coordinate[0]) < 1e-9
-                && Math.abs(coordinate[1] - intersection.coordinate[1]) < 1e-9,
-            );
-            if (!isDuplicate) {
-                intersections.push({
-                    ...intersection,
-                    candidateSegment,
-                    excludedSegment,
-                });
-            }
-        }
-    }
-
-    if (intersections.length !== 2) return null;
-    const [first, second] = intersections as [RingIntersection, RingIntersection];
-    const candidatePaths = [
-        forwardRingPath(
-            candidate,
-            first.candidateSegment,
-            first.coordinate,
-            second.candidateSegment,
-            second.coordinate,
-        ),
-        forwardRingPath(
-            candidate,
-            second.candidateSegment,
-            second.coordinate,
-            first.candidateSegment,
-            first.coordinate,
-        ),
-    ];
-    const candidatePath = candidatePaths.find((path) =>
-        !containsCoordinate(pathSample(path), excluded),
-    );
-    if (!candidatePath) return null;
-
-    const startsAtFirst = candidatePath[0] === first.coordinate;
-    const pathEnd = startsAtFirst ? second : first;
-    const pathStart = startsAtFirst ? first : second;
-    const excludedPaths = [
-        forwardRingPath(
-            excluded,
-            pathEnd.excludedSegment,
-            pathEnd.coordinate,
-            pathStart.excludedSegment,
-            pathStart.coordinate,
-        ),
-        forwardRingPath(
-            excluded,
-            pathStart.excludedSegment,
-            pathStart.coordinate,
-            pathEnd.excludedSegment,
-            pathEnd.coordinate,
-        ).toReversed(),
-    ];
-    const excludedPath = excludedPaths.find((path) =>
-        containsCoordinate(pathSample(path), candidate),
-    );
-    if (!excludedPath) return null;
-
-    return [...candidatePath, ...excludedPath.slice(1, -1)];
-}
-
-function playableAreaBounds(candidateArea: Coordinate[], excludedArea: Coordinate[] | null) {
-    const boundaryCoordinates = excludedArea
-        ? [
-            ...candidateArea.filter((coordinate) => !containsCoordinate(coordinate, excludedArea)),
-            ...excludedArea.filter((coordinate) => containsCoordinate(coordinate, candidateArea)),
-        ]
-        : candidateArea;
-    const coordinates = boundaryCoordinates.length > 0 ? boundaryCoordinates : candidateArea;
-    const longitudes = coordinates.map(([longitude]) => longitude);
-    const latitudes = coordinates.map(([, latitude]) => latitude);
+function playableAreaBounds(candidateArea: Coordinate[]) {
+    const longitudes = candidateArea.map(([longitude]) => longitude);
+    const latitudes = candidateArea.map(([, latitude]) => latitude);
 
     return [
         [Math.min(...longitudes), Math.min(...latitudes)],
@@ -428,32 +543,204 @@ function eliminatedBoundaryFromPlayableArea(
     return [...internalChain, ...complementarySwissPath.slice(1, -1)];
 }
 
-function eliminatedAreaFeature(
+function centrePartyEliminationAreas(geoJson: CentrePartyCantons) {
+    return geoJson.features.flatMap((feature) => {
+        const polygons = feature.geometry.type === "Polygon"
+            ? [feature.geometry.coordinates]
+            : feature.geometry.coordinates;
+
+        return polygons.map(([outerRing]) => outerRing!.slice(0, -1).map(
+            ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
+        ));
+    });
+}
+
+function nonMittellandEliminationAreas(geoJson: NonMittellandRegions) {
+    return geoJson.features.flatMap((feature) => {
+        const polygons = feature.geometry.type === "Polygon"
+            ? [feature.geometry.coordinates]
+            : feature.geometry.coordinates;
+
+        return polygons.map(([outerRing]) => outerRing!.slice(0, -1).map(
+            ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
+        ));
+    });
+}
+
+function playableBoundaryRings(
     candidateArea: Coordinate[],
-    radarMissCircle: Coordinate[] | null,
+    excludedAreas: Coordinate[][],
+    mutuallyDisjointExcludedAreaCount: number,
+    minimumRingArea: number,
+) {
+    const polygons = [candidateArea, ...excludedAreas].map((coordinates) => {
+        const bounds = polygonBounds(coordinates);
+        return {
+            bounds,
+            contains: createPolygonContainmentIndex(coordinates, bounds),
+            coordinates,
+            segments: polygonSegments(coordinates),
+        };
+    });
+
+    for (let leftIndex = 0; leftIndex < polygons.length; leftIndex += 1) {
+        const left = polygons[leftIndex]!;
+        for (let rightIndex = leftIndex + 1; rightIndex < polygons.length; rightIndex += 1) {
+            if (
+                leftIndex > 0
+                && rightIndex <= mutuallyDisjointExcludedAreaCount
+            ) continue;
+            const right = polygons[rightIndex]!;
+            if (!boundsOverlap(left.bounds, right.bounds)) continue;
+
+            addPolygonIntersections(left, right);
+        }
+    }
+
+    const isPlayable = (coordinate: Coordinate) => {
+        if (!polygons[0]!.contains(coordinate)) return false;
+        return !excludedAreas.some((_, index) => {
+            const bounds = polygons[index + 1]!.bounds;
+            return coordinate[0] >= bounds.minLongitude
+                && coordinate[0] <= bounds.maxLongitude
+                && coordinate[1] >= bounds.minLatitude
+                && coordinate[1] <= bounds.maxLatitude
+                && polygons[index + 1]!.contains(coordinate);
+        });
+    };
+    const boundarySegments: { start: Coordinate; end: Coordinate }[] = [];
+
+    for (const polygon of polygons) {
+        for (const segment of polygon.segments) {
+            const cuts = segment.cuts
+                .toSorted((left, right) => left - right)
+                .filter((cut, index, sorted) => index === 0 || cut - sorted[index - 1]! > 1e-9);
+            for (let index = 0; index < cuts.length - 1; index += 1) {
+                const start = coordinateAt(segment, cuts[index]!);
+                const end = coordinateAt(segment, cuts[index + 1]!);
+                const vector = subtractCoordinates(end, start);
+                const length = Math.hypot(vector[0], vector[1]);
+                if (length < 1e-10) continue;
+
+                const midpoint: Coordinate = [
+                    (start[0] + end[0]) / 2,
+                    (start[1] + end[1]) / 2,
+                ];
+                const sampleOffset: Coordinate = [
+                    -vector[1] / length * 1e-7,
+                    vector[0] / length * 1e-7,
+                ];
+                const leftIsPlayable = isPlayable([
+                    midpoint[0] + sampleOffset[0],
+                    midpoint[1] + sampleOffset[1],
+                ]);
+                const rightIsPlayable = isPlayable([
+                    midpoint[0] - sampleOffset[0],
+                    midpoint[1] - sampleOffset[1],
+                ]);
+                if (leftIsPlayable === rightIsPlayable) continue;
+                boundarySegments.push(leftIsPlayable ? { start, end } : { start: end, end: start });
+            }
+        }
+    }
+
+    const outgoing = new globalThis.Map<string, number[]>();
+    boundarySegments.forEach((segment, index) => {
+        const key = coordinateKey(segment.start);
+        outgoing.set(key, [...outgoing.get(key) ?? [], index]);
+    });
+    const used = new Set<number>();
+    const rings: Coordinate[][] = [];
+
+    for (let startIndex = 0; startIndex < boundarySegments.length; startIndex += 1) {
+        if (used.has(startIndex)) continue;
+        const first = boundarySegments[startIndex]!;
+        const ring = [first.start];
+        let currentIndex = startIndex;
+
+        while (!used.has(currentIndex)) {
+            used.add(currentIndex);
+            const current = boundarySegments[currentIndex]!;
+            ring.push(current.end);
+            if (coordinateKey(current.end) === coordinateKey(first.start)) break;
+            const nextIndex = outgoing.get(coordinateKey(current.end))?.find(
+                (candidateIndex) => !used.has(candidateIndex),
+            );
+            if (nextIndex === undefined) break;
+            currentIndex = nextIndex;
+        }
+
+        if (
+            ring.length >= 4
+            && coordinateKey(ring[0]!) === coordinateKey(ring.at(-1)!)
+            && Math.abs(ringArea(ring)) > minimumRingArea
+        ) rings.push(ring.slice(0, -1));
+    }
+
+    return rings;
+}
+
+function combinedEliminatedAreaFeature(
+    candidateArea: Coordinate[],
+    excludedAreas: Coordinate[][],
+    mutuallyDisjointExcludedAreaCount: number,
     switzerlandOutline: Coordinate[],
-): GeoJSON.Feature<GeoJSON.Polygon, { id: string }> {
-    const playableArea = radarMissCircle
-        ? playableBoundaryAfterExclusion(candidateArea, radarMissCircle) ?? candidateArea
-        : candidateArea;
-    const eliminatedBoundary = eliminatedBoundaryFromPlayableArea(
-        playableArea,
-        switzerlandOutline,
+    minimumRingArea = 1e-10,
+) {
+    const candidateBounds = polygonBounds(candidateArea);
+    const relevantExcludedAreas = excludedAreas
+        .map((area, index) => ({ area, index }))
+        .filter(({ area }) => boundsOverlap(candidateBounds, polygonBounds(area)));
+    const relevantDisjointAreaCount = relevantExcludedAreas.filter(
+        ({ index }) => index < mutuallyDisjointExcludedAreaCount,
+    ).length;
+    const playableRings = playableBoundaryRings(
+        candidateArea,
+        relevantExcludedAreas.map(({ area }) => area),
+        relevantDisjointAreaCount,
+        minimumRingArea,
     );
+    const playableOuterRings = playableRings.filter((ring) => ringArea(ring) > 0);
+    const eliminatedIslandRings = playableRings.filter((ring) => ringArea(ring) < 0);
+    const primaryPlayableRing = playableOuterRings.toSorted(
+        (left, right) => Math.abs(ringArea(right)) - Math.abs(ringArea(left)),
+    )[0];
+    const eliminatedBoundary = primaryPlayableRing
+        ? eliminatedBoundaryFromPlayableArea(primaryPlayableRing, switzerlandOutline)
+        : null;
+    const primaryIsSwitzerland = primaryPlayableRing?.every(
+        (coordinate) => switzerlandBoundarySegment(coordinate, switzerlandOutline) !== null,
+    ) ?? false;
+    const polygons: Coordinate[][][] = [];
+
+    if (eliminatedBoundary) {
+        polygons.push([
+            orientedRing(eliminatedBoundary, false),
+            ...playableOuterRings
+                .filter((ring) => ring !== primaryPlayableRing)
+                .map((ring) => orientedRing(ring, true)),
+        ]);
+    } else if (!primaryIsSwitzerland) {
+        polygons.push([
+            orientedRing(switzerlandOutline, false),
+            ...playableOuterRings.map((ring) => orientedRing(ring, true)),
+        ]);
+    }
+    polygons.push(...eliminatedIslandRings.map((ring) => [orientedRing(ring, false)]));
 
     return {
         type: "Feature",
         properties: { id: "season-nine-eliminated-area" },
-        geometry: {
-            type: "Polygon",
-            coordinates: eliminatedBoundary
-                ? [orientedRing(eliminatedBoundary, false)]
-                : [
-                    orientedRing(switzerlandOutline, false),
-                    orientedRing(playableArea, true),
-                ],
-        },
-    };
+        geometry: polygons.length === 1
+            ? {
+                type: "Polygon",
+                coordinates: polygons[0]!,
+            }
+            : {
+                type: "MultiPolygon",
+                coordinates: polygons,
+            },
+    } satisfies GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon, { id: string }>;
 }
 
 function createSwitzerlandMask(switzerlandOutline: Coordinate[]) {
@@ -506,6 +793,7 @@ function SwitzerlandMask({
 
 export function InvestigationMap({ state }: { state: SeasonNineState }) {
     const switzerlandGeoJson = useSwitzerlandGeoJson();
+    const runKey = `${state.currentRunStartedAt.episode}:${state.currentRunStartedAt.at}`;
     const switzerlandMap = useMemo(() => {
         const feature = switzerlandGeoJson?.features[0];
         if (!feature) return null;
@@ -514,7 +802,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
             ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
         );
         return {
-            bounds: playableAreaBounds(outline, null),
+            bounds: playableAreaBounds(outline),
             cityFilters: swissCityFilters(feature),
             mask: createSwitzerlandMask(outline),
             outline,
@@ -528,37 +816,67 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         ),
         [state.questions],
     );
+    const radarConstraints = useMemo(
+        () => state.questions.flatMap((question) => {
+            if (question.status !== "answered") return [];
+            const definition = RADAR_CONSTRAINTS_BY_EVENT_ID[question.eventId];
+            return definition ? [{ ...definition, eventId: question.eventId }] : [];
+        }),
+        [state.questions],
+    );
+    const radarHit = radarConstraints
+        .filter((constraint) => constraint.result === "hit")
+        .at(-1);
     const isFirstAdamRun = state.currentHider === "adam"
         && state.currentRunStartedAt.episode === "episode-1"
         && state.currentRunStartedAt.at === 0;
     const hasLongitudeConstraint = isFirstAdamRun && answeredQuestionIds.has("longitude");
+    const hasSamMeggenLongitudeConstraint = state.questions.some(
+        (question) => question.status === "answered"
+            && question.eventId === SAM_MEGGEN_LONGITUDE_EVENT_ID,
+    );
+    const hasSamPlateauRegionConstraint = state.questions.some(
+        (question) => question.status === "answered"
+            && question.eventId === SAM_PLATEAU_REGION_EVENT_ID,
+    );
+    const minimumHiderLongitude = hasSamMeggenLongitudeConstraint
+        ? MEGGEN_STATION[0]
+        : hasLongitudeConstraint
+            ? MIN_HIDER_LONGITUDE
+            : null;
     const hasLatitudeConstraint = isFirstAdamRun && answeredQuestionIds.has("latitude");
-    const hasGoldauRadarMiss = isFirstAdamRun && answeredQuestionIds.has("25-miles");
-    const hasAndermattRadarHit = isFirstAdamRun && answeredQuestionIds.has("10-miles");
+    const hasCentrePartyElimination = answeredQuestionIds.has("political-party");
+    const centrePartyCantons = useGeoJson<CentrePartyCantons>(
+        hasCentrePartyElimination ? CENTRE_PARTY_CANTONS_URL : null,
+    );
+    const nonMittellandRegions = useGeoJson<NonMittellandRegions>(
+        hasSamPlateauRegionConstraint ? NON_MITTELLAND_REGIONS_URL : null,
+    );
     const endgameStation = state.currentHider === "sam"
-        ? WINTERTHUR_TOSS_STATION
+        ? WINTERTHUR_TOESS_STATION
         : state.currentHider === "ben"
             ? MERLISCHACHEN_STATION
             : isFirstAdamRun
                 ? HOSPENTAL_STATION
                 : null;
-    const hasSearchConstraint = hasLongitudeConstraint
+    const hasPlayableAreaConstraint = minimumHiderLongitude !== null
         || hasLatitudeConstraint
-        || hasGoldauRadarMiss
-        || hasAndermattRadarHit
+        || radarHit !== undefined
         || (state.endgame && endgameStation !== null);
 
     const mapGeometry = useMemo(() => {
         if (!switzerlandMap) return null;
+        if (hasCentrePartyElimination && !centrePartyCantons) return null;
+        if (hasSamPlateauRegionConstraint && !nonMittellandRegions) return null;
 
         const preciseArea = state.endgame && endgameStation
             ? circleCoordinates(endgameStation, 1)
-            : hasAndermattRadarHit
-                ? circleCoordinates(ANDERMATT_STATION, 10)
+            : radarHit
+                ? circleCoordinates(radarHit.center, radarHit.radiusMiles)
                 : switzerlandMap.outline;
         const constrainedArea = applyDirectionalHints(
             preciseArea,
-            hasLongitudeConstraint,
+            minimumHiderLongitude,
             hasLatitudeConstraint,
         );
         if (constrainedArea.length < 3) {
@@ -568,26 +886,53 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
             };
         }
 
-        const radarMissCircle = hasGoldauRadarMiss
-            ? circleCoordinates(GOLDAU_STATION, 25)
-            : null;
+        const biogeographicalAreas = hasSamPlateauRegionConstraint
+            ? nonMittellandEliminationAreas(nonMittellandRegions!)
+            : [];
+        const centrePartyAreas = hasCentrePartyElimination
+            ? centrePartyEliminationAreas(centrePartyCantons!)
+            : [];
+        const mutuallyDisjointAreas = biogeographicalAreas.length > 0
+            ? biogeographicalAreas
+            : centrePartyAreas;
+        const additionalAreas = biogeographicalAreas.length > 0
+            ? centrePartyAreas
+            : [];
+        const excludedAreas = [
+            ...mutuallyDisjointAreas,
+            ...additionalAreas,
+            ...radarConstraints
+                .filter((constraint) => constraint.result === "miss")
+                .map((constraint) => circleCoordinates(
+                    constraint.center,
+                    constraint.radiusMiles,
+                )),
+        ];
+        const hasEliminatedArea = hasPlayableAreaConstraint || excludedAreas.length > 0;
+
         return {
-            eliminatedArea: hasSearchConstraint
-                ? eliminatedAreaFeature(
+            eliminatedArea: hasEliminatedArea
+                ? combinedEliminatedAreaFeature(
                     constrainedArea,
-                    radarMissCircle,
+                    excludedAreas,
+                    mutuallyDisjointAreas.length,
                     switzerlandMap.outline,
+                    hasSamPlateauRegionConstraint ? 5e-5 : undefined,
                 )
                 : null,
-            playableBounds: playableAreaBounds(constrainedArea, radarMissCircle),
+            playableBounds: playableAreaBounds(constrainedArea),
         };
     }, [
-        hasAndermattRadarHit,
-        hasGoldauRadarMiss,
+        centrePartyCantons,
         hasLatitudeConstraint,
-        hasLongitudeConstraint,
-        hasSearchConstraint,
+        hasPlayableAreaConstraint,
+        hasCentrePartyElimination,
+        hasSamPlateauRegionConstraint,
+        minimumHiderLongitude,
+        nonMittellandRegions,
         endgameStation,
+        radarConstraints,
+        radarHit,
         state.endgame,
         switzerlandMap,
     ]);
@@ -596,6 +941,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         <div className="bg-map-canvas relative h-72 overflow-hidden">
             {switzerlandMap && mapGeometry && (
                 <Map
+                    key={runKey}
                     bounds={switzerlandMap.bounds}
                     fitBoundsOptions={{ padding: 24 }}
                     minZoom={5.5}

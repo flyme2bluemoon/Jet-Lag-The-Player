@@ -284,7 +284,6 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
                     endedAt: eventTimestamp(event),
                 });
                 currentRunActive = false;
-                endgame = false;
                 for (const curse of curses) curse.active = false;
                 break;
             }

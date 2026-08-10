@@ -40,19 +40,23 @@ export function loadGeoJson<T extends GeoJsonObject>(url: string): Promise<T> {
  * `null` to defer the request until the geometry is needed.
  */
 export function useGeoJson<T extends GeoJsonObject>(url: string | null) {
-    const [, forceRender] = useState(0);
-    const geoJson = url ? cachedGeoJson.get(url) as T | undefined : undefined;
+    const [loaded, setLoaded] = useState<{ data: T; url: string } | null>(() => {
+        if (!url) return null;
+        const cached = cachedGeoJson.get(url) as T | undefined;
+        return cached ? { data: cached, url } : null;
+    });
+    const geoJson = loaded?.url === url ? loaded.data : null;
 
     useEffect(() => {
         if (!url || geoJson) return;
 
         let active = true;
         void loadGeoJson<T>(url)
-            .then(() => {
-                if (active) forceRender((revision) => revision + 1);
+            .then((data) => {
+                if (active) setLoaded({ data, url });
             })
-            .catch(() => {
-                // Leave the consumer empty if the static asset cannot be loaded.
+            .catch((error: unknown) => {
+                if (active) console.error(`Unable to load GeoJSON from ${url}`, error);
             });
 
         return () => {
@@ -60,5 +64,5 @@ export function useGeoJson<T extends GeoJsonObject>(url: string | null) {
         };
     }, [geoJson, url]);
 
-    return geoJson ?? null;
+    return geoJson;
 }

@@ -3,6 +3,10 @@
 import type * as GeoJSON from "geojson";
 import type { FilterSpecification } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
+import {
+    CENTRE_PARTY_CANTONS_URL,
+    NON_MITTELLAND_REGIONS_URL,
+} from "@/generated/geojson-assets";
 import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
 import { useGeoJson } from "@/lib/geojson";
@@ -29,8 +33,6 @@ const WINTERTHUR_TOESS_STATION: Coordinate = [8.7093, 47.4898];
 const MERLISCHACHEN_STATION: Coordinate = [8.409058, 47.06766];
 const MAP_MAX_ZOOM = 22;
 const COUNTRY_LABEL_LAYER_IDS = ["place_country_1", "place_country_2"] as const;
-const CENTRE_PARTY_CANTONS_URL = "/geojson/centre-party-cantons.json";
-const NON_MITTELLAND_REGIONS_URL = "/geojson/non-mittelland-regions.json";
 type CentrePartyCantons = GeoJSON.FeatureCollection<
     GeoJSON.Polygon | GeoJSON.MultiPolygon,
     { id: number; name: string }

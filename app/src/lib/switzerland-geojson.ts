@@ -1,9 +1,8 @@
 "use client";
 
 import type { FeatureCollection, Polygon } from "geojson";
+import { SWITZERLAND_GEOJSON_URL } from "@/generated/geojson-assets";
 import { loadGeoJson, useGeoJson } from "@/lib/geojson";
-
-const SWITZERLAND_GEOJSON_URL = "/geojson/switzerland.geojson";
 
 export type SwitzerlandGeoJson = FeatureCollection<
     Polygon,

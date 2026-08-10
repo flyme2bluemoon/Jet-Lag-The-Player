@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { Hexagon, Lock } from "lucide-react";
+import { CANADA_GEOJSON_URL } from "@/generated/geojson-assets";
 import {
     Accordion,
     AccordionContent,
@@ -51,7 +52,6 @@ import {
 } from "./state-claims";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
-const CANADA_GEOJSON = "/geojson/canada.geojson";
 const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
 
 
@@ -181,7 +181,7 @@ function ScoreboardMapLayers({
         <>
             <MapGeoJSON
                 id="season-four-canada"
-                data={CANADA_GEOJSON}
+                data={CANADA_GEOJSON_URL}
                 fillPaint={{
                     "fill-color": [
                         "case",

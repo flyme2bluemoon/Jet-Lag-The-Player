@@ -5,9 +5,8 @@ import type {
     MultiPolygon,
     Polygon,
 } from "geojson";
+import { US_STATES_GEOJSON_URL } from "@/generated/geojson-assets";
 import { loadGeoJson, useGeoJson } from "@/lib/geojson";
-
-const US_STATES_GEOJSON_URL = "/geojson/us-states.geojson";
 
 export type UsStateGeometry = Polygon | MultiPolygon;
 export type UsStatesGeoJson = FeatureCollection<

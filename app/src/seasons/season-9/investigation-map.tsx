@@ -6,6 +6,7 @@ import { useEffect, useMemo } from "react";
 import {
     CENTRE_PARTY_CANTONS_URL,
     NON_MITTELLAND_REGIONS_URL,
+    ZURICH_CANTON_URL,
 } from "@/generated/geojson-assets";
 import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
@@ -16,10 +17,14 @@ import type { SeasonNineState } from "./timeline-data";
 type Coordinate = [number, number];
 
 const MIN_HIDER_LONGITUDE = 8.3093;
+const ADAM_FINALE_MIN_HIDER_LONGITUDE = 7.44115;
 const MAX_HIDER_LATITUDE = 47.0502;
 const MEGGEN_STATION: Coordinate = [8.38306, 47.05015];
 const SAM_MEGGEN_LONGITUDE_EVENT_ID = "47d454a3-2b4c-41a4-9bd9-019d41f92123";
+const ADAM_FINALE_LONGITUDE_EVENT_ID = "3aed6dee-dbaa-4bcb-8e15-c628332087d9";
 const SAM_PLATEAU_REGION_EVENT_ID = "7752ab74-3e56-4059-9f2f-c2279f090382";
+const SAM_ZURICH_CANTON_EVENT_ID = "902d3f18-9259-47e5-9b91-fca5e7933e0c";
+const ADAM_NOT_ZURICH_CANTON_EVENT_ID = "ce2c3fcf-64fe-43d5-8604-8b31af974b11";
 const ARTH_GOLDAU_STATION: Coordinate = [8.54965, 47.04913];
 const ANDERMATT_STATION: Coordinate = [8.59333, 46.63684];
 const STEINEN_STATION: Coordinate = [8.60747, 47.04769];
@@ -29,7 +34,8 @@ const BERN_STATION: Coordinate = [7.43996, 46.94891];
 const SOLOTHURN_STATION: Coordinate = [7.54268, 47.20425];
 const STADION_SCHUETZENWIESE: Coordinate = [8.71813, 47.50075];
 const HOSPENTAL_STATION: Coordinate = [8.5696, 46.6195];
-const WINTERTHUR_TOESS_STATION: Coordinate = [8.7093, 47.4898];
+// const WINTERTHUR_TOESS_STATION: Coordinate = [8.7093, 47.4898];
+const WINTERTHUR_TOESS_STATION: Coordinate = [8.7121341, 47.4953199];
 const MERLISCHACHEN_STATION: Coordinate = [8.409058, 47.06766];
 const MAP_MAX_ZOOM = 22;
 const COUNTRY_LABEL_LAYER_IDS = ["place_country_1", "place_country_2"] as const;
@@ -40,6 +46,10 @@ type CentrePartyCantons = GeoJSON.FeatureCollection<
 type NonMittellandRegions = GeoJSON.FeatureCollection<
     GeoJSON.Polygon | GeoJSON.MultiPolygon,
     { id: number; region: string; subregion: string }
+>;
+type ZurichCanton = GeoJSON.FeatureCollection<
+    GeoJSON.Polygon,
+    { id: number; name: string }
 >;
 
 type RadarConstraintDefinition = {
@@ -170,6 +180,55 @@ function ringArea(coordinates: Coordinate[]) {
 function orientedRing(coordinates: Coordinate[], clockwise: boolean) {
     const isClockwise = ringArea(coordinates) < 0;
     return closeRing(isClockwise === clockwise ? coordinates : coordinates.toReversed());
+}
+
+function polygonContainsCoordinate(polygon: Coordinate[][], coordinate: Coordinate) {
+    const [outerRing, ...holes] = polygon;
+    if (!outerRing) return false;
+    const outerBounds = polygonBounds(outerRing);
+    if (!createPolygonContainmentIndex(outerRing, outerBounds)(coordinate)) return false;
+
+    return !holes.some((hole) => {
+        const holeBounds = polygonBounds(hole);
+        return createPolygonContainmentIndex(hole, holeBounds)(coordinate);
+    });
+}
+
+function ringInteriorCoordinate(ring: Coordinate[]) {
+    const bounds = polygonBounds(ring);
+    const scale = Math.max(
+        bounds.maxLongitude - bounds.minLongitude,
+        bounds.maxLatitude - bounds.minLatitude,
+    );
+    const contains = createPolygonContainmentIndex(ring, bounds);
+    const clockwise = ringArea(ring) < 0;
+
+    for (let index = 0; index < ring.length; index += 1) {
+        const start = ring[index]!;
+        const end = ring[(index + 1) % ring.length]!;
+        const vector = subtractCoordinates(end, start);
+        const length = Math.hypot(vector[0], vector[1]);
+        if (length < 1e-10) continue;
+
+        const midpoint: Coordinate = [
+            (start[0] + end[0]) / 2,
+            (start[1] + end[1]) / 2,
+        ];
+        const inwardNormal: Coordinate = clockwise
+            ? [vector[1] / length, -vector[0] / length]
+            : [-vector[1] / length, vector[0] / length];
+
+        for (const scaleFactor of [1e-7, 1e-8, 1e-9, 1e-10]) {
+            const offset = Math.min(scale * scaleFactor, length * 1e-3);
+            const candidate: Coordinate = [
+                midpoint[0] + inwardNormal[0] * offset,
+                midpoint[1] + inwardNormal[1] * offset,
+            ];
+            if (contains(candidate)) return candidate;
+        }
+    }
+
+    throw new Error("Unable to find an interior coordinate for a generated map ring.");
 }
 
 function circleCoordinates(center: Coordinate, radiusMiles: number) {
@@ -468,6 +527,24 @@ function playableAreaBounds(candidateArea: Coordinate[]) {
     ] as [[number, number], [number, number]];
 }
 
+function intersectPlayableAreaBounds(candidateAreas: Coordinate[][]) {
+    const [firstArea, ...remainingAreas] = candidateAreas;
+    if (!firstArea) throw new Error("At least one candidate area is required.");
+
+    return remainingAreas
+        .map(playableAreaBounds)
+        .reduce<[[number, number], [number, number]]>((intersection, bounds) => [
+            [
+                Math.max(intersection[0][0], bounds[0][0]),
+                Math.max(intersection[0][1], bounds[0][1]),
+            ],
+            [
+                Math.min(intersection[1][0], bounds[1][0]),
+                Math.min(intersection[1][1], bounds[1][1]),
+            ],
+        ], playableAreaBounds(firstArea));
+}
+
 function switzerlandBoundarySegment(
     [longitude, latitude]: Coordinate,
     switzerlandOutline: Coordinate[],
@@ -545,19 +622,9 @@ function eliminatedBoundaryFromPlayableArea(
     return [...internalChain, ...complementarySwissPath.slice(1, -1)];
 }
 
-function centrePartyEliminationAreas(geoJson: CentrePartyCantons) {
-    return geoJson.features.flatMap((feature) => {
-        const polygons = feature.geometry.type === "Polygon"
-            ? [feature.geometry.coordinates]
-            : feature.geometry.coordinates;
-
-        return polygons.map(([outerRing]) => outerRing!.slice(0, -1).map(
-            ([longitude, latitude]) => [longitude!, latitude!] as Coordinate,
-        ));
-    });
-}
-
-function nonMittellandEliminationAreas(geoJson: NonMittellandRegions) {
+function polygonOuterRings(
+    geoJson: GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>,
+) {
     return geoJson.features.flatMap((feature) => {
         const polygons = feature.geometry.type === "Polygon"
             ? [feature.geometry.coordinates]
@@ -570,12 +637,11 @@ function nonMittellandEliminationAreas(geoJson: NonMittellandRegions) {
 }
 
 function playableBoundaryRings(
-    candidateArea: Coordinate[],
+    candidateAreas: Coordinate[][],
     excludedAreas: Coordinate[][],
-    mutuallyDisjointExcludedAreaCount: number,
     minimumRingArea: number,
 ) {
-    const polygons = [candidateArea, ...excludedAreas].map((coordinates) => {
+    const polygons = [...candidateAreas, ...excludedAreas].map((coordinates) => {
         const bounds = polygonBounds(coordinates);
         return {
             bounds,
@@ -588,10 +654,6 @@ function playableBoundaryRings(
     for (let leftIndex = 0; leftIndex < polygons.length; leftIndex += 1) {
         const left = polygons[leftIndex]!;
         for (let rightIndex = leftIndex + 1; rightIndex < polygons.length; rightIndex += 1) {
-            if (
-                leftIndex > 0
-                && rightIndex <= mutuallyDisjointExcludedAreaCount
-            ) continue;
             const right = polygons[rightIndex]!;
             if (!boundsOverlap(left.bounds, right.bounds)) continue;
 
@@ -600,14 +662,17 @@ function playableBoundaryRings(
     }
 
     const isPlayable = (coordinate: Coordinate) => {
-        if (!polygons[0]!.contains(coordinate)) return false;
+        if (!polygons.slice(0, candidateAreas.length).every((polygon) => (
+            polygon.contains(coordinate)
+        ))) return false;
         return !excludedAreas.some((_, index) => {
-            const bounds = polygons[index + 1]!.bounds;
+            const polygon = polygons[index + candidateAreas.length]!;
+            const bounds = polygon.bounds;
             return coordinate[0] >= bounds.minLongitude
                 && coordinate[0] <= bounds.maxLongitude
                 && coordinate[1] >= bounds.minLatitude
                 && coordinate[1] <= bounds.maxLatitude
-                && polygons[index + 1]!.contains(coordinate);
+                && polygon.contains(coordinate);
         });
     };
     const boundarySegments: { start: Coordinate; end: Coordinate }[] = [];
@@ -682,24 +747,23 @@ function playableBoundaryRings(
     return rings;
 }
 
-function combinedEliminatedAreaFeature(
-    candidateArea: Coordinate[],
+function combinedMapGeometry(
+    candidateAreas: Coordinate[][],
     excludedAreas: Coordinate[][],
-    mutuallyDisjointExcludedAreaCount: number,
     switzerlandOutline: Coordinate[],
     minimumRingArea = 1e-10,
 ) {
-    const candidateBounds = polygonBounds(candidateArea);
+    const candidateBounds = candidateAreas.map(polygonBounds).reduce((intersection, bounds) => ({
+        minLongitude: Math.max(intersection.minLongitude, bounds.minLongitude),
+        minLatitude: Math.max(intersection.minLatitude, bounds.minLatitude),
+        maxLongitude: Math.min(intersection.maxLongitude, bounds.maxLongitude),
+        maxLatitude: Math.min(intersection.maxLatitude, bounds.maxLatitude),
+    }));
     const relevantExcludedAreas = excludedAreas
-        .map((area, index) => ({ area, index }))
-        .filter(({ area }) => boundsOverlap(candidateBounds, polygonBounds(area)));
-    const relevantDisjointAreaCount = relevantExcludedAreas.filter(
-        ({ index }) => index < mutuallyDisjointExcludedAreaCount,
-    ).length;
+        .filter((area) => boundsOverlap(candidateBounds, polygonBounds(area)));
     const playableRings = playableBoundaryRings(
-        candidateArea,
-        relevantExcludedAreas.map(({ area }) => area),
-        relevantDisjointAreaCount,
+        candidateAreas,
+        relevantExcludedAreas,
         minimumRingArea,
     );
     const playableOuterRings = playableRings.filter((ring) => ringArea(ring) > 0);
@@ -715,7 +779,12 @@ function combinedEliminatedAreaFeature(
     ) ?? false;
     const polygons: Coordinate[][][] = [];
 
-    if (eliminatedBoundary) {
+    if (!primaryPlayableRing) {
+        // With no playable outer ring, Switzerland is fully eliminated. Do not
+        // append eliminated island rings because they are already covered by
+        // this polygon and would create overlapping MultiPolygon members.
+        polygons.push([orientedRing(switzerlandOutline, false)]);
+    } else if (eliminatedBoundary) {
         polygons.push([
             orientedRing(eliminatedBoundary, false),
             ...playableOuterRings
@@ -728,21 +797,40 @@ function combinedEliminatedAreaFeature(
             ...playableOuterRings.map((ring) => orientedRing(ring, true)),
         ]);
     }
-    polygons.push(...eliminatedIslandRings.map((ring) => [orientedRing(ring, false)]));
+    if (primaryPlayableRing) {
+        // These rings come from the same fully intersected boundary graph as
+        // the outer rings. Add largest islands first and omit any nested island
+        // already covered by an existing polygon to keep MultiPolygon members
+        // interior-disjoint.
+        for (const ring of eliminatedIslandRings.toSorted(
+            (left, right) => Math.abs(ringArea(right)) - Math.abs(ringArea(left)),
+        )) {
+            const interiorCoordinate = ringInteriorCoordinate(ring);
+            if (polygons.some((polygon) => (
+                polygonContainsCoordinate(polygon, interiorCoordinate)
+            ))) continue;
+            polygons.push([orientedRing(ring, false)]);
+        }
+    }
 
     return {
-        type: "Feature",
-        properties: { id: "season-nine-eliminated-area" },
-        geometry: polygons.length === 1
-            ? {
-                type: "Polygon",
-                coordinates: polygons[0]!,
-            }
-            : {
-                type: "MultiPolygon",
-                coordinates: polygons,
-            },
-    } satisfies GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon, { id: string }>;
+        eliminatedArea: {
+            type: "Feature",
+            properties: { id: "season-nine-eliminated-area" },
+            geometry: polygons.length === 1
+                ? {
+                    type: "Polygon",
+                    coordinates: polygons[0]!,
+                }
+                : {
+                    type: "MultiPolygon",
+                    coordinates: polygons,
+                },
+        } satisfies GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon, { id: string }>,
+        playableBounds: playableOuterRings.length > 0
+            ? playableAreaBounds(playableOuterRings.flat())
+            : intersectPlayableAreaBounds(candidateAreas),
+    };
 }
 
 function createSwitzerlandMask(switzerlandOutline: Coordinate[]) {
@@ -837,15 +925,31 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         (question) => question.status === "answered"
             && question.eventId === SAM_MEGGEN_LONGITUDE_EVENT_ID,
     );
+    const hasAdamFinaleLongitudeConstraint = state.questions.some(
+        (question) => question.status === "answered"
+            && question.eventId === ADAM_FINALE_LONGITUDE_EVENT_ID,
+    );
     const hasSamPlateauRegionConstraint = state.questions.some(
         (question) => question.status === "answered"
             && question.eventId === SAM_PLATEAU_REGION_EVENT_ID,
     );
+    const hasSamZurichCantonConstraint = state.questions.some(
+        (question) => question.status === "answered"
+            && question.eventId === SAM_ZURICH_CANTON_EVENT_ID,
+    );
+    const hasAdamZurichCantonElimination = state.questions.some(
+        (question) => question.status === "answered"
+            && question.eventId === ADAM_NOT_ZURICH_CANTON_EVENT_ID,
+    );
+    const hasZurichCantonConstraint = hasSamZurichCantonConstraint
+        || hasAdamZurichCantonElimination;
     const minimumHiderLongitude = hasSamMeggenLongitudeConstraint
         ? MEGGEN_STATION[0]
-        : hasLongitudeConstraint
-            ? MIN_HIDER_LONGITUDE
-            : null;
+        : hasAdamFinaleLongitudeConstraint
+            ? ADAM_FINALE_MIN_HIDER_LONGITUDE
+            : hasLongitudeConstraint
+                ? MIN_HIDER_LONGITUDE
+                : null;
     const hasLatitudeConstraint = isFirstAdamRun && answeredQuestionIds.has("latitude");
     const hasCentrePartyElimination = answeredQuestionIds.has("political-party");
     const centrePartyCantons = useGeoJson<CentrePartyCantons>(
@@ -854,22 +958,26 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
     const nonMittellandRegions = useGeoJson<NonMittellandRegions>(
         hasSamPlateauRegionConstraint ? NON_MITTELLAND_REGIONS_URL : null,
     );
-    const endgameStation = state.currentHider === "sam"
-        ? WINTERTHUR_TOESS_STATION
-        : state.currentHider === "ben"
-            ? MERLISCHACHEN_STATION
-            : isFirstAdamRun
-                ? HOSPENTAL_STATION
-                : null;
+    const zurichCanton = useGeoJson<ZurichCanton>(
+        hasZurichCantonConstraint ? ZURICH_CANTON_URL : null,
+    );
+    const endgameStations = {
+        sam: WINTERTHUR_TOESS_STATION,
+        ben: MERLISCHACHEN_STATION,
+        adam: isFirstAdamRun ? HOSPENTAL_STATION : null,
+    } satisfies Record<SeasonNineState["currentHider"], Coordinate | null>;
+    const endgameStation = endgameStations[state.currentHider];
     const hasPlayableAreaConstraint = minimumHiderLongitude !== null
         || hasLatitudeConstraint
         || radarHit !== undefined
+        || hasSamZurichCantonConstraint
         || (state.endgame && endgameStation !== null);
 
     const mapGeometry = useMemo(() => {
         if (!switzerlandMap) return null;
         if (hasCentrePartyElimination && !centrePartyCantons) return null;
         if (hasSamPlateauRegionConstraint && !nonMittellandRegions) return null;
+        if (hasZurichCantonConstraint && !zurichCanton) return null;
 
         const preciseArea = state.endgame && endgameStation
             ? circleCoordinates(endgameStation, 1)
@@ -888,21 +996,21 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
             };
         }
 
+        const cantonAreas = hasSamZurichCantonConstraint
+            ? polygonOuterRings(zurichCanton!)
+            : [];
+        const candidateAreas = [constrainedArea, ...cantonAreas];
+
         const biogeographicalAreas = hasSamPlateauRegionConstraint
-            ? nonMittellandEliminationAreas(nonMittellandRegions!)
+            ? polygonOuterRings(nonMittellandRegions!)
             : [];
         const centrePartyAreas = hasCentrePartyElimination
-            ? centrePartyEliminationAreas(centrePartyCantons!)
-            : [];
-        const mutuallyDisjointAreas = biogeographicalAreas.length > 0
-            ? biogeographicalAreas
-            : centrePartyAreas;
-        const additionalAreas = biogeographicalAreas.length > 0
-            ? centrePartyAreas
+            ? polygonOuterRings(centrePartyCantons!)
             : [];
         const excludedAreas = [
-            ...mutuallyDisjointAreas,
-            ...additionalAreas,
+            ...biogeographicalAreas,
+            ...centrePartyAreas,
+            ...(hasAdamZurichCantonElimination ? polygonOuterRings(zurichCanton!) : []),
             ...radarConstraints
                 .filter((constraint) => constraint.result === "miss")
                 .map((constraint) => circleCoordinates(
@@ -911,25 +1019,29 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
                 )),
         ];
         const hasEliminatedArea = hasPlayableAreaConstraint || excludedAreas.length > 0;
+        const combinedGeometry = hasEliminatedArea
+            ? combinedMapGeometry(
+                candidateAreas,
+                excludedAreas,
+                switzerlandMap.outline,
+                hasSamPlateauRegionConstraint ? 5e-5 : undefined,
+            )
+            : null;
 
         return {
-            eliminatedArea: hasEliminatedArea
-                ? combinedEliminatedAreaFeature(
-                    constrainedArea,
-                    excludedAreas,
-                    mutuallyDisjointAreas.length,
-                    switzerlandMap.outline,
-                    hasSamPlateauRegionConstraint ? 5e-5 : undefined,
-                )
-                : null,
-            playableBounds: playableAreaBounds(constrainedArea),
+            eliminatedArea: combinedGeometry?.eliminatedArea ?? null,
+            playableBounds: combinedGeometry?.playableBounds
+                ?? intersectPlayableAreaBounds(candidateAreas),
         };
     }, [
         centrePartyCantons,
+        hasAdamZurichCantonElimination,
         hasLatitudeConstraint,
         hasPlayableAreaConstraint,
         hasCentrePartyElimination,
         hasSamPlateauRegionConstraint,
+        hasSamZurichCantonConstraint,
+        hasZurichCantonConstraint,
         minimumHiderLongitude,
         nonMittellandRegions,
         endgameStation,
@@ -937,6 +1049,7 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
         radarHit,
         state.endgame,
         switzerlandMap,
+        zurichCanton,
     ]);
 
     return (

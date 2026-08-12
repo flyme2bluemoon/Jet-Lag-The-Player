@@ -1637,7 +1637,7 @@
       "type": "question-response-revealed",
       "metadata": {
         "questionResponseEventId": "a2fe87dc-a879-4d7c-a944-d3e8c8486686",
-        "response": "Sam is not within 0.5 miles of Stadion Schutzenwiese (Rennweg 5, 8400 Winterthur, Switzerland)"
+        "response": "Sam is not within 0.5 miles of Schutzenwiese"
       }
     },
     {
@@ -1744,6 +1744,36 @@
         "questionType": "precision",
         "questionId": "same-street",
         "questionLabel": "Same street"
+      }
+    },
+    {
+      "id": "84682563-5304-4680-b51b-20186de17eb4",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "41f02ab2-8111-486e-a633-03bc9172a41d",
+        "response": "Answer provided"
+      }
+    },
+    {
+      "id": "124cd69a-7e65-4c83-b053-d98eaffcfe49",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "c5dec96d-b930-4117-bc82-63dd4a5d3a96",
+        "response": "Answer provided"
+      }
+    },
+    {
+      "id": "14ef2156-687a-49c6-aad8-699fdc3a84f3",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "dd95f3a2-3371-4a62-be35-92f239640367",
+        "response": "Answer provided"
       }
     },
     {

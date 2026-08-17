@@ -254,56 +254,36 @@ function circleCoordinates(center: Coordinate, radiusMiles: number) {
     return coordinates;
 }
 
-type ClippingEdge = {
-    includes: (coordinate: Coordinate) => boolean;
-    intersection: (from: Coordinate, to: Coordinate) => Coordinate;
-};
-
-function clipPolygon(coordinates: Coordinate[], edge: ClippingEdge) {
-    const clipped: Coordinate[] = [];
-    let previous = coordinates.at(-1)!;
-    let previousIsIncluded = edge.includes(previous);
-
-    for (const coordinate of coordinates) {
-        const isIncluded = edge.includes(coordinate);
-        if (isIncluded !== previousIsIncluded) clipped.push(edge.intersection(previous, coordinate));
-        if (isIncluded) clipped.push(coordinate);
-        previous = coordinate;
-        previousIsIncluded = isIncluded;
-    }
-
-    return clipped;
-}
-
-function eastOfLongitude(minimumLongitude: number): ClippingEdge {
-    return {
-        includes: ([longitude]) => longitude >= minimumLongitude,
-        intersection: ([fromLongitude, fromLatitude], [toLongitude, toLatitude]) => {
-            const progress = (minimumLongitude - fromLongitude) / (toLongitude - fromLongitude);
-            return [minimumLongitude, fromLatitude + (toLatitude - fromLatitude) * progress];
-        },
-    };
-}
-
-const southOfLatitude: ClippingEdge = {
-    includes: ([, latitude]) => latitude <= MAX_HIDER_LATITUDE,
-    intersection: ([fromLongitude, fromLatitude], [toLongitude, toLatitude]) => {
-        const progress = (MAX_HIDER_LATITUDE - fromLatitude) / (toLatitude - fromLatitude);
-        return [fromLongitude + (toLongitude - fromLongitude) * progress, MAX_HIDER_LATITUDE];
-    },
-};
-
 function applyDirectionalHints(
     coordinates: Coordinate[],
     minimumLongitude: number | null,
     hasLatitudeConstraint: boolean,
 ) {
-    let result = coordinates;
-    if (minimumLongitude !== null) {
-        result = clipPolygon(result, eastOfLongitude(minimumLongitude));
+    // Keep each hint as a separate candidate polygon. Clipping a concave outline
+    // into one ring can incorrectly join disconnected pieces when the outline
+    // crosses the hint boundary more than twice (Switzerland crosses 8.3093°E four times).
+    const candidateAreas = [coordinates];
+    if (minimumLongitude !== null || hasLatitudeConstraint) {
+        const bounds = polygonBounds(coordinates);
+        const padding = Math.max(
+            bounds.maxLongitude - bounds.minLongitude,
+            bounds.maxLatitude - bounds.minLatitude,
+            1,
+        );
+        const westernEdge = minimumLongitude ?? bounds.minLongitude - padding;
+        const easternEdge = bounds.maxLongitude + padding;
+        const southernEdge = bounds.minLatitude - padding;
+        const northernEdge = hasLatitudeConstraint
+            ? MAX_HIDER_LATITUDE
+            : bounds.maxLatitude + padding;
+        candidateAreas.push([
+            [westernEdge, southernEdge],
+            [easternEdge, southernEdge],
+            [easternEdge, northernEdge],
+            [westernEdge, northernEdge],
+        ]);
     }
-    if (hasLatitudeConstraint) result = clipPolygon(result, southOfLatitude);
-    return result;
+    return candidateAreas;
 }
 
 function crossProduct([leftX, leftY]: Coordinate, [rightX, rightY]: Coordinate) {
@@ -451,19 +431,24 @@ function addPolygonIntersections(left: BoundaryPolygon, right: BoundaryPolygon) 
     const width = right.bounds.maxLongitude - right.bounds.minLongitude || 1;
     const height = right.bounds.maxLatitude - right.bounds.minLatitude || 1;
     const buckets = new globalThis.Map<string, number[]>();
+    const cellIndex = (value: number, minimum: number, size: number, count: number) => (
+        Math.max(0, Math.min(count - 1, Math.floor((value - minimum) / size * count)))
+    );
     const cellRange = (bounds: ReturnType<typeof polygonBounds>) => ({
-        minColumn: Math.max(0, Math.floor(
-            (bounds.minLongitude - right.bounds.minLongitude) / width * columnCount,
-        )),
-        maxColumn: Math.min(columnCount - 1, Math.floor(
-            (bounds.maxLongitude - right.bounds.minLongitude) / width * columnCount,
-        )),
-        minRow: Math.max(0, Math.floor(
-            (bounds.minLatitude - right.bounds.minLatitude) / height * rowCount,
-        )),
-        maxRow: Math.min(rowCount - 1, Math.floor(
-            (bounds.maxLatitude - right.bounds.minLatitude) / height * rowCount,
-        )),
+        minColumn: cellIndex(
+            bounds.minLongitude,
+            right.bounds.minLongitude,
+            width,
+            columnCount,
+        ),
+        maxColumn: cellIndex(
+            bounds.maxLongitude,
+            right.bounds.minLongitude,
+            width,
+            columnCount,
+        ),
+        minRow: cellIndex(bounds.minLatitude, right.bounds.minLatitude, height, rowCount),
+        maxRow: cellIndex(bounds.maxLatitude, right.bounds.minLatitude, height, rowCount),
     });
 
     right.segments.forEach((segment, segmentIndex) => {
@@ -498,25 +483,6 @@ function addPolygonIntersections(left: BoundaryPolygon, right: BoundaryPolygon) 
     }
 }
 
-function forwardRingPath(
-    ring: Coordinate[],
-    startSegment: number,
-    startCoordinate: Coordinate,
-    endSegment: number,
-    endCoordinate: Coordinate,
-) {
-    const path = [startCoordinate];
-    let segment = startSegment;
-
-    while (segment !== endSegment) {
-        path.push(ring[(segment + 1) % ring.length]!);
-        segment = (segment + 1) % ring.length;
-    }
-
-    path.push(endCoordinate);
-    return path;
-}
-
 function playableAreaBounds(candidateArea: Coordinate[]) {
     const longitudes = candidateArea.map(([longitude]) => longitude);
     const latitudes = candidateArea.map(([, latitude]) => latitude);
@@ -545,83 +511,6 @@ function intersectPlayableAreaBounds(candidateAreas: Coordinate[][]) {
         ], playableAreaBounds(firstArea));
 }
 
-function switzerlandBoundarySegment(
-    [longitude, latitude]: Coordinate,
-    switzerlandOutline: Coordinate[],
-) {
-    const tolerance = 1e-8;
-
-    for (let segment = 0; segment < switzerlandOutline.length; segment += 1) {
-        const start = switzerlandOutline[segment]!;
-        const end = switzerlandOutline[(segment + 1) % switzerlandOutline.length]!;
-        const vector = subtractCoordinates(end, start);
-        const pointVector = subtractCoordinates([longitude, latitude], start);
-        const lengthSquared = vector[0] ** 2 + vector[1] ** 2;
-        if (lengthSquared === 0) continue;
-
-        const progress = (pointVector[0] * vector[0] + pointVector[1] * vector[1]) / lengthSquared;
-        if (progress < -tolerance || progress > 1 + tolerance) continue;
-
-        const distance = Math.abs(crossProduct(vector, pointVector)) / Math.sqrt(lengthSquared);
-        if (distance <= tolerance) return segment;
-    }
-
-    return null;
-}
-
-/**
- * Converts a playable ring that touches Switzerland's edge into the complementary
- * eliminated exterior ring. This avoids invalid GeoJSON holes that touch their shell.
- */
-function eliminatedBoundaryFromPlayableArea(
-    playableArea: Coordinate[],
-    switzerlandOutline: Coordinate[],
-) {
-    const boundaryEdges = playableArea.map((coordinate, index) => {
-        const next = playableArea[(index + 1) % playableArea.length]!;
-        const midpoint: Coordinate = [
-            (coordinate[0] + next[0]) / 2,
-            (coordinate[1] + next[1]) / 2,
-        ];
-        return switzerlandBoundarySegment(midpoint, switzerlandOutline) !== null;
-    });
-    const boundaryEdge = boundaryEdges.findIndex(Boolean);
-    if (boundaryEdge === -1 || boundaryEdges.every(Boolean)) return null;
-
-    const internalChains: Coordinate[][] = [];
-    let chain: Coordinate[] | null = null;
-    for (let offset = 1; offset <= playableArea.length; offset += 1) {
-        const edge = (boundaryEdge + offset) % playableArea.length;
-        if (!boundaryEdges[edge]) {
-            chain ??= [playableArea[edge]!];
-            chain.push(playableArea[(edge + 1) % playableArea.length]!);
-        } else if (chain) {
-            internalChains.push(chain);
-            chain = null;
-        }
-    }
-    if (chain) internalChains.push(chain);
-
-    const internalChain = internalChains.toSorted((left, right) => right.length - left.length)[0];
-    if (!internalChain || internalChain.length < 2) return null;
-
-    const chainStart = internalChain[0]!;
-    const chainEnd = internalChain.at(-1)!;
-    const startSegment = switzerlandBoundarySegment(chainStart, switzerlandOutline);
-    const endSegment = switzerlandBoundarySegment(chainEnd, switzerlandOutline);
-    if (startSegment === null || endSegment === null) return null;
-
-    const complementarySwissPath = forwardRingPath(
-        switzerlandOutline,
-        startSegment,
-        chainStart,
-        endSegment,
-        chainEnd,
-    ).toReversed();
-
-    return [...internalChain, ...complementarySwissPath.slice(1, -1)];
-}
-
 function polygonOuterRings(
     geoJson: GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon>,
 ) {
@@ -636,12 +525,12 @@ function polygonOuterRings(
     });
 }
 
-function playableBoundaryRings(
-    candidateAreas: Coordinate[][],
-    excludedAreas: Coordinate[][],
+function regionBoundaryRings(
+    areas: Coordinate[][],
+    includesCoordinate: (coordinate: Coordinate, polygons: BoundaryPolygon[]) => boolean,
     minimumRingArea: number,
 ) {
-    const polygons = [...candidateAreas, ...excludedAreas].map((coordinates) => {
+    const polygons = areas.map((coordinates) => {
         const bounds = polygonBounds(coordinates);
         return {
             bounds,
@@ -660,21 +549,6 @@ function playableBoundaryRings(
             addPolygonIntersections(left, right);
         }
     }
-
-    const isPlayable = (coordinate: Coordinate) => {
-        if (!polygons.slice(0, candidateAreas.length).every((polygon) => (
-            polygon.contains(coordinate)
-        ))) return false;
-        return !excludedAreas.some((_, index) => {
-            const polygon = polygons[index + candidateAreas.length]!;
-            const bounds = polygon.bounds;
-            return coordinate[0] >= bounds.minLongitude
-                && coordinate[0] <= bounds.maxLongitude
-                && coordinate[1] >= bounds.minLatitude
-                && coordinate[1] <= bounds.maxLatitude
-                && polygon.contains(coordinate);
-        });
-    };
     const boundarySegments: { start: Coordinate; end: Coordinate }[] = [];
 
     for (const polygon of polygons) {
@@ -697,16 +571,16 @@ function playableBoundaryRings(
                     -vector[1] / length * 1e-7,
                     vector[0] / length * 1e-7,
                 ];
-                const leftIsPlayable = isPlayable([
+                const leftIsIncluded = includesCoordinate([
                     midpoint[0] + sampleOffset[0],
                     midpoint[1] + sampleOffset[1],
-                ]);
-                const rightIsPlayable = isPlayable([
+                ], polygons);
+                const rightIsIncluded = includesCoordinate([
                     midpoint[0] - sampleOffset[0],
                     midpoint[1] - sampleOffset[1],
-                ]);
-                if (leftIsPlayable === rightIsPlayable) continue;
-                boundarySegments.push(leftIsPlayable ? { start, end } : { start: end, end: start });
+                ], polygons);
+                if (leftIsIncluded === rightIsIncluded) continue;
+                boundarySegments.push(leftIsIncluded ? { start, end } : { start: end, end: start });
             }
         }
     }
@@ -747,6 +621,81 @@ function playableBoundaryRings(
     return rings;
 }
 
+function playableBoundaryRings(
+    candidateAreas: Coordinate[][],
+    excludedAreas: Coordinate[][],
+    minimumRingArea: number,
+) {
+    return regionBoundaryRings(
+        [...candidateAreas, ...excludedAreas],
+        (coordinate, polygons) => {
+            if (!polygons.slice(0, candidateAreas.length).every((polygon) => (
+                polygon.contains(coordinate)
+            ))) return false;
+            return !polygons.slice(candidateAreas.length).some((polygon) => (
+                polygon.contains(coordinate)
+            ));
+        },
+        minimumRingArea,
+    );
+}
+
+function eliminatedBoundaryRings(
+    candidateAreas: Coordinate[][],
+    excludedAreas: Coordinate[][],
+    switzerlandOutline: Coordinate[],
+    minimumRingArea: number,
+) {
+    const existingSwitzerlandIndex = candidateAreas.findIndex(
+        (area) => area === switzerlandOutline,
+    );
+    const areas = existingSwitzerlandIndex === -1
+        ? [...candidateAreas, ...excludedAreas, switzerlandOutline]
+        : [...candidateAreas, ...excludedAreas];
+    const switzerlandIndex = existingSwitzerlandIndex === -1
+        ? areas.length - 1
+        : existingSwitzerlandIndex;
+
+    return regionBoundaryRings(
+        areas,
+        (coordinate, polygons) => {
+            if (!polygons[switzerlandIndex]!.contains(coordinate)) return false;
+            const isCandidate = polygons.slice(0, candidateAreas.length).every(
+                (polygon) => polygon.contains(coordinate),
+            );
+            const isExcluded = polygons
+                .slice(candidateAreas.length, candidateAreas.length + excludedAreas.length)
+                .some((polygon) => polygon.contains(coordinate));
+            return !isCandidate || isExcluded;
+        },
+        minimumRingArea,
+    );
+}
+
+function polygonsFromBoundaryRings(rings: Coordinate[][]) {
+    const polygons = rings
+        .filter((ring) => ringArea(ring) > 0)
+        .map((outerRing) => ({ outerRing, holes: [] as Coordinate[][] }));
+
+    for (const hole of rings.filter((ring) => ringArea(ring) < 0)) {
+        const interiorCoordinate = ringInteriorCoordinate(hole);
+        const containingPolygon = polygons
+            .filter(({ outerRing }) => polygonContainsCoordinate(
+                [outerRing],
+                interiorCoordinate,
+            ))
+            .toSorted((left, right) => (
+                Math.abs(ringArea(left.outerRing)) - Math.abs(ringArea(right.outerRing))
+            ))[0];
+        containingPolygon?.holes.push(hole);
+    }
+
+    return polygons.map(({ outerRing, holes }) => [
+        orientedRing(outerRing, false),
+        ...holes.map((hole) => orientedRing(hole, true)),
+    ]);
+}
+
 function combinedMapGeometry(
     candidateAreas: Coordinate[][],
     excludedAreas: Coordinate[][],
@@ -767,51 +716,13 @@ function combinedMapGeometry(
         minimumRingArea,
     );
     const playableOuterRings = playableRings.filter((ring) => ringArea(ring) > 0);
-    const eliminatedIslandRings = playableRings.filter((ring) => ringArea(ring) < 0);
-    const primaryPlayableRing = playableOuterRings.toSorted(
-        (left, right) => Math.abs(ringArea(right)) - Math.abs(ringArea(left)),
-    )[0];
-    const eliminatedBoundary = primaryPlayableRing
-        ? eliminatedBoundaryFromPlayableArea(primaryPlayableRing, switzerlandOutline)
-        : null;
-    const primaryIsSwitzerland = primaryPlayableRing?.every(
-        (coordinate) => switzerlandBoundarySegment(coordinate, switzerlandOutline) !== null,
-    ) ?? false;
-    const polygons: Coordinate[][][] = [];
-
-    if (!primaryPlayableRing) {
-        // With no playable outer ring, Switzerland is fully eliminated. Do not
-        // append eliminated island rings because they are already covered by
-        // this polygon and would create overlapping MultiPolygon members.
-        polygons.push([orientedRing(switzerlandOutline, false)]);
-    } else if (eliminatedBoundary) {
-        polygons.push([
-            orientedRing(eliminatedBoundary, false),
-            ...playableOuterRings
-                .filter((ring) => ring !== primaryPlayableRing)
-                .map((ring) => orientedRing(ring, true)),
-        ]);
-    } else if (!primaryIsSwitzerland) {
-        polygons.push([
-            orientedRing(switzerlandOutline, false),
-            ...playableOuterRings.map((ring) => orientedRing(ring, true)),
-        ]);
-    }
-    if (primaryPlayableRing) {
-        // These rings come from the same fully intersected boundary graph as
-        // the outer rings. Add largest islands first and omit any nested island
-        // already covered by an existing polygon to keep MultiPolygon members
-        // interior-disjoint.
-        for (const ring of eliminatedIslandRings.toSorted(
-            (left, right) => Math.abs(ringArea(right)) - Math.abs(ringArea(left)),
-        )) {
-            const interiorCoordinate = ringInteriorCoordinate(ring);
-            if (polygons.some((polygon) => (
-                polygonContainsCoordinate(polygon, interiorCoordinate)
-            ))) continue;
-            polygons.push([orientedRing(ring, false)]);
-        }
-    }
+    const eliminatedRings = eliminatedBoundaryRings(
+        candidateAreas,
+        relevantExcludedAreas,
+        switzerlandOutline,
+        minimumRingArea,
+    );
+    const polygons = polygonsFromBoundaryRings(eliminatedRings);
 
     return {
         eliminatedArea: {
@@ -984,22 +895,16 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
             : radarHit
                 ? circleCoordinates(radarHit.center, radarHit.radiusMiles)
                 : switzerlandMap.outline;
-        const constrainedArea = applyDirectionalHints(
+        const directionalCandidateAreas = applyDirectionalHints(
             preciseArea,
             minimumHiderLongitude,
             hasLatitudeConstraint,
         );
-        if (constrainedArea.length < 3) {
-            return {
-                eliminatedArea: null,
-                playableBounds: switzerlandMap.bounds,
-            };
-        }
 
         const cantonAreas = hasSamZurichCantonConstraint
             ? polygonOuterRings(zurichCanton!)
             : [];
-        const candidateAreas = [constrainedArea, ...cantonAreas];
+        const candidateAreas = [...directionalCandidateAreas, ...cantonAreas];
 
         const biogeographicalAreas = hasSamPlateauRegionConstraint
             ? polygonOuterRings(nonMittellandRegions!)

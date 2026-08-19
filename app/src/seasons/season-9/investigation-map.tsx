@@ -966,7 +966,6 @@ export function InvestigationMap({ state }: { state: SeasonNineState }) {
                     fitBoundsOptions={{ padding: 24 }}
                     minZoom={5.5}
                     maxZoom={MAP_MAX_ZOOM}
-                    attributionControl={false}
                     dragRotate={false}
                     touchPitch={false}
                 >

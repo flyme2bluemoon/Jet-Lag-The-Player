@@ -25,13 +25,14 @@ export type Coordinate = [longitude: number, latitude: number];
  *    phase boundary, and arrival. Interrupted journeys should keep the intended
  *    full route and declare their interruption location on the ground event.
  *
- * The NYC paths follow the Google Maps itineraries supplied for Episode 1:
+ * The NYC paths follow the itinerary details supplied for Episode 1:
  * walk to 72 St, C to 42 St-Port Authority, E to Jackson Hts-Roosevelt Av,
  * then Q70 to LGA. Their subway and bus sections were cropped from official
  * MTA geometry. Driving and bus paths were generated from OSRM, while the Metra,
  * CTA, SEPTA, and Amtrak paths were cropped from transit geometry. The WMATA
- * transfer uses Yellow and Red Line GIS geometry fitted to aerial imagery. The
- * remaining road paths use full OSRM geometry routed through the previously
+ * transfer uses Maryland iMAP's WMATA-derived Yellow and Red Line GIS geometry,
+ * fitted to aerial imagery. The remaining road paths use full OSRM geometry
+ * routed through the previously
  * authored waypoints and simplified to roughly five-meter tolerance. The
  * Mississippi-to-Atlanta I-22/I-20 legs use Valhalla geometry simplified to
  * roughly 50-meter tolerance so they remain on the interstate without the old
@@ -125,7 +126,7 @@ const NYC_LGA_SHARED_ROUTE: Coordinate[] = [
 ];
 
 export const trackerRoutePaths = {
-    // Google Maps itinerary with official MTA C, E, and Q70 geometry.
+    // Supplied itinerary with official MTA C, E, and Q70 geometry.
     "nyc-lga-b": [
         ...NYC_LGA_SHARED_ROUTE,
         [-73.864403, 40.770031],

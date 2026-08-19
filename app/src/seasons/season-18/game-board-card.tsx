@@ -111,7 +111,6 @@ export function GameBoardCard({
                     zoom={1.55}
                     minZoom={1.25}
                     maxZoom={5}
-                    attributionControl={false}
                     dragRotate={false}
                     touchPitch={false}
                 >

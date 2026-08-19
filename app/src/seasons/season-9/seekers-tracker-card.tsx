@@ -268,7 +268,6 @@ export function SeekersTrackerCard({
                     key={state.id}
                     bounds={bounds}
                     fitBoundsOptions={{ padding: 42, maxZoom: 15 }}
-                    attributionControl={false}
                     dragRotate={false}
                     touchPitch={false}
                 >
@@ -329,26 +328,6 @@ export function SeekersTrackerCard({
             <div className="border-paper/20 border-t px-5 py-4 sm:px-6">
                 <p className="font-heading text-lg leading-tight font-bold uppercase">
                     {state.label}
-                </p>
-                <p className="text-card-meta mt-2 text-xs">
-                    Rail geometry: {" "}
-                    <a
-                        className="hover:text-foreground underline underline-offset-2"
-                        href="https://data.sbb.ch/explore/dataset/linie-mit-polygon/"
-                        rel="noreferrer"
-                        target="_blank"
-                    >
-                        SBB Open Data
-                    </a>
-                    {" · "}
-                    <a
-                        className="hover:text-foreground underline underline-offset-2"
-                        href="https://www.openstreetmap.org/copyright"
-                        rel="noreferrer"
-                        target="_blank"
-                    >
-                        OpenStreetMap contributors
-                    </a>
                 </p>
             </div>
         </section>

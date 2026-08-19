@@ -1037,7 +1037,6 @@ export function TrackerCard({
                     zoom={mapStage.zoom}
                     minZoom={MAP_MIN_ZOOM}
                     maxZoom={16}
-                    attributionControl={false}
                 >
                     <TrackerCamera
                         stage={mapStage}

@@ -213,7 +213,10 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Show a loading indicator on the map */
   loading?: boolean;
-} & Omit<MapLibreGL.MapOptions, "container" | "style">;
+} & Omit<
+  MapLibreGL.MapOptions,
+  "attributionControl" | "container" | "style"
+>;
 
 function DefaultLoader() {
   return (
@@ -269,6 +272,12 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   });
 
   const stableStyles = useStableValue(styles);
+  const usesCartoBasemap = !blank && (
+    !stableStyles
+    || (resolvedTheme === "dark"
+      ? stableStyles.dark === undefined
+      : stableStyles.light === undefined)
+  );
 
   const mapStyles = useMemo(() => {
     // Explicit styles win. Otherwise `blank` opts into the transparent
@@ -300,9 +309,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       container: containerRef.current,
       style: initialStyle,
       renderWorldCopies: false,
-      attributionControl: {
-        compact: true,
-      },
+      attributionControl: false,
       ...props,
       ...viewport,
     });
@@ -420,10 +427,38 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         {(!isLoaded || loading) && <DefaultLoader />}
         {/* SSR-safe: children render only when map is loaded on client */}
         {mapInstance && children}
+        {usesCartoBasemap && <CartoMapAttribution />}
       </div>
     </MapContext.Provider>
   );
 });
+
+function CartoMapAttribution() {
+  const linkClassName = "underline underline-offset-2 hover:text-foreground focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none";
+
+  return (
+    <div className="bg-background/85 text-muted-foreground absolute right-0 bottom-0 z-10 px-1.5 py-0.5 font-sans text-[10px] leading-tight shadow-sm backdrop-blur-xs">
+      © {" "}
+      <a
+        className={linkClassName}
+        href="https://carto.com/attribution/"
+        rel="noreferrer"
+        target="_blank"
+      >
+        CARTO
+      </a>
+      {" · © "}
+      <a
+        className={linkClassName}
+        href="https://www.openstreetmap.org/copyright"
+        rel="noreferrer"
+        target="_blank"
+      >
+        OpenStreetMap contributors
+      </a>
+    </div>
+  );
+}
 
 type MarkerContextValue = {
   marker: MapLibreGL.Marker;

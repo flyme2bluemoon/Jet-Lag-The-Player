@@ -1897,6 +1897,15 @@
       }
     },
     {
+      "id": "65cbf5a5-70d4-45aa-b74e-bb857e45733e",
+      "episode": "finale",
+      "at": 293,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Arrive in Winterthur"
+      }
+    },
+    {
       "id": "2ce43ab9-b693-497f-bd87-5eb760740e86",
       "episode": "finale",
       "at": 339,

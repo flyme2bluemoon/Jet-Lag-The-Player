@@ -1191,8 +1191,8 @@ type MapRouteProps = {
   width?: number;
   /** Line opacity from 0 to 1 (default: 0.8) */
   opacity?: number;
-  /** Dash pattern [dash length, gap length] for dashed lines */
-  dashArray?: [number, number];
+  /** Dash pattern in line-width units, e.g. [dash, gap] or [gap, dash, gap] to offset the pattern */
+  dashArray?: readonly number[];
   /** Shape applied to each line or dash endpoint (default: round) */
   lineCap?: "butt" | "round";
   /** Callback when the route line is clicked */
@@ -1246,7 +1246,12 @@ function MapRoute({
         "line-color": color,
         "line-width": width,
         "line-opacity": opacity,
-        ...(dashArray && { "line-dasharray": dashArray }),
+        ...(dashArray && {
+          "line-dasharray": [...dashArray],
+          // Without this MapLibre cross-fades between dash patterns, which reads
+          // as flicker when the pattern is updated on every animation frame.
+          "line-dasharray-transition": { duration: 0, delay: 0 },
+        }),
       },
     });
 
@@ -1281,7 +1286,7 @@ function MapRoute({
     map.setPaintProperty(layerId, "line-color", color);
     map.setPaintProperty(layerId, "line-width", width);
     map.setPaintProperty(layerId, "line-opacity", opacity);
-    map.setPaintProperty(layerId, "line-dasharray", dashArray);
+    map.setPaintProperty(layerId, "line-dasharray", dashArray && [...dashArray]);
   }, [isLoaded, map, layerId, color, width, opacity, dashArray]);
 
   useEffect(() => {

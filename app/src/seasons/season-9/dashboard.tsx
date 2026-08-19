@@ -8,6 +8,7 @@ import { CurrentRunCard } from "./current-run-card";
 import { CurseCard } from "./curse-card";
 import { InvestigationBookCard } from "./investigation-book-card";
 import { LeaderboardCard } from "./leaderboard-card";
+import { SeekersTrackerCard } from "./seekers-tracker-card";
 import { getSeasonNineState } from "./timeline-data";
 
 const WIDE_COLUMN_RATIO = [0.9, 0.95, 1.35] as const;
@@ -35,6 +36,10 @@ export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: Epis
             left={
                 <>
                     <CurrentRunCard state={state} />
+                    <SeekersTrackerCard
+                        episodeSlug={episodeSlug}
+                        currentTime={currentTime}
+                    />
                     <CurseCard curse={state.activeCurse} />
                 </>
             }

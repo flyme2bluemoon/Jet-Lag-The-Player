@@ -20,21 +20,9 @@
     --control: #354c58;
     --footer-copy: #586b75;
     --map-canvas: #e6e3dc;
-    --budget-credit: color-mix(
-        in oklch,
-        var(--color-jet-lag-green) 72%,
-        black
-    );
-    --budget-debit: color-mix(
-        in oklch,
-        var(--color-jet-lag-red) 78%,
-        black
-    );
-    --texture-line: color-mix(
-        in srgb,
-        var(--color-foreground) 4%,
-        transparent
-    );
+    --budget-credit: color-mix(in oklch, var(--color-jet-lag-green) 72%, black);
+    --budget-debit: color-mix(in oklch, var(--color-jet-lag-red) 78%, black);
+    --texture-line: color-mix(in srgb, var(--color-foreground) 4%, transparent);
     --background: #f4f0e9;
     --foreground: #102431;
     --card: #fffaf2;
@@ -50,16 +38,8 @@
     --accent: #d5e0e3;
     --accent-foreground: #102431;
     --destructive: var(--color-jet-lag-red);
-    --border: color-mix(
-        in srgb,
-        var(--color-foreground) 22%,
-        transparent
-    );
-    --input: color-mix(
-        in srgb,
-        var(--color-foreground) 25%,
-        transparent
-    );
+    --border: color-mix(in srgb, var(--color-foreground) 22%, transparent);
+    --input: color-mix(in srgb, var(--color-foreground) 25%, transparent);
     --ring: var(--color-jet-lag-red);
     --radius: 0.625rem;
     --season-card-hover-scale: 1.035;
@@ -82,16 +62,8 @@
     --control: #c4ccd0;
     --footer-copy: #8c9aa2;
     --map-canvas: #071722;
-    --budget-credit: color-mix(
-        in oklch,
-        var(--color-jet-lag-green) 70%,
-        white
-    );
-    --budget-debit: color-mix(
-        in oklch,
-        var(--color-jet-lag-red) 72%,
-        white
-    );
+    --budget-credit: color-mix(in oklch, var(--color-jet-lag-green) 70%, white);
+    --budget-debit: color-mix(in oklch, var(--color-jet-lag-red) 72%, white);
     --texture-line: color-mix(
         in srgb,
         var(--color-foreground) 1.2%,
@@ -112,16 +84,8 @@
     --accent: #18384a;
     --accent-foreground: #f4f0e9;
     --destructive: var(--color-jet-lag-red);
-    --border: color-mix(
-        in srgb,
-        var(--color-foreground) 20%,
-        transparent
-    );
-    --input: color-mix(
-        in srgb,
-        var(--color-foreground) 25%,
-        transparent
-    );
+    --border: color-mix(in srgb, var(--color-foreground) 20%, transparent);
+    --input: color-mix(in srgb, var(--color-foreground) 25%, transparent);
     --ring: var(--color-jet-lag-red);
 }
 
@@ -484,6 +448,7 @@
     --color-jet-lag-navy-blue: #242f3f;
     --color-jet-lag-curse-purple: #411771;
     --color-jet-lag-orange: #d17849;
+    --color-nebula-blue: #2cadfe;
     --color-passport-usa: #7f9bb4;
     --color-passport-date: #bd7774;
     --color-passport-schengen: #b8817b;
@@ -530,11 +495,7 @@
                 transparent
             ),
         0 0 1.25rem
-            color-mix(
-                in srgb,
-                var(--color-challenge-card-ink) 16%,
-                transparent
-            );
+            color-mix(in srgb, var(--color-challenge-card-ink) 16%, transparent);
     --font-heading: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
     --font-sans: "Rubik", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "Geist Mono", ui-monospace, monospace;
@@ -602,10 +563,7 @@
 }
 
 @utility page-texture {
-    background-image: linear-gradient(
-        var(--texture-line) 1px,
-        transparent 1px
-    );
+    background-image: linear-gradient(var(--texture-line) 1px, transparent 1px);
     background-size: 100% 0.375rem;
 }
 

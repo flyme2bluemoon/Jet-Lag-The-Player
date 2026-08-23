@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 
 type AttributionSeason = "season-4" | "season-9" | "season-18";
@@ -9,14 +10,23 @@ export function SiteFooter() {
   const attributionSeason = getAttributionSeason(usePathname());
 
   return (
-    <footer className="max-w-page border-paper/15 px-gutter tablet:min-h-72 mx-auto flex min-h-64 w-full items-center gap-4 border-t py-10">
-      <div className="border-paper/40 after:border-paper/25 relative hidden size-28 shrink-0 -rotate-6 place-content-center rounded-full border text-center after:absolute after:inset-2 after:rounded-full after:border after:border-dashed sm:grid">
-        <span className="font-display text-4xl leading-none font-bold">18½</span>
-        <small className="font-heading text-xs leading-tight font-bold uppercase">seasons<br />one world</small>
-      </div>
-      <div className="mx-auto flex min-w-0 max-w-2xl flex-1 flex-col items-center gap-3 text-center">
-        <p className="text-footer-copy font-display text-base leading-none font-bold uppercase">Jet Lag: The Player</p>
-        <div className="text-footer-copy/70 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-sans text-sm">
+    <footer className="max-w-page mx-auto w-full">
+      {attributionSeason && (
+        <div className="border-paper/15 px-gutter border-t py-7 tablet:py-8">
+          <MapAttribution season={attributionSeason} />
+        </div>
+      )}
+      <div
+        className={cn(
+          "px-gutter flex min-h-20 flex-col items-center justify-between gap-4 border-t py-4 wide:flex-row",
+          attributionSeason ? "border-paper/10" : "border-paper/15",
+        )}
+      >
+        <div className="text-footer-copy/70 flex min-w-0 flex-wrap items-baseline justify-center gap-x-3 gap-y-1 font-sans text-sm wide:flex-nowrap wide:justify-start wide:whitespace-nowrap">
+          <span className="text-footer-copy font-display text-base leading-none font-bold uppercase">
+            Jet Lag: The Player
+          </span>
+          <span aria-hidden="true">·</span>
           <a
             className="hover:text-footer-copy focus-visible:ring-ring rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
             href="https://flyme2bluemoon.github.io/"
@@ -35,10 +45,9 @@ export function SiteFooter() {
             Source Code
           </a>
         </div>
-        {attributionSeason && <MapAttribution season={attributionSeason} />}
-      </div>
-      <div className="ml-auto shrink-0 sm:flex sm:w-28 sm:justify-end">
-        <ThemeToggle />
+        <div className="shrink-0">
+          <ThemeToggle />
+        </div>
       </div>
     </footer>
   );
@@ -62,7 +71,7 @@ function MapAttribution({ season }: { season: AttributionSeason }) {
   const usesCartoBasemap = season === "season-9" || season === "season-18";
 
   return (
-    <div className="text-footer-copy/60 max-w-2xl space-y-1 font-sans text-xs leading-relaxed">
+    <div className="text-footer-copy/60 max-w-7xl space-y-2 font-sans text-xs leading-relaxed">
       <p className="text-footer-copy/75 font-heading text-sm font-bold uppercase">
         Map data sources
       </p>

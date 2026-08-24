@@ -193,6 +193,15 @@
       }
     },
     {
+      "id": "season-9-episode-1-arth-goldau-to-goeschenen",
+      "episode": "episode-1",
+      "at": 919,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Train from Arth-Goldau to Goschenen"
+      }
+    },
+    {
       "id": "b8d46184-ae42-46b9-bef9-92f3425257d0",
       "episode": "episode-1",
       "at": 955,

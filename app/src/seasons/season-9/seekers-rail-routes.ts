@@ -4,7 +4,7 @@
 // Only the simplified track polylines used by the Season 9 seekers tracker are retained.
 import type { TrackerCoordinate } from "./seekers-tracker-data";
 
-export const SEEKERS_RAIL_ROUTES: Readonly<Record<string, readonly TrackerCoordinate[]>> = {
+const seekersRailRoutes = {
     "e0248f8b-3ea0-4f30-b050-2179341437e5": [
         [
             8.31072,
@@ -4931,4 +4931,20 @@ export const SEEKERS_RAIL_ROUTES: Readonly<Record<string, readonly TrackerCoordi
             47.13722
         ]
     ]
+} as const satisfies Readonly<Record<string, readonly TrackerCoordinate[]>>;
+
+const lucerneToArthGoldau = seekersRailRoutes["e0248f8b-3ea0-4f30-b050-2179341437e5"];
+const goeschenenToZug = seekersRailRoutes["f07ed24d-70fe-457b-832b-0f061b89bfd5"];
+
+// The Göschenen→Zug route reaches the southbound mainline outside Arth-Goldau
+// at index 141. Reverse through that point and append it to the existing
+// Lucerne→Arth-Goldau geometry, skipping the route's northbound branch tracks.
+const arthGoldauToGoeschenen = goeschenenToZug.slice(0, 142).toReversed();
+
+export const SEEKERS_RAIL_ROUTES: Readonly<Record<string, readonly TrackerCoordinate[]>> = {
+    ...seekersRailRoutes,
+    "season-9-episode-1-arth-goldau-to-goeschenen": [
+        ...lucerneToArthGoldau,
+        ...arthGoldauToGoeschenen,
+    ],
 };

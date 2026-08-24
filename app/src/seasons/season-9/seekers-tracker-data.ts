@@ -88,6 +88,7 @@ const POINTS_BY_LABEL: Readonly<Record<string, Station>> = {
 
 const TRANSIT_DESTINATIONS: Readonly<Record<string, readonly Station[]>> = {
     "Train to Arth-Goldau leaves Lucerne": [STATIONS.arthGoldau],
+    "Train from Arth-Goldau to Goschenen": [STATIONS.goeschenen],
     "Train to Andermatt": [STATIONS.andermatt],
     "Train leaves to Hospental": [STATIONS.hospental],
     "Train to Zug": [STATIONS.zug],

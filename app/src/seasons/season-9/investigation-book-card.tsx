@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { InvestigationMap } from "./investigation-map";
+import type { SeekersTrackerState } from "./seekers-tracker-data";
 import {
     formatSeasonNineTimestamp,
     type InvestigationQuestion,
@@ -82,7 +83,13 @@ function QuestionResponse({ question }: { question: InvestigationQuestion }) {
     );
 }
 
-export function InvestigationBookCard({ state }: { state: SeasonNineState }) {
+export function InvestigationBookCard({
+    seekersTrackerState,
+    state,
+}: {
+    seekersTrackerState: SeekersTrackerState;
+    state: SeasonNineState;
+}) {
     return (
         <section className="border-paper/25 bg-panel w-full overflow-hidden rounded-lg border" aria-labelledby="investigation-book-title">
             <header className="border-paper/20 flex items-center justify-between gap-4 border-b p-6">
@@ -99,7 +106,7 @@ export function InvestigationBookCard({ state }: { state: SeasonNineState }) {
             </header>
 
             <div className="border-paper/20 border-b">
-                <InvestigationMap state={state} />
+                <InvestigationMap seekersTrackerState={seekersTrackerState} state={state} />
             </div>
 
             <div className="p-5 sm:p-6">

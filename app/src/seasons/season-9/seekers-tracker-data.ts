@@ -5,6 +5,11 @@ import { SEEKERS_RAIL_ROUTES } from "./seekers-rail-routes";
 
 export type TrackerCoordinate = [longitude: number, latitude: number];
 
+export type TrackerWaypoint = {
+    label: string;
+    coordinate: TrackerCoordinate;
+};
+
 type SeekersLocationEvent = EpisodeTimestamp & {
     id: string;
     type: "seekers-location";
@@ -18,7 +23,11 @@ export type SeekersTrackerState = {
     endsAt: EpisodeTimestamp | null;
 } & (
     | { kind: "point"; coordinate: TrackerCoordinate }
-    | { kind: "transit"; route: readonly TrackerCoordinate[] }
+    | {
+        kind: "transit";
+        route: readonly TrackerCoordinate[];
+        waypoints: readonly TrackerWaypoint[];
+    }
 );
 
 type Station = { name: string; coordinate: TrackerCoordinate };
@@ -100,6 +109,10 @@ const TRANSIT_DESTINATIONS: Readonly<Record<string, readonly Station[]>> = {
     "Train to Rohrbach": [STATIONS.rohrbach],
 };
 
+const TRANSIT_WAYPOINTS: Readonly<Record<string, readonly Station[]>> = {
+    "Train from Arth-Goldau to Goschenen": [STATIONS.arthGoldau],
+};
+
 const locationEvents = (markup.events as readonly SeekersLocationEvent[])
     .filter((event) => event.type === "seekers-location")
     .toSorted((left, right) => compareTimestamps(seasonNine, left, right));
@@ -144,6 +157,10 @@ function createState(index: number): SeekersTrackerState {
             label: `${origin.name} → ${destinations.at(-1)!.name}`,
             route: SEEKERS_RAIL_ROUTES[event.id]
                 ?? [origin.coordinate, ...destinations.map((stop) => stop.coordinate)],
+            waypoints: (TRANSIT_WAYPOINTS[label] ?? []).map((waypoint) => ({
+                label: waypoint.name,
+                coordinate: waypoint.coordinate,
+            })),
             startedAt: event,
             endsAt: nextEvent,
         };

@@ -1,6 +1,10 @@
 "use client";
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from "maplibre-gl";
+import MapLibreGL, {
+  type MarkerOptions,
+  type PaddingOptions,
+  type PopupOptions,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type * as GeoJSON from "geojson";
 import {
@@ -883,7 +887,7 @@ type MapControlsProps = {
       }
     | {
         bounds: [[number, number], [number, number]];
-        padding?: number;
+        padding?: number | PaddingOptions | ((map: MapLibreGL.Map) => number | PaddingOptions);
         maxZoom?: number;
       };
   /** Show compass button to reset bearing (default: false) */
@@ -970,7 +974,9 @@ function MapControls({
     if ("bounds" in resetView) {
       map.resetNorthPitch({ duration: 0 });
       map.fitBounds(resetView.bounds, {
-        padding: resetView.padding ?? 24,
+        padding: typeof resetView.padding === "function"
+          ? resetView.padding(map)
+          : resetView.padding ?? 24,
         maxZoom: resetView.maxZoom,
         duration: 600,
       });

@@ -346,6 +346,7 @@ export function SeekersTrackerOverlay({
     return (
         <>
             <div
+                data-investigation-map-overlay="seekers"
                 className="bg-jet-lag-navy-blue/90 text-challenge-card-paper pointer-events-none absolute top-3 left-3 z-10 rounded-sm px-2.5 py-2 shadow-lg backdrop-blur-xs"
                 aria-live="polite"
             >

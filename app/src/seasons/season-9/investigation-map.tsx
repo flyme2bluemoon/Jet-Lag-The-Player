@@ -1,7 +1,7 @@
 "use client";
 
 import type * as GeoJSON from "geojson";
-import type { FilterSpecification } from "maplibre-gl";
+import type { FilterSpecification, Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import {
     CENTRE_PARTY_CANTONS_URL,
@@ -12,7 +12,12 @@ import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
 import { useGeoJson } from "@/lib/geojson";
 import { useSwitzerlandGeoJson } from "@/lib/switzerland-geojson";
-import { getInvestigationMapResetBounds } from "./investigation-map-bounds";
+import {
+    getInvestigationMapResetBounds,
+    getInvestigationMapResetPadding,
+    type InvestigationMapBounds,
+    type InvestigationMapOverlay,
+} from "./investigation-map-bounds";
 import type { SeekersTrackerState } from "./seekers-tracker-data";
 import { SeekersTrackerOverlay } from "./seekers-tracker-overlay";
 import type { SeasonNineState } from "./timeline-data";
@@ -795,6 +800,51 @@ function SwitzerlandMask({
     );
 }
 
+function InvestigationMapResetControls({
+    bounds,
+}: {
+    bounds: InvestigationMapBounds;
+}) {
+    const getResetPadding = (map: MapLibreMap) => {
+        const container = map.getContainer();
+        const seekersOverlay = container.querySelector(
+            '[data-investigation-map-overlay="seekers"]',
+        );
+        const controlsOverlay = container.querySelector(
+            ".season-nine-investigation-map-controls",
+        );
+        const attributionOverlay = container.querySelector(
+            'a[href="https://carto.com/attribution/"]',
+        )?.parentElement ?? null;
+        const overlayElements = [
+            [seekersOverlay, "top"],
+            [controlsOverlay, "right"],
+            [attributionOverlay, "bottom"],
+        ] as const;
+        const overlays = overlayElements.flatMap<InvestigationMapOverlay>(
+            ([element, edge]) => element
+                ? [{ edge, bounds: element.getBoundingClientRect() }]
+                : [],
+        );
+
+        return getInvestigationMapResetPadding(
+            container.getBoundingClientRect(),
+            overlays,
+        );
+    };
+
+    return (
+        <MapControls
+            className="season-nine-investigation-map-controls"
+            resetView={{
+                bounds,
+                padding: getResetPadding,
+                maxZoom: MAP_MAX_ZOOM,
+            }}
+        />
+    );
+}
+
 export function InvestigationMap({
     seekersTrackerState,
     state,
@@ -1006,13 +1056,7 @@ export function InvestigationMap({
                         currentHider={state.currentHider}
                         state={seekersTrackerState}
                     />
-                    <MapControls
-                        resetView={{
-                            bounds: resetBounds,
-                            padding: 24,
-                            maxZoom: MAP_MAX_ZOOM,
-                        }}
-                    />
+                    <InvestigationMapResetControls bounds={resetBounds} />
                 </Map>
             )}
         </div>

@@ -12,6 +12,7 @@ import { Map, MapControls, MapGeoJSON, useMap } from "@/components/ui/map";
 import { MAPLIBRE_INVESTIGATION_COLORS } from "@/components/ui/map-colors";
 import { useGeoJson } from "@/lib/geojson";
 import { useSwitzerlandGeoJson } from "@/lib/switzerland-geojson";
+import { getInvestigationMapResetBounds } from "./investigation-map-bounds";
 import type { SeekersTrackerState } from "./seekers-tracker-data";
 import { SeekersTrackerOverlay } from "./seekers-tracker-overlay";
 import type { SeasonNineState } from "./timeline-data";
@@ -964,10 +965,17 @@ export function InvestigationMap({
         switzerlandMap,
         zurichCanton,
     ]);
+    const resetBounds = useMemo(
+        () => mapGeometry && getInvestigationMapResetBounds(
+            mapGeometry.playableBounds,
+            seekersTrackerState,
+        ),
+        [mapGeometry, seekersTrackerState],
+    );
 
     return (
         <div className="bg-map-canvas relative h-80 overflow-hidden sm:h-96">
-            {switzerlandMap && mapGeometry && (
+            {switzerlandMap && mapGeometry && resetBounds && (
                 <Map
                     key={runKey}
                     bounds={switzerlandMap.bounds}
@@ -1000,7 +1008,7 @@ export function InvestigationMap({
                     />
                     <MapControls
                         resetView={{
-                            bounds: mapGeometry.playableBounds,
+                            bounds: resetBounds,
                             padding: 24,
                             maxZoom: MAP_MAX_ZOOM,
                         }}

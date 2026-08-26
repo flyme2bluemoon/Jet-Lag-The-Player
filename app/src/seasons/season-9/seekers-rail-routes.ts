@@ -451,18 +451,6 @@ const seekersRailRoutes = {
             46.66578
         ],
         [
-            8.58858,
-            46.66366
-        ],
-        [
-            8.58868,
-            46.66216
-        ],
-        [
-            8.58852,
-            46.66411
-        ],
-        [
             8.58912,
             46.66632
         ],
@@ -651,22 +639,6 @@ const seekersRailRoutes = {
             46.76042
         ],
         [
-            8.6499,
-            46.75987
-        ],
-        [
-            8.6467,
-            46.75773
-        ],
-        [
-            8.64733,
-            46.75834
-        ],
-        [
-            8.65047,
-            46.7601
-        ],
-        [
             8.65514,
             46.7608
         ],
@@ -767,10 +739,6 @@ const seekersRailRoutes = {
             46.81471
         ],
         [
-            8.65947,
-            46.81153
-        ],
-        [
             8.65141,
             46.81907
         ],
@@ -793,10 +761,6 @@ const seekersRailRoutes = {
         [
             8.64331,
             46.842
-        ],
-        [
-            8.64509,
-            46.83854
         ],
         [
             8.64213,
@@ -845,14 +809,6 @@ const seekersRailRoutes = {
         [
             8.62401,
             46.91556
-        ],
-        [
-            8.62402,
-            46.91685
-        ],
-        [
-            8.62412,
-            46.91562
         ],
         [
             8.62421,
@@ -943,14 +899,6 @@ const seekersRailRoutes = {
             47.03097
         ],
         [
-            8.62864,
-            47.02958
-        ],
-        [
-            8.62556,
-            47.03072
-        ],
-        [
             8.62422,
             47.03161
         ],
@@ -1015,22 +963,6 @@ const seekersRailRoutes = {
             47.04927
         ],
         [
-            8.54896,
-            47.05003
-        ],
-        [
-            8.55023,
-            47.04943
-        ],
-        [
-            8.55527,
-            47.04874
-        ],
-        [
-            8.55125,
-            47.04911
-        ],
-        [
             8.54941,
             47.04964
         ],
@@ -1061,10 +993,6 @@ const seekersRailRoutes = {
         [
             8.54434,
             47.05857
-        ],
-        [
-            8.54525,
-            47.05743
         ],
         [
             8.54429,
@@ -4935,11 +4863,18 @@ const seekersRailRoutes = {
 
 const lucerneToArthGoldau = seekersRailRoutes["e0248f8b-3ea0-4f30-b050-2179341437e5"];
 const goeschenenToZug = seekersRailRoutes["f07ed24d-70fe-457b-832b-0f061b89bfd5"];
+const ARTH_GOLDAU_SOUTHBOUND_JUNCTION = [8.55111, 47.04927] as const;
 
 // The Göschenen→Zug route reaches the southbound mainline outside Arth-Goldau
-// at index 141. Reverse through that point and append it to the existing
+// at this junction. Reverse through that point and append it to the existing
 // Lucerne→Arth-Goldau geometry, skipping the route's northbound branch tracks.
-const arthGoldauToGoeschenen = goeschenenToZug.slice(0, 142).toReversed();
+const arthGoldauJunctionIndex = goeschenenToZug.findIndex(
+    ([longitude, latitude]) => longitude === ARTH_GOLDAU_SOUTHBOUND_JUNCTION[0]
+        && latitude === ARTH_GOLDAU_SOUTHBOUND_JUNCTION[1],
+);
+const arthGoldauToGoeschenen = goeschenenToZug
+    .slice(0, arthGoldauJunctionIndex + 1)
+    .toReversed();
 
 export const SEEKERS_RAIL_ROUTES: Readonly<Record<string, readonly TrackerCoordinate[]>> = {
     ...seekersRailRoutes,

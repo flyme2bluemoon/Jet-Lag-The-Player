@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "check:seekers-routes": "node scripts/check-seekers-rail-routes.mjs",
     "generate:geojson": "node scripts/generate-geojson-assets.mjs",
     "watch:geojson": "node scripts/watch-geojson-assets.mjs",
     "dev": "pnpm generate:geojson && concurrently --kill-others --names geojson,next \"pnpm watch:geojson\" \"next dev\"",

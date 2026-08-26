@@ -350,7 +350,7 @@ export function SeekersTrackerOverlay({
                 className="bg-jet-lag-navy-blue/90 text-challenge-card-paper pointer-events-none absolute top-3 left-3 z-10 rounded-sm px-2.5 py-2 shadow-lg backdrop-blur-xs"
                 aria-live="polite"
             >
-                <p className="font-display text-[0.625rem] leading-none font-bold tracking-wide uppercase">
+                <p className="font-display text-2xs leading-none font-bold tracking-wide uppercase">
                     Seekers
                 </p>
                 <p className="font-heading mt-1 text-sm leading-none font-bold uppercase">

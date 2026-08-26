@@ -441,7 +441,7 @@ function CartoMapAttribution() {
   const linkClassName = "underline underline-offset-2 hover:text-foreground focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none";
 
   return (
-    <div className="bg-background/85 text-muted-foreground absolute right-0 bottom-0 z-10 px-1.5 py-0.5 font-sans text-[10px] leading-tight shadow-sm backdrop-blur-xs">
+    <div className="bg-background/85 text-muted-foreground absolute right-0 bottom-0 z-10 px-1.5 py-0.5 font-sans text-2xs leading-tight shadow-sm backdrop-blur-xs">
       © {" "}
       <a
         className={linkClassName}
@@ -1489,7 +1489,7 @@ function MapGeoJSON<
   const mergedFillPaint = useMemo(
     () =>
       mergeHoverPaint(
-        { "fill-color": defaults.fill, ...(fillPaint || {}) },
+        { "fill-color": defaults.fill, ...fillPaint },
         fillHoverPaint,
       ),
     [defaults.fill, fillPaint, fillHoverPaint],
@@ -1498,7 +1498,7 @@ function MapGeoJSON<
     () => ({
       "line-color": defaults.line,
       "line-width": 0.5,
-      ...(linePaint || {}),
+      ...linePaint,
     }),
     [defaults.line, linePaint],
   );

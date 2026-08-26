@@ -43,7 +43,7 @@ const STATIONS = {
     andermatt: station("Andermatt", 8.59324, 46.63696),
     hospental: station("Hospental", 8.57095, 46.62112),
     zug: station("Zug", 8.5157, 47.17356),
-    chollermueli: station("Chollermüli", 8.48661, 47.18019),
+    chollermueli: station("Zug Chollermüli", 8.48661, 47.18019),
     chamAlpenblick: station("Cham Alpenblick", 8.47131, 47.1823),
     steinen: station("Steinen", 8.60752, 47.0475),
     seewen: station("Seewen", 8.63139, 47.02752),
@@ -67,7 +67,6 @@ const POINTS_BY_LABEL: Readonly<Record<string, Station>> = {
     Hospental: STATIONS.hospental,
     "Arrive in Goschenen": STATIONS.goeschenen,
     "Arrive in Zug": STATIONS.zug,
-    "Stop at Chollermuli": STATIONS.chollermueli,
     "Arrive in Cham Alpenblick": STATIONS.chamAlpenblick,
     "Arrive in Steinen": STATIONS.steinen,
     "Arrive in Seewen": STATIONS.seewen,
@@ -93,6 +92,7 @@ const TRANSIT_DESTINATIONS: Readonly<Record<string, readonly Station[]>> = {
     "Train leaves to Hospental": [STATIONS.hospental],
     "Train to Zug": [STATIONS.zug],
     "Train to Cham Alpenblick": [STATIONS.chamAlpenblick],
+    "Stop at Chollermuli": [STATIONS.chamAlpenblick],
     "Leave Chollermuli": [STATIONS.chamAlpenblick],
     "Train to Steinen": [STATIONS.steinen],
     "Train to Seewen": [STATIONS.seewen],
@@ -112,6 +112,20 @@ const TRANSIT_DESTINATIONS: Readonly<Record<string, readonly Station[]>> = {
 
 const TRANSIT_WAYPOINTS: Readonly<Record<string, readonly Station[]>> = {
     "Train from Arth-Goldau to Goschenen": [STATIONS.arthGoldau],
+    "Train to Cham Alpenblick": [STATIONS.chollermueli],
+    "Stop at Chollermuli": [STATIONS.chollermueli],
+    "Leave Chollermuli": [STATIONS.chollermueli],
+};
+
+const ZUG_TO_CHAM_ALPENBLICK_ROUTE =
+    SEEKERS_RAIL_ROUTES["b38f982e-1469-448c-ac22-1d158d40bbd6"];
+
+const TRANSIT_ROUTE_OVERRIDES: Readonly<
+    Record<string, readonly TrackerCoordinate[]>
+> = {
+    "Train to Cham Alpenblick": ZUG_TO_CHAM_ALPENBLICK_ROUTE,
+    "Stop at Chollermuli": ZUG_TO_CHAM_ALPENBLICK_ROUTE,
+    "Leave Chollermuli": ZUG_TO_CHAM_ALPENBLICK_ROUTE,
 };
 
 const locationEvents = (markup.events as readonly SeekersLocationEvent[])
@@ -156,7 +170,8 @@ function createState(index: number): SeekersTrackerState {
             id: event.id,
             kind: "transit",
             label: `${origin.name} → ${destinations.at(-1)!.name}`,
-            route: SEEKERS_RAIL_ROUTES[event.id]
+            route: TRANSIT_ROUTE_OVERRIDES[label]
+                ?? SEEKERS_RAIL_ROUTES[event.id]
                 ?? [origin.coordinate, ...destinations.map((stop) => stop.coordinate)],
             waypoints: (TRANSIT_WAYPOINTS[label] ?? []).map((waypoint) => ({
                 label: waypoint.name,

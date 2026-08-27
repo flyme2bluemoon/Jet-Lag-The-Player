@@ -44,6 +44,9 @@ yarn-debug.log*
 .cache/
 .eslintcache
 
+# Generated GeoJSON manifest
+/app/src/generated/geojson-assets.ts
+
 # Editor and operating-system files
 .DS_Store
 Thumbs.db

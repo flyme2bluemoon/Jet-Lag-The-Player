@@ -193,6 +193,15 @@
       }
     },
     {
+      "id": "season-9-episode-1-arth-goldau-to-goeschenen",
+      "episode": "episode-1",
+      "at": 919,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Train from Arth-Goldau to Goschenen"
+      }
+    },
+    {
       "id": "b8d46184-ae42-46b9-bef9-92f3425257d0",
       "episode": "episode-1",
       "at": 955,
@@ -1224,7 +1233,7 @@
       "type": "question-response-revealed",
       "metadata": {
         "questionResponseEventId": "b6f34bb3-7398-4e40-a10a-0ddcc8451875",
-        "response": "Sam is in the Plateau region (not Jura or Alps)"
+        "response": "Sam is in the Plateau region"
       }
     },
     {
@@ -1637,7 +1646,7 @@
       "type": "question-response-revealed",
       "metadata": {
         "questionResponseEventId": "a2fe87dc-a879-4d7c-a944-d3e8c8486686",
-        "response": "Sam is not within 0.5 miles of Stadion Schutzenwiese (Rennweg 5, 8400 Winterthur, Switzerland)"
+        "response": "Sam is not within 0.5 miles of Schutzenwiese"
       }
     },
     {
@@ -1744,6 +1753,36 @@
         "questionType": "precision",
         "questionId": "same-street",
         "questionLabel": "Same street"
+      }
+    },
+    {
+      "id": "84682563-5304-4680-b51b-20186de17eb4",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "41f02ab2-8111-486e-a633-03bc9172a41d",
+        "response": "Answer provided"
+      }
+    },
+    {
+      "id": "124cd69a-7e65-4c83-b053-d98eaffcfe49",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "c5dec96d-b930-4117-bc82-63dd4a5d3a96",
+        "response": "Answer provided"
+      }
+    },
+    {
+      "id": "14ef2156-687a-49c6-aad8-699fdc3a84f3",
+      "episode": "episode-4",
+      "at": 2729,
+      "type": "question-response-revealed",
+      "metadata": {
+        "questionResponseEventId": "dd95f3a2-3371-4a62-be35-92f239640367",
+        "response": "Answer provided"
       }
     },
     {
@@ -1864,6 +1903,15 @@
         "questionId": "50-miles",
         "questionLabel": "50 miles",
         "coins": 30
+      }
+    },
+    {
+      "id": "65cbf5a5-70d4-45aa-b74e-bb857e45733e",
+      "episode": "finale",
+      "at": 293,
+      "type": "seekers-location",
+      "metadata": {
+        "location": "Arrive in Winterthur"
       }
     },
     {

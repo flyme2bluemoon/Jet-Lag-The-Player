@@ -25,23 +25,35 @@ function formatDateTime(premiere: Date, timeZone: string) {
   }).format(premiere);
 }
 
-function PremiereDetails({ premiere }: { premiere: Date }) {
-  const localZone = useClientValue<string | null>(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    null,
-  );
+function PremiereLine({ platform, premiere, localZone }: { platform: string; premiere: Date; localZone: string | null }) {
   const localTime = localZone && localZone !== PREMIERE_ZONE
     ? formatDateTime(premiere, localZone)
     : null;
 
   return (
-    <p className="text-copy-muted font-sans text-base leading-relaxed">
-      Premieres{" "}
-      <time className="text-paper font-semibold whitespace-nowrap" dateTime={premiere.toISOString()}>
-        {formatDateTime(premiere, PREMIERE_ZONE)} ET
-      </time>
+    <p className="text-copy-muted font-sans text-sm leading-relaxed tablet:text-base">
+      <span className="whitespace-nowrap">
+        Premieres on {platform} at{" "}
+        <time className="text-paper font-semibold" dateTime={premiere.toISOString()}>
+          {formatDateTime(premiere, PREMIERE_ZONE)} ET
+        </time>
+      </span>
       {localTime && <> <span className="whitespace-nowrap">({localTime} your time)</span></>}
     </p>
+  );
+}
+
+function PremiereDetails({ nebulaPremiere, youtubePremiere }: { nebulaPremiere: Date; youtubePremiere: Date }) {
+  const localZone = useClientValue<string | null>(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+    null,
+  );
+
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <PremiereLine platform="Nebula" premiere={nebulaPremiere} localZone={localZone} />
+      <PremiereLine platform="Youtube" premiere={youtubePremiere} localZone={localZone} />
+    </div>
   );
 }
 
@@ -62,9 +74,14 @@ function CallToAction({ href, children }: { href: string; children: React.ReactN
 }
 
 export function SeasonTrailerPage({ trailer }: { trailer: SeasonTrailer }) {
-  const premiere = new Date(trailer.premiere);
+  const nebulaPremiere = new Date(trailer.nebulaPremiere);
+  const youtubePremiere = new Date(trailer.youtubePremiere);
   const hasPremiered = useClientValue(
-    () => Date.now() >= premiere.getTime(),
+    () => Date.now() >= nebulaPremiere.getTime(),
+    false,
+  );
+  const hasReleasedOnYoutube = useClientValue(
+    () => Date.now() >= youtubePremiere.getTime(),
     false,
   );
   const watchHref = hasPremiered ? trailer.nebulaFirstEpisode : trailer.nebulaSeason;
@@ -84,7 +101,7 @@ export function SeasonTrailerPage({ trailer }: { trailer: SeasonTrailer }) {
       </header>
 
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-8 pt-8">
-        <h2 className="font-heading text-center text-2xl leading-tight font-bold tracking-normal uppercase text-balance tablet:text-3xl">{trailer.tagline}</h2>
+        <h2 className="font-heading text-center text-2xl leading-tight font-bold tracking-normal uppercase text-balance tablet:text-3xl">{hasReleasedOnYoutube ? trailer.releasedTagline : trailer.tagline}</h2>
 
         <div className="border-paper/20 bg-surface relative aspect-video w-full overflow-hidden rounded-lg border">
           <iframe
@@ -96,9 +113,11 @@ export function SeasonTrailerPage({ trailer }: { trailer: SeasonTrailer }) {
           />
         </div>
 
-        <div className="flex w-full max-w-xl flex-col items-center gap-5 text-center">
-          <PremiereDetails premiere={premiere} />
-          <CallToAction href={watchHref}>{watchLabel}</CallToAction>
+        <div className="flex w-full flex-col items-center gap-5 text-center">
+          <PremiereDetails nebulaPremiere={nebulaPremiere} youtubePremiere={youtubePremiere} />
+          <div className="w-full max-w-xl">
+            <CallToAction href={watchHref}>{watchLabel}</CallToAction>
+          </div>
         </div>
       </div>
     </main>

@@ -1,5 +1,9 @@
 # Jet Lag: The Player
 
+## Domain language
+
+When naming or changing project-specific domain concepts, follow `CONTEXT-MAP.md` to the context that owns the topic. Use its canonical terms and flag conflicts instead of inventing synonyms.
+
 ## Game reference
 
 Jet Lag: The Game is a travel game show in which teams or individual players compete while traveling through a region.

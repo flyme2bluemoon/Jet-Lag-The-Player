@@ -1,9 +1,6 @@
-import type { SeasonPage } from "./season-pages";
+import type { LiveDashboard } from "./season-types";
 
 export const seasonEighteen = {
-    slug: "season-18",
-    number: 18,
-    name: "Stateside Scramble",
     episodes: [
         {
             slug: "episode-1",
@@ -48,4 +45,4 @@ export const seasonEighteen = {
             image: "/thumbnails/season-18/finale.jpg",
         },
     ],
-} as const satisfies SeasonPage;
+} as const satisfies LiveDashboard;

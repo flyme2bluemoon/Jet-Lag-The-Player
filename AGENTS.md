@@ -42,6 +42,10 @@ For Season 18 challenge data, check out [Stateside Scramble challenge reference]
 - `app/` is the web application: a Next.js 16, React 19, TypeScript, and Tailwind CSS project. Run its package scripts from this directory with pnpm (`pnpm dev`, `pnpm lint`, `pnpm build`, and `pnpm start`).
 - `transcript_downloader/` is a standalone Python utility that downloads English YouTube caption tracks for the listed seasons. It never downloads video or audio; it saves WebVTT captions, readable text transcripts, and YouTube metadata under `transcript_downloader/transcripts/`, which is generated and gitignored. See `transcript_downloader/README.md` for usage and options. Run it from that directory using its existing `.venv` virtual environment; install dependencies through that environment only when needed.
 
+## Development servers
+
+Reuse an existing development server and rely on hot reloading for code changes. Never stop or kill a running development server. If a restart is unavoidable, leave the existing server running, start a separate server on a new port, and tell the user which port you used and that they should restart their own development server.
+
 ## Playwright browser checks
 
 Use the bundled Playwright CLI wrapper for browser automation. Do not run it from the repository or `app/`: the CLI writes `.playwright-cli/` artifacts to its working directory. Instead, run it from a temporary directory while targeting the local application:
@@ -72,13 +76,15 @@ Use a fresh snapshot before interacting with element references, re-snapshot aft
 
 When adding a reusable helper function or component, document its purpose, import path, and key usage constraints in this section so future work can discover and use it consistently.
 
-To add a season:
+To add a Season to the archive, add its canonical slug, number, name, and YouTube playlist URL to `app/src/data/seasons.ts`. Store its cover at `app/public/thumbnails/<season-slug>/cover.jpg`.
 
-1. Add episode metadata in `app/src/data/season-<n>.ts`.
-2. Register it in `app/src/data/season-pages.ts`.
-3. Add its branch to `EpisodeDashboard` in `app/src/components/episode/episode-dashboard.tsx`.
+To add a Live dashboard:
 
-Routes, static params, episode navigation, and page metadata are then provided automatically.
+1. Add its Episode metadata in `app/src/data/season-<n>.ts`.
+2. Attach that data to the Season's `liveDashboard` field in `app/src/data/seasons.ts`. Add structured attribution there when the dashboard incorporates attributed data.
+3. Add the corresponding literal dynamic import to `app/src/components/episode/dashboard-registry.ts`.
+
+The `liveDashboard` field makes the Season supported. The dashboard registry is exhaustive, so type checking fails when a Supported season lacks a component. Routes, static params, Episode navigation, and page metadata are derived from the catalog.
 
 - Use `cn(...classes)` from `@/lib/utils` whenever a component accepts a `className` override.
 - Use `DashboardGrid` from `@/components/episode/dashboard-grid` for responsive dashboard layouts. Supply the `video`, `left`, `middle`, and `right` lanes rather than positioning columns in season code. It is single-column on small screens, uses a 7/5 video/sidebar split at `lg`, and becomes three columns at Tailwind's `2xl` viewport breakpoint (96rem/1536px), where the video spans the first two columns and every other lane remains one column wide. Set the wide tracks with a stable, positive `wideColumnRatio` tuple ordered as `[left, middle, right]`; it defaults to `[1, 1.15, 1]`.

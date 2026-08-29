@@ -1,10 +1,10 @@
 "use client";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getSeason, isAttributedSeason, type AttributedSeason } from "@/data/seasons";
+import type { SeasonAttribution } from "@/data/season-types";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-
-type AttributionSeason = "season-4" | "season-9" | "season-18";
 
 export function SiteFooter() {
   const attributionSeason = getAttributionSeason(usePathname());
@@ -13,7 +13,7 @@ export function SiteFooter() {
     <footer className="max-w-page mx-auto w-full">
       {attributionSeason && (
         <div className="border-paper/15 px-gutter border-t py-7 tablet:py-8">
-          <MapAttribution season={attributionSeason} />
+          <MapAttribution attribution={attributionSeason.attribution} />
         </div>
       )}
       <div
@@ -53,130 +53,42 @@ export function SiteFooter() {
   );
 }
 
-function getAttributionSeason(pathname: string): AttributionSeason | null {
+function getAttributionSeason(pathname: string): AttributedSeason | null {
   const [season, episode, ...rest] = pathname.split("/").filter(Boolean);
 
   if (
     rest.length > 0 ||
-    (!/^episode-\d+$/.test(episode ?? "") && episode !== "finale") ||
-    (season !== "season-4" && season !== "season-9" && season !== "season-18")
+    (!/^episode-\d+$/.test(episode ?? "") && episode !== "finale")
   ) {
     return null;
   }
 
-  return season;
+  const configuredSeason = getSeason(season ?? "");
+  return configuredSeason && isAttributedSeason(configuredSeason)
+    ? configuredSeason
+    : null;
 }
 
-function MapAttribution({ season }: { season: AttributionSeason }) {
-  const usesCartoBasemap = season === "season-9" || season === "season-18";
-
+function MapAttribution({ attribution }: { attribution: SeasonAttribution }) {
   return (
     <div className="text-footer-copy/60 max-w-7xl space-y-2 font-sans text-xs leading-relaxed">
       <p className="text-footer-copy/75 font-heading text-sm font-bold uppercase">
         Map data sources
       </p>
-      {usesCartoBasemap && (
-        <p>
-          Basemap tiles from {" "}
-          <FooterLink href="https://carto.com/attribution/">CARTO</FooterLink>
-          {" · Basemap data from © "}
-          <FooterLink href="https://www.openstreetmap.org/copyright">
-            OpenStreetMap contributors
-          </FooterLink>
-        </p>
-      )}
-
-      {season === "season-18" && (
-        <p>
-          <CountryLabel>North America</CountryLabel>{" "}
-          Road-route geometry from © {" "}
-          <FooterLink href="https://www.openstreetmap.org/copyright">
-            OpenStreetMap contributors
-          </FooterLink>
-          {" via OSRM and Valhalla"}
-        </p>
-      )}
-
-      {(season === "season-4" || season === "season-18") && (
-        <p>
-          <CountryLabel>Canada</CountryLabel>{" "}
-          <FooterLink href="https://www.naturalearthdata.com/about/terms-of-use/">
-            National boundary data from Natural Earth
-          </FooterLink>
-        </p>
-      )}
-
-      {season === "season-9" && (
-        <p>
-          <CountryLabel>Switzerland</CountryLabel>{" "}
-          <FooterLink href="https://www.geoboundaries.org/">
-            Simplified national boundary data from geoBoundaries
-          </FooterLink>
-          {", licensed under "}
-          <FooterLink href="https://creativecommons.org/licenses/by/4.0/">
-            CC BY 4.0
-          </FooterLink>
-          {" and modified for this application"}
-          {" · "}
-          <FooterLink href="https://www.swisstopo.admin.ch/en/landscape-model-swissboundaries3d">
-            Canton boundary data derived from © swisstopo, swissBOUNDARIES3D 2020
-          </FooterLink>
-          {" · "}
-          <FooterLink href="https://opendata.swiss/en/dataset/biogeographische-regionen-der-schweiz-ch">
-            Biogeographical region data from the Federal Office for the Environment (FOEN), Biogeographical regions of Switzerland
-          </FooterLink>
-          {" · "}
-          <FooterLink href="https://data.sbb.ch/explore/dataset/linie-mit-polygon/">
-            Rail-line geometry from SBB Infrastructure, Line (graphical), data.sbb.ch
-          </FooterLink>
-          {" · Rail-geometry from © "}
-          <FooterLink href="https://www.openstreetmap.org/copyright">
-            OpenStreetMap contributors
-          </FooterLink>
-          {" via Overpass API"}
-        </p>
-      )}
-
-      {(season === "season-4" || season === "season-18") && (
-        <p>
-          <CountryLabel>United States</CountryLabel>{" "}
-          {season === "season-4" ? (
-            <FooterLink href="https://leafletjs.com/examples/choropleth/">
-              State boundary data from Mike Bostock via Leaflet
-            </FooterLink>
-          ) : (
-            <>
-              <FooterLink href="https://leafletjs.com/examples/choropleth/">
-                State boundary data from Mike Bostock via Leaflet
+      {attribution.map((paragraph, paragraphIndex) => (
+        <p key={`${paragraph.label ?? "general"}-${paragraphIndex}`}>
+          {paragraph.label && <><CountryLabel>{paragraph.label}</CountryLabel>{" "}</>}
+          {paragraph.parts.map((part, partIndex) =>
+            typeof part === "string" ? (
+              part
+            ) : (
+              <FooterLink href={part.href} key={`${part.href}-${partIndex}`}>
+                {part.text}
               </FooterLink>
-              {" · NYC transit route geometry from "}
-              <FooterLink href="https://new.mta.info/developers">MTA</FooterLink>
-              {" · Chicago commuter-rail route geometry from "}
-              <FooterLink href="https://gtfs.metrarr.com/gtfsMETRA.zip">Metra</FooterLink>
-              {" (data updated July 8, 2026; this product is not sponsored or operated by Metra) · Chicago rapid-transit route geometry from "}
-              <FooterLink href="https://www.transitchicago.com/developers/gtfs/">
-                Chicago Transit Authority
-              </FooterLink>
-              {" · Philadelphia commuter-rail route geometry from "}
-              <FooterLink href="https://www3.septa.org/developer/">SEPTA</FooterLink>
-              {" · Intercity rail route geometry from "}
-              <FooterLink href="https://content.amtrak.com/content/gtfs/GTFS.zip">Amtrak</FooterLink>
-              {" · Washington Metro rail geometry from "}
-              <FooterLink href="https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_Transit/FeatureServer/8">
-                MD iMAP
-              </FooterLink>
-              {" and "}
-              <FooterLink href="https://developer.wmata.com/">
-                WMATA
-              </FooterLink>
-              {" · Airport coordinate data from "}
-              <FooterLink href="https://ourairports.com/data/">
-                OurAirports
-              </FooterLink>
-            </>
+            ),
           )}
         </p>
-      )}
+      ))}
     </div>
   );
 }

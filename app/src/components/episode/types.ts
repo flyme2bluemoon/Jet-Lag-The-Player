@@ -1,7 +1,7 @@
-import type { EpisodeSlug, SeasonSlug } from "@/data/season-pages";
+import type { EpisodeSlug, SupportedSeasonSlug } from "@/data/seasons";
 
 export type EpisodeDashboardProps = {
-    seasonSlug: SeasonSlug;
+    seasonSlug: SupportedSeasonSlug;
     episodeSlug: EpisodeSlug;
     label: string;
     title: string;

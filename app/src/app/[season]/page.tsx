@@ -2,25 +2,25 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSeasonPage, isReleasedEpisode, seasonPages, type Episode } from "@/data/season-pages";
+import { getSupportedSeason, isReleasedEpisode, supportedSeasons, type Episode } from "@/data/seasons";
 
 type SeasonPageProps = { params: Promise<{ season: string }> };
 
 export function generateStaticParams() {
-  return seasonPages.map((season) => ({ season: season.slug }));
+  return supportedSeasons.map((season) => ({ season: season.slug }));
 }
 
 export async function generateMetadata({ params }: SeasonPageProps): Promise<Metadata> {
-  const season = getSeasonPage((await params).season);
+  const season = getSupportedSeason((await params).season);
   return season
     ? { title: `Season ${season.number}: ${season.name} | Jet Lag: The Player` }
     : {};
 }
 
 export default async function SeasonPage({ params }: SeasonPageProps) {
-  const season = getSeasonPage((await params).season);
+  const season = getSupportedSeason((await params).season);
   if (!season) notFound();
-  const episodes: readonly Episode[] = season.episodes;
+  const episodes: readonly Episode[] = season.liveDashboard.episodes;
 
   return (
     <main className="page-texture max-w-page px-gutter mx-auto min-h-screen w-full overflow-hidden pb-24">

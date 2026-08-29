@@ -1,6 +1,5 @@
 import Image from "next/image";
-import { seasons, type Season } from "@/data/seasons";
-import { getSeasonPageHref } from "@/data/season-pages";
+import { isSupportedSeason, seasons, type Season } from "@/data/seasons";
 import { seasonTrailers, type SeasonTrailer } from "@/data/season-trailers";
 import { cn } from "@/lib/utils";
 
@@ -15,16 +14,15 @@ function RouteMap({ className = "" }: { className?: string }) {
 }
 
 function SeasonCard({ season }: { season: Season }) {
-  const pageHref = getSeasonPageHref(season.number);
-  const isAvailable = Boolean(pageHref);
+  const isSupported = isSupportedSeason(season);
   return (
-    <a className={`border-paper/60 bg-panel hover:border-signal hover:shadow-card-hover focus-visible:border-signal focus-visible:shadow-card-hover group relative min-w-0 overflow-hidden rounded-lg border transition duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none ${isAvailable ? "" : "grayscale opacity-45 hover:opacity-60 focus-visible:opacity-60"}`} href={pageHref ? `/${pageHref}` : season.playlist} target={isAvailable ? undefined : "_blank"} rel={isAvailable ? undefined : "noreferrer"} aria-label={`Season ${season.number}: ${season.name}${isAvailable ? "" : " — coming soon"}`}>
+    <a className={`border-paper/60 bg-panel hover:border-signal hover:shadow-card-hover focus-visible:border-signal focus-visible:shadow-card-hover group relative min-w-0 overflow-hidden rounded-lg border transition duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none ${isSupported ? "" : "grayscale opacity-45 hover:opacity-60 focus-visible:opacity-60"}`} href={isSupported ? `/${season.slug}` : season.playlistUrl} target={isSupported ? undefined : "_blank"} rel={isSupported ? undefined : "noreferrer"} aria-label={`Season ${season.number}: ${season.name}${isSupported ? "" : " — coming soon"}`}>
       <div className="border-paper/45 bg-surface relative aspect-video overflow-hidden border-b">
-        <Image className="object-cover transition-[transform,filter] duration-500 group-hover:scale-(--season-card-hover-scale) group-hover:saturate-(--thumbnail-hover-saturation)" src={`/thumbnails/season-${season.number === 13.5 ? "13-5" : season.number}/cover.${season.number === 17 ? "png" : "jpg"}`} alt={`YouTube playlist thumbnail for ${season.name}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1000px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 20vw" loading={season.number <= 3 ? "eager" : undefined} />
+        <Image className="object-cover transition-[transform,filter] duration-500 group-hover:scale-(--season-card-hover-scale) group-hover:saturate-(--thumbnail-hover-saturation)" src={`/thumbnails/${season.slug}/cover.jpg`} alt={`YouTube playlist thumbnail for ${season.name}`} fill sizes="(max-width: 700px) 100vw, (max-width: 1000px) 50vw, (max-width: 1280px) 33vw, (max-width: 1536px) 25vw, 20vw" loading={season.number <= 3 ? "eager" : undefined} />
       </div>
       <div className="tablet:min-h-32 flex min-h-28 flex-col px-4.5 pt-4 pb-4">
         <h2 className="wide:text-xl max-w-9/10 font-sans text-lg leading-tight font-bold tracking-tight text-balance">Season {season.number}: {season.name}</h2>
-        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isAvailable ? "Open Dashboard" : "Watch on YouTube"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2" aria-hidden="true" /></div>
+        <div className="mt-auto flex items-center justify-between"><span className="text-card-meta font-sans text-xs leading-none font-bold tracking-widest uppercase">{isSupported ? "Open Dashboard" : "Watch on YouTube"}</span><i className="border-signal after:border-signal relative h-3 w-7 translate-y-1 border-t-2 after:absolute after:-top-1.5 after:right-0 after:size-2.5 after:rotate-45 after:border-t-2 after:border-r-2" aria-hidden="true" /></div>
       </div>
     </a>
   );
@@ -63,8 +61,8 @@ function SeasonSection({ id, title, seasons }: { id: string; title: string; seas
 }
 
 export default function Home() {
-  const availableSeasons = seasons.filter((season) => getSeasonPageHref(season.number));
-  const unavailableSeasons = seasons.filter((season) => !getSeasonPageHref(season.number));
+  const supportedSeasons = seasons.filter(isSupportedSeason);
+  const unsupportedSeasons = seasons.filter((season) => !isSupportedSeason(season));
 
   return (
     <main className="page-texture min-h-screen overflow-hidden">
@@ -99,8 +97,8 @@ export default function Home() {
 
       <div className="max-w-page px-gutter tablet:pt-0 mx-auto space-y-12 pt-6 pb-18">
         <TrailerSection id="new-season-title" title="New season" trailers={seasonTrailers} />
-        <SeasonSection id="watch-now-title" title="Watch now" seasons={availableSeasons} />
-        <SeasonSection id="coming-soon-title" title="Coming soon" seasons={unavailableSeasons} />
+        <SeasonSection id="watch-now-title" title="Watch now" seasons={supportedSeasons} />
+        <SeasonSection id="coming-soon-title" title="Coming soon" seasons={unsupportedSeasons} />
       </div>
 
     </main>

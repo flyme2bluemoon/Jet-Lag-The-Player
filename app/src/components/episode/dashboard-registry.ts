@@ -2,12 +2,12 @@
 
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
-import type { SeasonSlug } from "@/data/season-pages";
+import type { SupportedSeasonSlug } from "@/data/seasons";
 import type { EpisodeDashboardProps } from "./types";
 
 type DashboardComponent = ComponentType<EpisodeDashboardProps>;
 
-export const dashboardRegistry: Partial<Record<SeasonSlug, DashboardComponent>> = {
+export const dashboardRegistry: Record<SupportedSeasonSlug, DashboardComponent> = {
     "season-4": dynamic(() =>
         import("@/seasons/season-4/dashboard").then(
             (module) => module.SeasonFourDashboard,

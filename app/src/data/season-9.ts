@@ -1,9 +1,6 @@
-import type { SeasonPage } from "./season-pages";
+import type { LiveDashboard } from "./season-types";
 
 export const seasonNine = {
-    slug: "season-9",
-    number: 9,
-    name: "Hide + Seek",
     episodes: [
         {
             slug: "episode-1",
@@ -41,4 +38,4 @@ export const seasonNine = {
             image: "/thumbnails/season-9/finale.jpg",
         },
     ],
-} as const satisfies SeasonPage;
+} as const satisfies LiveDashboard;

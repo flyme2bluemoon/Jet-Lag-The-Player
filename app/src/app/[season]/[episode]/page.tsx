@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { FastForward, Rewind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EpisodeDashboard } from "@/components/episode/episode-dashboard";
-import { getSeasonPage, isReleasedEpisode, seasonPages } from "@/data/season-pages";
+import { getSupportedSeason, isReleasedEpisode, supportedSeasons } from "@/data/seasons";
 import { EpisodeSwitcher } from "./episode-switcher";
 
 type EpisodePageProps = { params: Promise<{ season: string; episode: string }> };
@@ -12,8 +12,8 @@ type EpisodePageProps = { params: Promise<{ season: string; episode: string }> }
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return seasonPages.flatMap((season) =>
-    season.episodes.flatMap((episode) =>
+  return supportedSeasons.flatMap((season) =>
+    season.liveDashboard.episodes.flatMap((episode) =>
       isReleasedEpisode(episode)
         ? [{ season: season.slug, episode: episode.slug }]
         : [],
@@ -23,11 +23,11 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const route = await params;
-  const season = getSeasonPage(route.season);
-  const episodeNumber = season?.episodes.findIndex(
+  const season = getSupportedSeason(route.season);
+  const episodeNumber = season?.liveDashboard.episodes.findIndex(
     (item) => isReleasedEpisode(item) && item.slug === route.episode,
   ) ?? -1;
-  const episode = season?.episodes[episodeNumber];
+  const episode = season?.liveDashboard.episodes[episodeNumber];
   return episode && isReleasedEpisode(episode) && season
     ? { title: `S${season.number}E${episodeNumber + 1} ${episode.title} | Jet Lag: The Player`, description: episode.title }
     : {};
@@ -35,14 +35,14 @@ export async function generateMetadata({ params }: EpisodePageProps): Promise<Me
 
 export default async function EpisodeDashboardPage({ params }: EpisodePageProps) {
   const route = await params;
-  const season = getSeasonPage(route.season);
+  const season = getSupportedSeason(route.season);
   if (!season) notFound();
-  const episode = season.episodes.find(
+  const episode = season.liveDashboard.episodes.find(
     (item) => isReleasedEpisode(item) && item.slug === route.episode,
   );
   if (!episode || !isReleasedEpisode(episode)) notFound();
 
-  const releasedEpisodes = season.episodes.filter(isReleasedEpisode);
+  const releasedEpisodes = season.liveDashboard.episodes.filter(isReleasedEpisode);
   const episodeIndex = releasedEpisodes.findIndex((item) => item.slug === episode.slug);
   const previousEpisode = releasedEpisodes[episodeIndex - 1];
   const nextEpisode = releasedEpisodes[episodeIndex + 1];
@@ -58,7 +58,7 @@ export default async function EpisodeDashboardPage({ params }: EpisodePageProps)
         </div>
         <nav className="border-paper/40 bg-panel tablet:inline-flex tablet:w-auto grid min-h-11 w-full grid-cols-22 items-stretch overflow-hidden rounded-lg border" aria-label="Episode controls">
           {previousEpisode ? <Button asChild variant="ghost" className="text-control hover:text-paper focus-visible:text-paper hover:bg-paper/5 focus-visible:bg-paper/5 tablet:min-w-40 tablet:px-4 tablet:text-base col-span-7 h-auto min-w-0 gap-2 rounded-none border-0 px-2 font-display leading-none font-bold uppercase"><Link href={episodeHref(previousEpisode.slug)}><Rewind className="size-4 shrink-0" aria-hidden="true" /> Previous episode</Link></Button> : <Button variant="ghost" className="bg-player/15 tablet:min-w-40 tablet:px-4 tablet:text-base col-span-7 h-auto min-w-0 gap-2 rounded-none border-0 px-2 font-display leading-none font-bold text-paper/30 uppercase disabled:opacity-100" disabled><Rewind className="size-4 shrink-0" aria-hidden="true" /> Previous episode</Button>}
-          <EpisodeSwitcher seasonSlug={season.slug} episodes={season.episodes} currentSlug={episode.slug} />
+          <EpisodeSwitcher seasonSlug={season.slug} episodes={season.liveDashboard.episodes} currentSlug={episode.slug} />
           {nextEpisode ? <Button asChild variant="ghost" className="text-control hover:text-paper focus-visible:text-paper hover:bg-paper/5 focus-visible:bg-paper/5 tablet:min-w-40 tablet:px-4 tablet:text-base col-span-7 h-auto min-w-0 gap-2 rounded-none border-0 px-2 font-display leading-none font-bold uppercase"><Link href={episodeHref(nextEpisode.slug)}>Next episode <FastForward className="size-4 shrink-0" aria-hidden="true" /></Link></Button> : <Button variant="ghost" className="bg-player/15 tablet:min-w-40 tablet:px-4 tablet:text-base col-span-7 h-auto min-w-0 gap-2 rounded-none border-0 px-2 font-display leading-none font-bold text-paper/30 uppercase disabled:opacity-100" disabled>Next episode <FastForward className="size-4 shrink-0" aria-hidden="true" /></Button>}
         </nav>
       </header>

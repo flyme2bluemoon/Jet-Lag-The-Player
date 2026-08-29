@@ -12,7 +12,13 @@ A **Season** with its own **Live dashboard**.
 _Avoid_: available season
 
 **Episode**:
-One released video within a **Season**. A finale is an episode label, not a separate content type.
+One installment within a **Season**. A finale is an episode label, not a separate content type.
+
+**Released episode**:
+An **Episode** with a published video.
+
+**Upcoming episode**:
+An announced **Episode** whose video has not been published yet.
 
 **Player**:
 An individual competitor in a **Season**.
@@ -21,7 +27,7 @@ An individual competitor in a **Season**.
 A competing unit containing one or more **Players**. In an individual game, a **Player** may also act as a one-player team for scoring and display.
 
 **Episode timestamp**:
-A playback position identified by an **Episode** and the number of seconds into its video.
+A playback position identified by a **Released episode** and the number of seconds into its video.
 
 **Game state**:
 Everything a **Live dashboard** may show at an **Episode timestamp**, limited to information revealed by that point.
@@ -40,5 +46,5 @@ A rules-defined card used by **Players** within a **Season**. It is part of the 
 ## Relationships
 
 - A **Season** contains an ordered set of **Episodes**.
-- A **Supported season** has one **Live dashboard** shared by its **Episodes**.
+- A **Season** is a **Supported season** exactly when it has one **Live dashboard**, shared by its **Released episodes**.
 - A **Live dashboard** derives its **Game state** from the current **Episode timestamp**.

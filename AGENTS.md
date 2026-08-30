@@ -46,21 +46,6 @@ For Season 18 challenge data, check out [Stateside Scramble challenge reference]
 
 Reuse an existing development server and rely on hot reloading for code changes. Never stop or kill a running development server. If a restart is unavoidable, leave the existing server running, start a separate server on a new port, and tell the user which port you used and that they should restart their own development server.
 
-## Playwright browser checks
-
-Use the bundled Playwright CLI wrapper for browser automation. Do not run it from the repository or `app/`: the CLI writes `.playwright-cli/` artifacts to its working directory. Instead, run it from a temporary directory while targeting the local application:
-
-```sh
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
-mkdir -p /tmp/jet-lag-playwright
-cd /tmp/jet-lag-playwright
-"$PWCLI" open http://localhost:3000
-"$PWCLI" snapshot
-```
-
-Use a fresh snapshot before interacting with element references, re-snapshot after navigation or major UI changes, and close the browser session when finished with `"$PWCLI" close`. Keep any screenshots, PDFs, and traces in `/tmp/jet-lag-playwright`; do not add test artifacts to the repository.
-
 ## Dashboard conventions
 
 - Each season has a custom dashboard. Keep its UI and data in `app/src/seasons/season-<n>/`.

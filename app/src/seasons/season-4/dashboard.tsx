@@ -30,6 +30,8 @@ export function SeasonFourDashboard({ episodeSlug, label, title, videoId }: Epis
 
     return (
         <DashboardGrid
+            middleStack="left"
+            narrowLead="right"
             wideColumnRatio={WIDE_COLUMN_RATIO}
             video={
                 <YouTubePlayer
@@ -43,18 +45,18 @@ export function SeasonFourDashboard({ episodeSlug, label, title, videoId }: Epis
                 <BudgetCard credits={gameState.travelBudgetCredits} />
             }
             middle={
-                <>
-                    <BattleStatusCard battle={gameState.battle} />
-                    <PowerupsCard transactions={gameState.powerupTransactions} />
-                </>
+                <PowerupsCard transactions={gameState.powerupTransactions} />
             }
             right={
-                <ClaimsCard
-                    challenges={gameState.challenges}
-                    claimedStates={gameState.claimedStates}
-                    hands={gameState.hands}
-                    score={gameState.score}
-                />
+                <>
+                    <BattleStatusCard battle={gameState.battle} />
+                    <ClaimsCard
+                        challenges={gameState.challenges}
+                        claimedStates={gameState.claimedStates}
+                        hands={gameState.hands}
+                        score={gameState.score}
+                    />
+                </>
             }
         />
     );

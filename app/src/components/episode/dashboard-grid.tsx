@@ -14,6 +14,8 @@ type DashboardGridProps = ComponentProps<"div"> & {
   middle: ReactNode;
   /** Which two-column stack the middle lane joins before the wide breakpoint. */
   middleStack?: "left" | "right";
+  /** Which lane follows the video in the single-column stack. */
+  narrowLead?: "left" | "right";
   video: ReactNode;
   right: ReactNode;
   /** Screen width at which the dashboard opens up to three columns. */
@@ -66,6 +68,7 @@ export function DashboardGrid({
   left,
   middle,
   middleStack = "right",
+  narrowLead = "left",
   style,
   video,
   wideBreakpoint = "2xl",
@@ -85,7 +88,8 @@ export function DashboardGrid({
     <div
       className={cn(
         "flex min-w-0 flex-col gap-5",
-        middleStack === "right" && "lg:order-2",
+        narrowLead === "right" && "order-1",
+        middleStack === "right" ? "lg:order-2" : "lg:order-none",
         wide.middle,
       )}
     >
@@ -122,6 +126,7 @@ export function DashboardGrid({
           <div
             className={cn(
               "flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2",
+              narrowLead === "right" && "order-1 lg:order-none",
               wide.left,
             )}
           >

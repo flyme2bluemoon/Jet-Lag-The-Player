@@ -7,7 +7,7 @@ const cachedGeoJson = new Map<string, GeoJsonObject>();
 const pendingGeoJson = new Map<string, Promise<GeoJsonObject>>();
 
 /** Loads and parses a GeoJSON asset once per client session. */
-export function loadGeoJson<T extends GeoJsonObject>(url: string): Promise<T> {
+function loadGeoJson<T extends GeoJsonObject>(url: string): Promise<T> {
     const cached = cachedGeoJson.get(url) as T | undefined;
     if (cached) return Promise.resolve(cached);
 

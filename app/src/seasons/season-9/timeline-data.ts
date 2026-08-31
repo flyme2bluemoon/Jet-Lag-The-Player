@@ -56,7 +56,7 @@ export type CurseRecord = {
     active: boolean;
 };
 
-export type CompletedRun = {
+type CompletedRun = {
     hider: PlayerId;
     durationSeconds: number;
     endedAt: EpisodeTimestamp;

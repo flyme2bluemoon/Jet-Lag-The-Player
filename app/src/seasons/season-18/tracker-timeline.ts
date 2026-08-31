@@ -1,4 +1,3 @@
-import type { TeamId } from "./team-data";
 import type {
     EpisodeSlug,
     FlightTravelEvent,
@@ -569,5 +568,3 @@ export const trackerTimeline = {
     "sam-amy": samAmyTimeline,
     "ben-adam": benAdamTimeline,
 } satisfies TrackerTimeline<PathId, LocationId>;
-
-export const trackerTeams = Object.keys(trackerTimeline) as TeamId[];

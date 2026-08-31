@@ -5,7 +5,7 @@ import { SEEKERS_RAIL_ROUTES } from "./seekers-rail-routes";
 
 export type TrackerCoordinate = [longitude: number, latitude: number];
 
-export type TrackerWaypoint = {
+type TrackerWaypoint = {
     label: string;
     coordinate: TrackerCoordinate;
 };

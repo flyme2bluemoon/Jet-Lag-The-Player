@@ -34,7 +34,3 @@ export const seasonNineteenTrailer = {
 } as const satisfies SeasonTrailer;
 
 export const seasonTrailers = [seasonNineteenTrailer] as const satisfies readonly SeasonTrailer[];
-
-export function getSeasonTrailer(slug: string) {
-  return seasonTrailers.find((trailer) => trailer.slug === slug);
-}

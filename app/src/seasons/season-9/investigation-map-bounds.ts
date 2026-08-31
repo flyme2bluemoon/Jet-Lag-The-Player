@@ -1,7 +1,7 @@
 import type { SeekersTrackerState, TrackerCoordinate } from "./seekers-tracker-data";
 
 export type InvestigationMapBounds = [TrackerCoordinate, TrackerCoordinate];
-export type InvestigationMapPadding = {
+type InvestigationMapPadding = {
     top: number;
     right: number;
     bottom: number;

@@ -20,14 +20,14 @@ export type LiveDashboard = {
   episodes: readonly Episode[];
 };
 
-export type AttributionLink = {
+type AttributionLink = {
   text: string;
   href: string;
 };
 
-export type AttributionPart = string | AttributionLink;
+type AttributionPart = string | AttributionLink;
 
-export type AttributionParagraph = {
+type AttributionParagraph = {
   label?: string;
   parts: readonly AttributionPart[];
 };

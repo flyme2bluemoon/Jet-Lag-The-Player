@@ -262,8 +262,7 @@ export const seasons = [
 ] as const satisfies readonly SeasonDefinition[];
 
 export type Season = (typeof seasons)[number];
-export type SeasonSlug = Season["slug"];
-export type SupportedSeason = Extract<Season, { liveDashboard: LiveDashboard }>;
+type SupportedSeason = Extract<Season, { liveDashboard: LiveDashboard }>;
 export type SupportedSeasonSlug = SupportedSeason["slug"];
 export type AttributedSeason = Extract<Season, { attribution: unknown }>;
 

@@ -12,7 +12,7 @@ export type TrackerTimestamp = Readonly<{
     at: number;
 }>;
 
-export type TimeRange = Readonly<{
+type TimeRange = Readonly<{
     start: TrackerTimestamp;
     end: TrackerTimestamp;
 }>;
@@ -35,7 +35,7 @@ export type TrackerPath<Location extends string = string> = Readonly<{
     intermediateCoordinates: readonly Coordinate[];
 }>;
 
-export type MapLabel = Readonly<{
+type MapLabel = Readonly<{
     text?: string;
 }>;
 
@@ -83,7 +83,7 @@ export type GroundDwellPhase<Location extends string = string> = Readonly<{
     setIntermediateOrigin?: boolean;
 }>;
 
-export type GroundPhase<
+type GroundPhase<
     Path extends string = string,
     Location extends string = string,
 > = GroundPathPhase<Path, Location> | GroundDwellPhase<Location>;
@@ -102,7 +102,7 @@ export type GroundTravelEvent<
     display?: TravelDisplay<Location>;
 }>;
 
-export type FlightPhase<Location extends string = string> = Readonly<{
+type FlightPhase<Location extends string = string> = Readonly<{
     kind: "flight";
     time: TimeRange;
     progress?: Readonly<{ from: number; to: number }>;

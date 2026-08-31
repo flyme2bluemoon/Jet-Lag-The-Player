@@ -24,7 +24,7 @@ type TeamLedgerCardProps<
     emptyLabel: string;
     formatBalanceLabel: (balance: number) => string;
     historyTitle: string;
-    items: Item[];
+    items: readonly Item[];
     renderBalance: (balance: number) => ReactNode;
     renderHistoryItem: (item: Item, team: TeamId) => ReactNode;
     renderTeamIcon: (team: TeamId) => ReactNode;

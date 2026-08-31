@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "check:seekers-routes": "node scripts/check-seekers-rail-routes.mjs",
+    "check:unused-exports": "node scripts/check-unused-exports.mjs",
     "generate:geojson": "node scripts/generate-geojson-assets.mjs",
     "watch:geojson": "node scripts/watch-geojson-assets.mjs",
     "dev": "pnpm generate:geojson && concurrently --kill-others --names geojson,next \"pnpm watch:geojson\" \"next dev\"",
     "build": "pnpm generate:geojson && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
     "@turf/bearing": "^7.3.5",
@@ -40,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }

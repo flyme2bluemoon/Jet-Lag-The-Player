@@ -1,16 +1,17 @@
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps } from "@/lib/timestamps";
 import {
-    seasonFourEpisodeOrder,
+    compareTimestamps,
+    createTimestampProjection,
+} from "@/lib/timestamps";
+import {
     seasonFourStateClaims,
     type StateClaim,
 } from "./state-claims";
 import type { TeamId } from "./team-data";
+import type { SeasonFourEpisodeTimestamp } from "./types";
 
-export type PowerupTransaction = {
+export type PowerupTransaction = SeasonFourEpisodeTimestamp & {
     id: string;
-    episode: (typeof seasonFourEpisodeOrder)[number];
-    at: number;
     team: TeamId;
     amount: number;
     title: string;
@@ -18,10 +19,8 @@ export type PowerupTransaction = {
     claim?: StateClaim;
 };
 
-export type TravelBudgetCredit = {
+export type TravelBudgetCredit = SeasonFourEpisodeTimestamp & {
     id: string;
-    episode: (typeof seasonFourEpisodeOrder)[number];
-    at: number;
     amount: number;
     title: string;
     transportMode?: TransportMode;
@@ -37,7 +36,7 @@ export type TransportMode =
     | "bike-share"
     | "scooter-share";
 
-export const seasonFourTravelBudgetCredits: TravelBudgetCredit[] = [
+const seasonFourTravelBudgetCredits: TravelBudgetCredit[] = [
     {
         id: "day-one-budget",
         episode: "episode-1",
@@ -547,17 +546,10 @@ const seasonFourPowerupRewards: PowerupTransaction[] =
         const amount = claim.challenge.powerUpTokens;
 
         if (!amount) return [];
-        if (!seasonFourEpisodeOrder.includes(
-            claim.episode as (typeof seasonFourEpisodeOrder)[number],
-        )) {
-            throw new RangeError(
-                `Powerup reward claim belongs to unknown episode "${claim.episode}".`,
-            );
-        }
 
         return [{
             id: `reward-${claim.episode}-${claim.at}-${claim.team}`,
-            episode: claim.episode as (typeof seasonFourEpisodeOrder)[number],
+            episode: claim.episode,
             at: claim.at,
             team: claim.team,
             amount,
@@ -566,84 +558,31 @@ const seasonFourPowerupRewards: PowerupTransaction[] =
         }];
     });
 
-export const seasonFourPowerupTransactions: PowerupTransaction[] = [
+const seasonFourPowerupTransactions: PowerupTransaction[] = [
     ...seasonFourPowerupPurchases,
     ...seasonFourPowerupRewards,
 ].toSorted((left, right) => compareTimestamps(seasonFour, left, right));
 
-const visiblePowerupTransactionsCache = new Map<
-    number,
-    PowerupTransaction[]
->();
-const visibleTravelBudgetCreditsCache = new Map<
-    number,
-    TravelBudgetCredit[]
->();
+const powerupTransactionBoundaries =
+    seasonFourPowerupTransactions.map(({ episode, at }) => ({ episode, at }));
 
-function getVisibleItemCount(
-    items: readonly { episode: string; at: number }[],
-    episode: string,
-    currentTime: number,
-) {
-    const currentTimestamp = { episode, at: currentTime };
+const travelBudgetBoundaries =
+    seasonFourTravelBudgetCredits.map(({ episode, at }) => ({ episode, at }));
 
-    return items.reduce(
-        (count, item) => count + Number(
-            compareTimestamps(seasonFour, item, currentTimestamp) <= 0,
+export const getVisiblePowerupTransactions = createTimestampProjection({
+    season: seasonFour,
+    boundaries: powerupTransactionBoundaries,
+    project: (timestamp): readonly PowerupTransaction[] =>
+        seasonFourPowerupTransactions.filter((transaction) =>
+            compareTimestamps(seasonFour, transaction, timestamp) <= 0
         ),
-        0,
-    );
-}
+});
 
-export function getVisiblePowerupTransactions(
-    episode: string,
-    currentTime: number,
-) {
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return [];
-    }
-
-    const visibleCount = getVisibleItemCount(
-        seasonFourPowerupTransactions,
-        episode,
-        currentTime,
-    );
-    const cachedTransactions = visiblePowerupTransactionsCache.get(visibleCount);
-    if (cachedTransactions) return cachedTransactions;
-
-    const currentTimestamp = { episode, at: currentTime };
-    const visibleTransactions = seasonFourPowerupTransactions.filter(
-        (transaction) =>
-            compareTimestamps(seasonFour, transaction, currentTimestamp) <= 0,
-    );
-    visiblePowerupTransactionsCache.set(visibleCount, visibleTransactions);
-    return visibleTransactions;
-}
-
-export function getVisibleTravelBudgetCredits(
-    episode: string,
-    currentTime: number,
-) {
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return [];
-    }
-
-    const visibleCount = getVisibleItemCount(
-        seasonFourTravelBudgetCredits,
-        episode,
-        currentTime,
-    );
-    const cachedCredits = visibleTravelBudgetCreditsCache.get(visibleCount);
-    if (cachedCredits) return cachedCredits;
-
-    const currentTimestamp = { episode, at: currentTime };
-    const visibleCredits = seasonFourTravelBudgetCredits.filter(
-        (credit) => compareTimestamps(seasonFour, credit, currentTimestamp) <= 0,
-    );
-    visibleTravelBudgetCreditsCache.set(visibleCount, visibleCredits);
-    return visibleCredits;
-}
+export const getVisibleTravelBudgetCredits = createTimestampProjection({
+    season: seasonFour,
+    boundaries: travelBudgetBoundaries,
+    project: (timestamp): readonly TravelBudgetCredit[] =>
+        seasonFourTravelBudgetCredits.filter((credit) =>
+            compareTimestamps(seasonFour, credit, timestamp) <= 0
+        ),
+});

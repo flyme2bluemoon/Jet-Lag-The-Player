@@ -10,23 +10,16 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
-import { getCurrentHand, type ChallengeCard } from "./hand-data";
-import { seasonFourStateClaims } from "./state-claims";
+import type { ChallengeCard } from "./challenge-card-data";
+import type { Hand } from "./hand-data";
 import { seasonFourTeams, type TeamId } from "./team-data";
 
 type HandDrawerProps = {
-    episodeSlug: string;
-    currentTime: number;
+    hand: Hand;
     team: TeamId;
 };
 
-export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) {
-    const hand = getCurrentHand(
-        episodeSlug,
-        currentTime,
-        team,
-        seasonFourStateClaims,
-    );
+export function HandDrawer({ hand, team }: HandDrawerProps) {
     const teamDetails = seasonFourTeams[team];
 
     return (

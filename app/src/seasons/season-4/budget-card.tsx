@@ -13,9 +13,7 @@ import {
     TramFront,
     type LucideIcon,
 } from "lucide-react";
-import { useMemo } from "react";
 import {
-    getVisibleTravelBudgetCredits,
     type TransportMode,
     type TravelBudgetCredit,
 } from "./budget-data";
@@ -27,8 +25,7 @@ import { formatBudgetAmount } from "@/lib/formatters";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
 type BudgetCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    credits: readonly TravelBudgetCredit[];
 };
 
 const transportModeIcons: Record<TransportMode, LucideIcon> = {
@@ -83,18 +80,13 @@ function TransactionContent({
     );
 }
 
-export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
-    const visibleTravelCredits = useMemo(
-        () => getVisibleTravelBudgetCredits(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
-
+export function BudgetCard({ credits }: BudgetCardProps) {
     return (
         <TeamLedgerCard
             emptyLabel="No transactions yet"
             formatBalanceLabel={(balance) => `$${formatBudgetAmount(balance)}`}
             historyTitle="Transaction History"
-            items={visibleTravelCredits}
+            items={credits}
             renderBalance={(balance) => (
                 <>
                     $

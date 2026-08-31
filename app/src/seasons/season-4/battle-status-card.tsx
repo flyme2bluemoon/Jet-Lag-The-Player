@@ -1,12 +1,11 @@
 "use client";
 
 import { Clock3, Shield, Swords, Trophy } from "lucide-react";
-import { getBattleStatus, type BattlePhase } from "./battle-status-data";
+import type { BattlePhase, BattleStatus } from "./battle-status-data";
 import { seasonFourTeams, type TeamId } from "./team-data";
 
 type BattleStatusCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    battle: BattleStatus | null;
 };
 
 const phaseLabels: Record<BattlePhase, string> = {
@@ -49,16 +48,18 @@ function TeamRole({
     );
 }
 
-export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardProps) {
-    const battle = getBattleStatus(episodeSlug, currentTime);
-
+export function BattleStatusCard({ battle }: BattleStatusCardProps) {
     if (!battle) return null;
 
     const isCountdown = battle.phase === "countdown";
-    const isConcluded = battle.phase === "concluded";
-    const StatusIcon = isCountdown ? Clock3 : isConcluded ? Trophy : Swords;
-    const winner = battle.winner ? seasonFourTeams[battle.winner] : undefined;
-    const winningRole = battle.winner === battle.attacker ? "attackers" : "defenders";
+    const concludedBattle = battle.phase === "concluded" ? battle : null;
+    const StatusIcon = isCountdown ? Clock3 : concludedBattle ? Trophy : Swords;
+    const winner = concludedBattle
+        ? seasonFourTeams[concludedBattle.winner]
+        : undefined;
+    const winningRole = concludedBattle?.winner === battle.attacker
+        ? "attackers"
+        : "defenders";
 
     return (
         <section
@@ -87,7 +88,7 @@ export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardP
             <div className="px-5 py-5 sm:px-6">
                 <div className="border-paper/20 bg-paper/6 mb-5 flex w-fit items-center gap-2 rounded-full border px-3 py-2">
                     <span
-                        className={`size-2 translate-y-px rounded-full ${isConcluded ? "" : "animate-pulse bg-paper"}`}
+                        className={`size-2 translate-y-px rounded-full ${concludedBattle ? "" : "animate-pulse bg-paper"}`}
                         style={winner ? { backgroundColor: winner.color } : undefined}
                     />
                     <p className="font-heading text-sm leading-none font-bold uppercase">
@@ -107,13 +108,13 @@ export function BattleStatusCard({ episodeSlug, currentTime }: BattleStatusCardP
                         <p className="text-card-meta mt-3 max-w-2xl text-sm leading-relaxed">
                             {battle.description}
                         </p>
-                        {isConcluded && battle.winner && (
+                        {concludedBattle && (
                             <p
                                 className="mt-3 flex items-center gap-2 text-sm font-bold"
-                                style={{ color: seasonFourTeams[battle.winner].color }}
+                                style={{ color: seasonFourTeams[concludedBattle.winner].color }}
                             >
                                 <Trophy className="size-4" aria-hidden="true" />
-                                {seasonFourTeams[battle.winner].name} win as {winningRole}
+                                {seasonFourTeams[concludedBattle.winner].name} win as {winningRole}
                             </p>
                         )}
                     </div>

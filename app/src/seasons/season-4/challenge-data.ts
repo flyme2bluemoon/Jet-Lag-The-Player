@@ -1,39 +1,35 @@
 import { seasonFour } from "@/data/season-4";
 import {
     compareTimestamps,
+    createTimestampProjection,
     isTimestampInRange,
-    type EpisodeTimestamp,
 } from "@/lib/timestamps";
 import { seasonFourBattles } from "./battle-status-data";
-import { seasonFourCards, type ChallengeCard } from "./hand-data";
-import {
-    seasonFourEpisodeOrder,
-    seasonFourStateClaims,
-} from "./state-claims";
+import { seasonFourCards, type ChallengeCard } from "./challenge-card-data";
+import { seasonFourStateClaims } from "./state-claims";
 import type { TeamId } from "./team-data";
+import type { SeasonFourEpisodeTimestamp } from "./types";
 
-type ChallengeWindowBase = {
-    episode: (typeof seasonFourEpisodeOrder)[number];
+type ChallengeWindowDetails = {
     team: TeamId;
-    start: number;
     challenge: ChallengeCard;
     displayTitle?: string;
     subtitle?: string;
 };
 
-type ChallengeWindowDefinition = ChallengeWindowBase & {
+type ChallengeWindowDefinition = ChallengeWindowDetails & {
+    start: SeasonFourEpisodeTimestamp;
     // Only interrupted or abandoned attempts define their own end.
-    end?: EpisodeTimestamp;
+    end?: SeasonFourEpisodeTimestamp;
 };
 
-export type ChallengeWindow = ChallengeWindowBase & {
-    end: EpisodeTimestamp;
+type ChallengeWindow = ChallengeWindowDetails & {
+    start: SeasonFourEpisodeTimestamp;
+    end: SeasonFourEpisodeTimestamp;
 };
 
-type FailedChallengeBase = {
-    episode: string;
+type FailedChallengeBase = SeasonFourEpisodeTimestamp & {
     team: TeamId;
-    at: number;
     state: string;
     challenge: ChallengeCard;
 };
@@ -46,7 +42,7 @@ type FailedBattleChallenge = FailedChallengeBase & {
 
 export type FailedChallenge = FailedBattleChallenge;
 
-export const seasonFourFailedChallenges: FailedChallenge[] =
+const seasonFourFailedChallenges: FailedChallenge[] =
     seasonFourBattles.map((battle) => ({
         ...battle.concluded,
         team: battle.winner === battle.attacker
@@ -65,55 +61,52 @@ export const seasonFourFailedChallenges: FailedChallenge[] =
 // Battle windows are derived separately from their authoritative battle record.
 const challengeWindowDefinitions: ChallengeWindowDefinition[] = [
     // Episode 1
-    { episode: "episode-1", team: "ben-adam", start: 100, challenge: seasonFourCards.praiseBuilding },
-    { episode: "episode-1", team: "sam-brian", start: 1176, challenge: seasonFourCards.spiritHalloween },
-    { episode: "episode-1", team: "ben-adam", start: 1010, challenge: seasonFourCards.pawnShop },
-    { episode: "episode-1", team: "sam-brian", start: 1715, challenge: seasonFourCards.geodeticMarker },
-    { episode: "episode-1", team: "ben-adam", start: 2167, challenge: seasonFourCards.highFive },
-    { episode: "episode-1", team: "sam-brian", start: 2152, challenge: seasonFourCards.photographPartner },
+    { start: { episode: "episode-1", at: 100 }, team: "ben-adam", challenge: seasonFourCards.praiseBuilding },
+    { start: { episode: "episode-1", at: 1176 }, team: "sam-brian", challenge: seasonFourCards.spiritHalloween },
+    { start: { episode: "episode-1", at: 1010 }, team: "ben-adam", challenge: seasonFourCards.pawnShop },
+    { start: { episode: "episode-1", at: 1715 }, team: "sam-brian", challenge: seasonFourCards.geodeticMarker },
+    { start: { episode: "episode-1", at: 2167 }, team: "ben-adam", challenge: seasonFourCards.highFive },
+    { start: { episode: "episode-1", at: 2152 }, team: "sam-brian", challenge: seasonFourCards.photographPartner },
 
     // Episode 2
-    { episode: "episode-2", team: "ben-adam", start: 794.49, challenge: seasonFourCards.roadsideAttraction },
-    { episode: "episode-2", team: "sam-brian", start: 1185, challenge: seasonFourCards.clawMachine },
-    { episode: "episode-2", team: "ben-adam", start: 1304.985, challenge: seasonFourCards.getDrunk },
+    { start: { episode: "episode-2", at: 794.49 }, team: "ben-adam", challenge: seasonFourCards.roadsideAttraction },
+    { start: { episode: "episode-2", at: 1185 }, team: "sam-brian", challenge: seasonFourCards.clawMachine },
+    { start: { episode: "episode-2", at: 1304.985 }, team: "ben-adam", challenge: seasonFourCards.getDrunk },
     {
-        episode: "episode-2",
+        start: { episode: "episode-2", at: 1441.365 },
         team: "sam-brian",
-        start: 1441.365,
         end: { episode: "episode-2", at: 1881.92 },
         challenge: seasonFourCards.spendBucees,
     },
 
     // Episode 3
-    { episode: "episode-3", team: "sam-brian", start: 338, challenge: seasonFourCards.spendBucees },
-    { episode: "episode-3", team: "ben-adam", start: 455, challenge: seasonFourCards.chevyLevee },
-    { episode: "episode-3", team: "ben-adam", start: 1169, challenge: seasonFourCards.criticizePlace },
-    { episode: "episode-3", team: "sam-brian", start: 1554, challenge: seasonFourCards.eatInNOut },
+    { start: { episode: "episode-3", at: 338 }, team: "sam-brian", challenge: seasonFourCards.spendBucees },
+    { start: { episode: "episode-3", at: 455 }, team: "ben-adam", challenge: seasonFourCards.chevyLevee },
+    { start: { episode: "episode-3", at: 1169 }, team: "ben-adam", challenge: seasonFourCards.criticizePlace },
+    { start: { episode: "episode-3", at: 1554 }, team: "sam-brian", challenge: seasonFourCards.eatInNOut },
     {
-        episode: "episode-3",
+        start: { episode: "episode-3", at: 1869 },
         team: "ben-adam",
-        start: 1869,
         challenge: seasonFourCards.breakLaw,
         displayTitle: "Seduce and Debauch an Unmarried Woman (Mich.)",
         subtitle: seasonFourCards.breakLaw.title,
     },
 
     // Episode 4
-    { episode: "episode-4", team: "sam-brian", start: 543, challenge: seasonFourCards.fourLeafClover },
-    { episode: "episode-4", team: "sam-brian", start: 1822, challenge: seasonFourCards.soupHelicopter },
-    { episode: "episode-4", team: "ben-adam", start: 1289, challenge: seasonFourCards.forgeArt },
+    { start: { episode: "episode-4", at: 543 }, team: "sam-brian", challenge: seasonFourCards.fourLeafClover },
+    { start: { episode: "episode-4", at: 1822 }, team: "sam-brian", challenge: seasonFourCards.soupHelicopter },
+    { start: { episode: "episode-4", at: 1289 }, team: "ben-adam", challenge: seasonFourCards.forgeArt },
     {
-        episode: "episode-4",
+        start: { episode: "episode-4", at: 1792 },
         team: "ben-adam",
-        start: 1792,
         end: { episode: "finale", at: 266 },
         challenge: seasonFourCards.cleanPark,
     },
 
     // Finale
-    { episode: "finale", team: "sam-brian", start: 1624, challenge: seasonFourCards.miniGolf },
-    { episode: "finale", team: "sam-brian", start: 1998, challenge: seasonFourCards.advertise },
-    { episode: "finale", team: "ben-adam", start: 2138, challenge: seasonFourCards.spellHelp },
+    { start: { episode: "finale", at: 1624 }, team: "sam-brian", challenge: seasonFourCards.miniGolf },
+    { start: { episode: "finale", at: 1998 }, team: "sam-brian", challenge: seasonFourCards.advertise },
+    { start: { episode: "finale", at: 2138 }, team: "ben-adam", challenge: seasonFourCards.spellHelp },
 ];
 
 const standardChallengeWindows: ChallengeWindow[] =
@@ -124,69 +117,36 @@ const standardChallengeWindows: ChallengeWindow[] =
 
 const battleChallengeWindows: ChallengeWindow[] = seasonFourBattles.flatMap(
     (battle) => [battle.attacker, battle.defender].map((team) => ({
-        episode: battle.revealed.episode,
         team,
-        start: battle.revealed.at,
+        start: battle.revealed,
         challenge: battle.challenge,
         end: battle.concluded,
     })),
 );
 
-export const seasonFourChallengeWindows: ChallengeWindow[] = [
+const seasonFourChallengeWindows: ChallengeWindow[] = [
     ...standardChallengeWindows,
     ...battleChallengeWindows,
 ].sort((left, right) => compareTimestamps(
     seasonFour,
-    { episode: left.episode, at: left.start },
-    { episode: right.episode, at: right.start },
+    left.start,
+    right.start,
 ));
-
-export function getActiveChallenge(
-    episode: string,
-    currentTime: number,
-    team: TeamId,
-) {
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return undefined;
-    }
-
-    const currentTimestamp = { episode, at: currentTime };
-    const window = seasonFourChallengeWindows.find(
-        (candidate) =>
-            candidate.team === team &&
-            isTimestampInRange(
-                seasonFour,
-                currentTimestamp,
-                { episode: candidate.episode, at: candidate.start },
-                candidate.end,
-            ),
-    );
-
-    if (!window) return undefined;
-
-    return {
-        ...window,
-        ...window.challenge,
-    };
-}
 
 function resolveChallengeWindowEnd(window: ChallengeWindowDefinition) {
     if (window.end) return window.end;
 
-    const start = { episode: window.episode, at: window.start };
     const completion = seasonFourStateClaims.find(
         (claim) =>
             claim.team === window.team &&
             claim.challenge === window.challenge &&
-            compareTimestamps(seasonFour, claim, start) >= 0,
+            compareTimestamps(seasonFour, claim, window.start) >= 0,
     );
     const failure = seasonFourFailedChallenges.find(
         (challenge) =>
             challenge.team === window.team &&
             challenge.challenge === window.challenge &&
-            compareTimestamps(seasonFour, challenge, start) >= 0,
+            compareTimestamps(seasonFour, challenge, window.start) >= 0,
     );
 
     if (completion && failure) {
@@ -202,22 +162,53 @@ function resolveChallengeWindowEnd(window: ChallengeWindowDefinition) {
     );
 }
 
-export function getFailedChallenges(
-    episode: string,
-    currentTime: number,
+export type ActiveChallenge = ChallengeWindow & ChallengeCard;
+
+type TeamChallengeState = {
+    active: ActiveChallenge | null;
+    failed: readonly FailedChallenge[];
+};
+
+export type SeasonFourChallengeState = Readonly<
+    Record<TeamId, TeamChallengeState>
+>;
+
+const challengeChangeBoundaries = [
+    ...seasonFourChallengeWindows.flatMap(({ start, end }) => [start, end]),
+    ...seasonFourFailedChallenges.map(({ episode, at }) => ({ episode, at })),
+];
+
+export const getChallengeState = createTimestampProjection({
+    season: seasonFour,
+    boundaries: challengeChangeBoundaries,
+    project: (timestamp): SeasonFourChallengeState => ({
+        "sam-brian": getTeamChallengeState("sam-brian", timestamp),
+        "ben-adam": getTeamChallengeState("ben-adam", timestamp),
+    }),
+});
+
+function getTeamChallengeState(
     team: TeamId,
-) {
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return [];
-    }
-
-    const currentTimestamp = { episode, at: currentTime };
-
-    return seasonFourFailedChallenges.filter(
+    timestamp: SeasonFourEpisodeTimestamp,
+): TeamChallengeState {
+    const window = seasonFourChallengeWindows.find(
+        (candidate) =>
+            candidate.team === team &&
+            isTimestampInRange(
+                seasonFour,
+                timestamp,
+                candidate.start,
+                candidate.end,
+            ),
+    );
+    const failed = seasonFourFailedChallenges.filter(
         (challenge) =>
             challenge.team === team &&
-            compareTimestamps(seasonFour, challenge, currentTimestamp) <= 0,
+            compareTimestamps(seasonFour, challenge, timestamp) <= 0,
     );
+
+    return {
+        active: window ? { ...window, ...window.challenge } : null,
+        failed,
+    };
 }

@@ -9,19 +9,16 @@ import {
     Target,
     type LucideIcon,
 } from "lucide-react";
-import { useMemo } from "react";
 import { TeamLedgerCard } from "@/components/episode/team-ledger-card";
 import { TeamLedgerHistoryItem } from "@/components/episode/team-ledger-history-item";
 import { seasonFour } from "@/data/season-4";
 import {
-    getVisiblePowerupTransactions,
     type PowerupTransaction,
 } from "./budget-data";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
 type PowerupsCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    transactions: readonly PowerupTransaction[];
 };
 
 type PowerupName = "Border Pass" | "Card Swap" | "Reshuffle" | "Tracker";
@@ -93,12 +90,7 @@ function PowerupHistoryContent({
     );
 }
 
-export function PowerupsCard({ episodeSlug, currentTime }: PowerupsCardProps) {
-    const visibleTransactions = useMemo(
-        () => getVisiblePowerupTransactions(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
-
+export function PowerupsCard({ transactions }: PowerupsCardProps) {
     return (
         <TeamLedgerCard
             emptyLabel="No powerup activity yet"
@@ -106,7 +98,7 @@ export function PowerupsCard({ episodeSlug, currentTime }: PowerupsCardProps) {
                 `${balance} powerup ${balance === 1 ? "token" : "tokens"}`
             }
             historyTitle="Powerup History"
-            items={visibleTransactions}
+            items={transactions}
             renderBalance={(balance) => balance}
             renderHistoryItem={(transaction, team) => (
                 <PowerupHistoryContent team={team} transaction={transaction} />

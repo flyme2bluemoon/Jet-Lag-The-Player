@@ -38,6 +38,17 @@ export const MAPLIBRE_SCOREBOARD_COLORS = {
     Record<"unavailableRegion" | "unclaimedRegion" | "line", MapHexColor>
 >;
 
+export const MAPLIBRE_INVESTIGATION_COLORS = {
+    eliminated: "#6C8591",
+    outside: {
+        light: "#e6e3dc",
+        dark: "#071722",
+    },
+} as const satisfies {
+    eliminated: MapHexColor;
+    outside: Record<"light" | "dark", MapHexColor>;
+};
+
 export const MAPLIBRE_GEOJSON_DEFAULT_COLORS = {
     light: { fill: "#d4d4d4", line: "#ffffff" },
     dark: { fill: "#404040", line: "#171717" },

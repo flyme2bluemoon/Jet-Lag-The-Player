@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { Hexagon, Lock } from "lucide-react";
+import { CANADA_GEOJSON_URL } from "@/generated/geojson-assets";
 import {
     Accordion,
     AccordionContent,
@@ -38,43 +39,45 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
-    getAreaBonusScores,
-    isAreaBonusVisible,
     type AreaBonusScore,
+    type SeasonFourScore,
 } from "./area-bonus-data";
-import { getActiveChallenge, getFailedChallenges } from "./challenge-data";
+import type {
+    ActiveChallenge as ActiveChallengeData,
+    FailedChallenge,
+    SeasonFourChallengeState,
+} from "./challenge-data";
 import { HandDrawer } from "./hand-drawer";
+import type { Hand, SeasonFourHands } from "./hand-data";
 import {
     getPreviousStateClaim,
-    getStateClaims,
     type StateClaim,
 } from "./state-claims";
 import { seasonFourTeamIds, seasonFourTeams, type TeamId } from "./team-data";
 
-const CANADA_GEOJSON = "/geojson/canada.geojson";
-const FINAL_SCORE_REVEALED_AT = 40 * 60 + 50;
-
-
 type ClaimsCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    challenges: SeasonFourChallengeState;
+    claimedStates: ReadonlyMap<string, StateClaim>;
+    hands: SeasonFourHands;
+    score: SeasonFourScore;
 };
 
-export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
+export function ClaimsCard({
+    challenges,
+    claimedStates,
+    hands,
+    score,
+}: ClaimsCardProps) {
     const [expandedState, setExpandedState] = useState<string | null>(null);
     const usStatesGeoJson = useUsStatesGeoJson();
-    const isFinalScore = isFinalScoreVisible(episodeSlug, currentTime);
-    const claims = useMemo(
-        () => getStateClaims(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
+    const isFinalScore = score.phase === "final";
     const statesByTeam = useMemo(() => {
         const result: Record<TeamId, StateClaim[]> = { "sam-brian": [], "ben-adam": [] };
-        for (const claim of claims.values()) result[claim.team].push(claim);
+        for (const claim of claimedStates.values()) result[claim.team].push(claim);
         result["sam-brian"].sort(compareClaims);
         result["ben-adam"].sort(compareClaims);
         return result;
-    }, [claims]);
+    }, [claimedStates]);
 
     return (
         <section className="border-paper/25 bg-panel @container flex min-h-0 w-full flex-col overflow-hidden rounded-lg border" aria-labelledby="claims-title">
@@ -88,21 +91,16 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                     zoom={1.55}
                     minZoom={1.25}
                     maxZoom={5}
-                    attributionControl={false}
                     dragRotate={false}
                     touchPitch={false}
                 >
                     <ScoreboardMapLayers
-                        claims={claims}
+                        claims={claimedStates}
                         usStatesGeoJson={usStatesGeoJson}
                     />
                 </Map>
             </div>
-            <Score
-                episodeSlug={episodeSlug}
-                currentTime={currentTime}
-                claimsByTeam={statesByTeam}
-            />
+            <Score hands={hands} score={score} />
             <div className="border-paper/20 grid flex-1 border-t md:grid-cols-2">
                 {seasonFourTeamIds.map((team, index) => (
                     <article
@@ -112,8 +110,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
                         {!isFinalScore && (
                             <div className="border-paper/15 border-b p-4 sm:p-5">
                                 <ActiveChallenge
-                                    episodeSlug={episodeSlug}
-                                    currentTime={currentTime}
+                                    challenge={challenges[team].active}
                                     team={team}
                                 />
                             </div>
@@ -128,8 +125,7 @@ export function ClaimsCard({ episodeSlug, currentTime }: ClaimsCardProps) {
 
                         <div className="border-paper/15 border-t">
                             <FailedChallenges
-                                episodeSlug={episodeSlug}
-                                currentTime={currentTime}
+                                challenges={challenges[team].failed}
                                 expandedState={expandedState}
                                 onExpandedStateChange={setExpandedState}
                                 team={team}
@@ -181,7 +177,7 @@ function ScoreboardMapLayers({
         <>
             <MapGeoJSON
                 id="season-four-canada"
-                data={CANADA_GEOJSON}
+                data={CANADA_GEOJSON_URL}
                 fillPaint={{
                     "fill-color": [
                         "case",
@@ -251,18 +247,16 @@ function compareClaims(a: StateClaim, b: StateClaim) {
 }
 
 function Score({
-    claimsByTeam,
-    episodeSlug,
-    currentTime,
+    hands,
+    score,
 }: {
-    claimsByTeam: Record<TeamId, StateClaim[]>;
-    episodeSlug: string;
-    currentTime: number;
+    hands: SeasonFourHands;
+    score: SeasonFourScore;
 }) {
-    const isFinalScore = isFinalScoreVisible(episodeSlug, currentTime);
+    const isFinalScore = score.phase === "final";
 
-    if (isAreaBonusVisible(episodeSlug, currentTime)) {
-        const scores = getAreaBonusScores(claimsByTeam);
+    if (score.phase !== "state-count") {
+        const scores = score.byTeam;
 
         return (
             <div
@@ -282,15 +276,13 @@ function Score({
                     </div>
                 )}
                 <AreaBonusTeamScore
-                    episodeSlug={episodeSlug}
-                    currentTime={currentTime}
+                    hand={hands["sam-brian"]}
                     isFinalScore={isFinalScore}
                     score={scores["sam-brian"]}
                     team="sam-brian"
                 />
                 <AreaBonusTeamScore
-                    episodeSlug={episodeSlug}
-                    currentTime={currentTime}
+                    hand={hands["ben-adam"]}
                     isFinalScore={isFinalScore}
                     score={scores["ben-adam"]}
                     team="ben-adam"
@@ -301,8 +293,8 @@ function Score({
         );
     }
 
-    const samBrian = claimsByTeam["sam-brian"].length;
-    const benAdam = claimsByTeam["ben-adam"].length;
+    const samBrian = score.byTeam["sam-brian"].states;
+    const benAdam = score.byTeam["ben-adam"].states;
 
     return (
         <div className="border-paper/20 relative grid grid-cols-2 border-t" aria-label={`Score: Sam and Brian ${samBrian}, Ben and Adam ${benAdam}`}>
@@ -319,7 +311,7 @@ function Score({
                             Sam &amp; Brian
                         </span>
                     </div>
-                    <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team="sam-brian" />
+                    <HandDrawer hand={hands["sam-brian"]} team="sam-brian" />
                 </div>
                 <span className="text-center font-display text-4xl leading-none font-bold sm:text-5xl">
                     {samBrian}
@@ -341,7 +333,7 @@ function Score({
                         </span>
                         <span className="size-3 shrink-0" style={{ backgroundColor: seasonFourTeams["ben-adam"].color }} />
                     </div>
-                    <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team="ben-adam" />
+                    <HandDrawer hand={hands["ben-adam"]} team="ben-adam" />
                 </div>
             </div>
             <span className="bg-paper/25 absolute top-1/2 left-1/2 h-10 w-px -translate-x-1/2 -translate-y-1/2" aria-hidden="true" />
@@ -350,13 +342,13 @@ function Score({
 }
 
 function AreaBonusTeamScore({
-    currentTime,
-    episodeSlug,
+    hand,
     isFinalScore,
     reverse = false,
     score,
     team,
-}: ClaimsCardProps & {
+}: {
+    hand: Hand;
     isFinalScore: boolean;
     reverse?: boolean;
     score: AreaBonusScore;
@@ -382,7 +374,7 @@ function AreaBonusTeamScore({
                     <span className="text-paper font-bold tabular-nums">{formatArea(score.area)}</span> sq mi
                 </p>
                 {!isFinalScore && (
-                    <HandDrawer episodeSlug={episodeSlug} currentTime={currentTime} team={team} />
+                    <HandDrawer hand={hand} team={team} />
                 )}
             </div>
             {!reverse && <ScoreTotal isFinalScore={isFinalScore} score={score} />}
@@ -438,14 +430,6 @@ function getAreaBonusAriaLabel(
 
 function formatArea(area: number) {
     return new Intl.NumberFormat("en-US").format(area);
-}
-
-function isFinalScoreVisible(episodeSlug: string, currentTime: number) {
-    return compareTimestamps(
-        seasonFour,
-        { episode: episodeSlug, at: currentTime },
-        { episode: "finale", at: FINAL_SCORE_REVEALED_AT },
-    ) >= 0;
 }
 
 type ClaimedStatesProps = {
@@ -582,9 +566,13 @@ function DisclosureEvent({
     );
 }
 
-function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & { team: TeamId }) {
-    const challenge = getActiveChallenge(episodeSlug, currentTime, team);
-
+function ActiveChallenge({
+    challenge,
+    team,
+}: {
+    challenge: ActiveChallengeData | null;
+    team: TeamId;
+}) {
     if (!challenge) {
         return (
             <div className="border-paper/20 bg-paper/4 flex min-h-16 items-center justify-between gap-4 rounded-lg border px-4 py-3">
@@ -600,7 +588,7 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
 
     return (
         <Collapsible
-            key={`${challenge.episode}:${challenge.title}`}
+            key={`${challenge.start.episode}:${challenge.title}`}
             className="border-paper/20 bg-paper/4 rounded-lg border"
             style={{ borderColor: `color-mix(in srgb, ${seasonFourTeams[team].color} 44%, transparent)` }}
         >
@@ -636,14 +624,16 @@ function ActiveChallenge({ episodeSlug, currentTime, team }: ClaimsCardProps & {
 }
 
 function FailedChallenges({
-    episodeSlug,
-    currentTime,
+    challenges,
     expandedState,
     onExpandedStateChange,
     team,
-}: ClaimsCardProps & Omit<ClaimedStatesProps, "claims">) {
-    const challenges = getFailedChallenges(episodeSlug, currentTime, team);
-
+}: {
+    challenges: readonly FailedChallenge[];
+    expandedState: string | null;
+    onExpandedStateChange: (state: string | null) => void;
+    team: TeamId;
+}) {
     return (
         <div>
             <h3

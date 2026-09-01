@@ -4,6 +4,7 @@ import type MapLibreGL from "maplibre-gl";
 import type { Position } from "geojson";
 import { useEffect, useId, useMemo } from "react";
 import { Check, Hexagon, LockKeyhole, Star } from "lucide-react";
+import { CANADA_GEOJSON_URL } from "@/generated/geojson-assets";
 import {
     Accordion,
     AccordionContent,
@@ -51,7 +52,6 @@ import {
     type TeamId,
 } from "./team-data";
 
-const CANADA_GEOJSON = "/geojson/canada.geojson";
 const PUBLIC_HAND_SIZE = 6;
 const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
 const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
@@ -111,7 +111,6 @@ export function GameBoardCard({
                     zoom={1.55}
                     minZoom={1.25}
                     maxZoom={5}
-                    attributionControl={false}
                     dragRotate={false}
                     touchPitch={false}
                 >
@@ -235,7 +234,7 @@ function GameBoardMapLayers({
         <>
             <MapGeoJSON
                 id="season-eighteen-canada"
-                data={CANADA_GEOJSON}
+                data={CANADA_GEOJSON_URL}
                 interactive={Boolean(canadaStatus)}
                 fillPaint={{
                     "fill-color": canadaStatus

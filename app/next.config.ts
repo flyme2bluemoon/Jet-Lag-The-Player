@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDevelopment = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
     reactCompiler: true,
     images: {
@@ -8,6 +10,14 @@ const nextConfig: NextConfig = {
         minimumCacheTTL: 31_536_000,
     },
     async headers() {
+        const geoJsonAssetHeaders = [
+            {
+                key: "Cache-Control",
+                value: isDevelopment
+                    ? "no-store"
+                    : "public, max-age=31536000, immutable",
+            },
+        ];
         const immutableAssetHeaders = [
             {
                 key: "Cache-Control",
@@ -18,7 +28,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: "/geojson/:path*",
-                headers: immutableAssetHeaders,
+                headers: geoJsonAssetHeaders,
             },
             {
                 source: "/thumbnails/:path*",

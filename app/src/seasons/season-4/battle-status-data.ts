@@ -1,42 +1,51 @@
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps, isTimestampInRange } from "@/lib/timestamps";
-import { seasonFourCards, type ChallengeCard } from "./hand-data";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+    isTimestampInRange,
+} from "@/lib/timestamps";
+import { seasonFourCards, type ChallengeCard } from "./challenge-card-data";
 import type { TeamId } from "./team-data";
+import type { SeasonFourEpisodeTimestamp } from "./types";
 
-export type BattlePhase = "countdown" | "active" | "concluded";
-
-export type BattleStatus = {
+type BattleStatusBase = {
     state: string;
-    phase: BattlePhase;
     attacker: TeamId;
     defender: TeamId;
-    challenge?: string;
-    description?: string;
-    winner?: TeamId;
 };
 
-type EpisodeSlug = (typeof seasonFour.episodes)[number]["slug"];
+export type BattleStatus = BattleStatusBase & (
+    | { phase: "countdown" }
+    | {
+        phase: "active";
+        challenge: string;
+        description: string;
+    }
+    | {
+        phase: "concluded";
+        challenge: string;
+        description: string;
+        winner: TeamId;
+    }
+);
 
-type VideoTimestamp = {
-    episode: EpisodeSlug;
-    at: number;
-};
+export type BattlePhase = BattleStatus["phase"];
 
 type BattleChallengeCard = ChallengeCard & {
     kind: "battle";
 };
 
-export type BattleDefinition = {
+type BattleDefinition = {
     state: string;
     attacker: TeamId;
     defender: TeamId;
     challenge: BattleChallengeCard;
     description: string;
     winner: TeamId;
-    declared: VideoTimestamp;
-    revealed: VideoTimestamp;
-    concluded: VideoTimestamp;
-    hidden: VideoTimestamp;
+    declared: SeasonFourEpisodeTimestamp;
+    revealed: SeasonFourEpisodeTimestamp;
+    concluded: SeasonFourEpisodeTimestamp;
+    hidden: SeasonFourEpisodeTimestamp;
 };
 
 /** Authoritative records for every Season 4 battle and its lifecycle. */
@@ -79,45 +88,66 @@ export const seasonFourBattles: BattleDefinition[] = [
     },
 ];
 
-/** Returns the battle state visible at a given point in the Season 4 videos. */
-export function getBattleStatus(
-    episodeSlug: string,
-    currentTime: number,
-): BattleStatus | undefined {
-    if (!seasonFour.episodes.some((episode) => episode.slug === episodeSlug)) {
-        return undefined;
-    }
+const battleChangeBoundaries = seasonFourBattles.flatMap(
+    ({ declared, revealed, concluded, hidden }) => [
+        declared,
+        revealed,
+        concluded,
+        hidden,
+    ],
+);
 
-    const currentTimestamp = { episode: episodeSlug, at: currentTime };
-    const battle = seasonFourBattles.find(
-        (candidate) => isTimestampInRange(
+/** Returns the Battle visible at a given Season 4 Episode timestamp. */
+export const getBattleStatus = createTimestampProjection({
+    season: seasonFour,
+    boundaries: battleChangeBoundaries,
+    project: (timestamp): BattleStatus | null => {
+        const battle = seasonFourBattles.find(
+            (candidate) => isTimestampInRange(
+                seasonFour,
+                timestamp,
+                candidate.declared,
+                candidate.hidden,
+            ),
+        );
+
+        if (!battle) return null;
+
+        const isRevealed = compareTimestamps(
             seasonFour,
-            currentTimestamp,
-            candidate.declared,
-            candidate.hidden,
-        ),
-    );
+            timestamp,
+            battle.revealed,
+        ) >= 0;
+        const isConcluded = compareTimestamps(
+            seasonFour,
+            timestamp,
+            battle.concluded,
+        ) >= 0;
 
-    if (!battle) return undefined;
+        const participants = {
+            state: battle.state,
+            attacker: battle.attacker,
+            defender: battle.defender,
+        };
 
-    const isRevealed = compareTimestamps(
-        seasonFour,
-        currentTimestamp,
-        battle.revealed,
-    ) >= 0;
-    const isConcluded = compareTimestamps(
-        seasonFour,
-        currentTimestamp,
-        battle.concluded,
-    ) >= 0;
+        if (!isRevealed) {
+            return { ...participants, phase: "countdown" };
+        }
 
-    return {
-        state: battle.state,
-        phase: isConcluded ? "concluded" : isRevealed ? "active" : "countdown",
-        attacker: battle.attacker,
-        defender: battle.defender,
-        challenge: isRevealed ? battle.challenge.title : undefined,
-        description: isRevealed ? battle.description : undefined,
-        winner: isConcluded ? battle.winner : undefined,
-    };
-}
+        const challenge = {
+            challenge: battle.challenge.title,
+            description: battle.description,
+        };
+
+        if (!isConcluded) {
+            return { ...participants, ...challenge, phase: "active" };
+        }
+
+        return {
+            ...participants,
+            ...challenge,
+            phase: "concluded",
+            winner: battle.winner,
+        };
+    },
+});

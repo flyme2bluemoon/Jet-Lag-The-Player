@@ -10,23 +10,16 @@ import {
     DrawerTitle,
     DrawerTrigger,
 } from "@/components/ui/drawer";
-import { getCurrentHand, type ChallengeCard } from "./hand-data";
-import { seasonFourStateClaims } from "./state-claims";
+import type { ChallengeCard } from "./challenge-card-data";
+import type { Hand } from "./hand-data";
 import { seasonFourTeams, type TeamId } from "./team-data";
 
 type HandDrawerProps = {
-    episodeSlug: string;
-    currentTime: number;
+    hand: Hand;
     team: TeamId;
 };
 
-export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) {
-    const hand = getCurrentHand(
-        episodeSlug,
-        currentTime,
-        team,
-        seasonFourStateClaims,
-    );
+export function HandDrawer({ hand, team }: HandDrawerProps) {
     const teamDetails = seasonFourTeams[team];
 
     return (
@@ -35,7 +28,7 @@ export function HandDrawer({ episodeSlug, currentTime, team }: HandDrawerProps) 
                 <Button
                     variant="outline"
                     size="sm"
-                    className="border-paper/25 bg-paper/4 text-paper hover:bg-paper hover:text-ink h-8 gap-2 rounded-md px-3 font-display text-sm leading-none font-bold uppercase"
+                    className="border-paper/25 bg-paper/4 text-paper hover:bg-paper hover:text-ink dark:bg-paper/4 dark:hover:bg-paper h-8 gap-2 rounded-md px-3 font-display text-sm leading-none font-bold uppercase"
                     aria-label={`View ${teamDetails.name}'s current hand`}
                 >
                     <WalletCards className="size-3.5" aria-hidden="true" />

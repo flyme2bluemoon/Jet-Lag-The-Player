@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { isReleasedEpisode, type Episode } from "@/data/season-pages";
+import { isReleasedEpisode, type Episode } from "@/data/seasons";
 
 type EpisodeSwitcherProps = {
   seasonSlug: string;

@@ -20,6 +20,7 @@ export function SeasonEighteenDashboard({
     const [currentTime, setCurrentTime] = useState(0);
     return (
         <DashboardGrid
+            narrowLead="right"
             wideColumnRatio={WIDE_COLUMN_RATIO}
             video={
                 <YouTubePlayer

@@ -1,24 +1,18 @@
 import { seasonFour } from "@/data/season-4";
-import { compareTimestamps } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+} from "@/lib/timestamps";
 import { seasonFourBattles } from "./battle-status-data";
-import { seasonFourCards, type ChallengeCard } from "./hand-data";
+import { seasonFourCards, type ChallengeCard } from "./challenge-card-data";
 import type { TeamId } from "./team-data";
+import type { SeasonFourEpisodeTimestamp } from "./types";
 
-export type StateClaim = {
-    episode: string;
-    at: number;
+export type StateClaim = SeasonFourEpisodeTimestamp & {
     state: string;
     team: TeamId;
     challenge: ChallengeCard;
 };
-
-export const seasonFourEpisodeOrder = [
-    "episode-1",
-    "episode-2",
-    "episode-3",
-    "episode-4",
-    "finale",
-] as const;
 
 // Claim times are taken from the timestamped Season 4 episode transcripts.
 // A later event for the same state becomes its current claim. This covers both
@@ -58,48 +52,41 @@ const battleStateClaims: StateClaim[] = seasonFourBattles.map((battle) => ({
     challenge: battle.challenge,
 }));
 
-export const seasonFourStateClaims: StateClaim[] = [
+export const seasonFourStateClaims: readonly StateClaim[] = [
     ...standardStateClaims,
     ...battleStateClaims,
-].sort((left, right) => compareTimestamps(seasonFour, left, right));
+].toSorted((left, right) => compareTimestamps(seasonFour, left, right));
 
-const stateClaimsSnapshotCache = new Map<
-    number,
-    ReadonlyMap<string, StateClaim>
->();
-const emptyStateClaims = new Map<string, StateClaim>();
+const stateClaimBoundaries = seasonFourStateClaims.map(
+    ({ episode, at }) => ({ episode, at }),
+);
 
-export function getStateClaims(
-    episode: string,
-    currentTime: number,
-): ReadonlyMap<string, StateClaim> {
-    if (!seasonFourEpisodeOrder.includes(
-        episode as (typeof seasonFourEpisodeOrder)[number],
-    )) {
-        return emptyStateClaims;
-    }
+type StateClaimState = {
+    claimedStates: ReadonlyMap<string, StateClaim>;
+    historyByTeam: Readonly<Record<TeamId, readonly StateClaim[]>>;
+};
 
-    const currentTimestamp = { episode, at: currentTime };
-    const revision = seasonFourStateClaims.reduce(
-        (count, claim) => count + Number(
-            compareTimestamps(seasonFour, claim, currentTimestamp) <= 0,
-        ),
-        0,
-    );
-    const cachedClaims = stateClaimsSnapshotCache.get(revision);
-    if (cachedClaims) return cachedClaims;
+export const getStateClaimState = createTimestampProjection({
+    season: seasonFour,
+    boundaries: stateClaimBoundaries,
+    project: (timestamp): StateClaimState => {
+        const history = seasonFourStateClaims.filter((claim) =>
+            compareTimestamps(seasonFour, claim, timestamp) <= 0
+        );
+        const historyByTeam: Record<TeamId, StateClaim[]> = {
+            "sam-brian": [],
+            "ben-adam": [],
+        };
+        const claimedStates = new Map<string, StateClaim>();
 
-    const claims = new Map<string, StateClaim>();
-
-    for (const claim of seasonFourStateClaims) {
-        if (compareTimestamps(seasonFour, claim, currentTimestamp) <= 0) {
-            claims.set(claim.state, claim);
+        for (const claim of history) {
+            historyByTeam[claim.team].push(claim);
+            claimedStates.set(claim.state, claim);
         }
-    }
 
-    stateClaimsSnapshotCache.set(revision, claims);
-    return claims;
-}
+        return { claimedStates, historyByTeam };
+    },
+});
 
 export function getPreviousStateClaim(claim: StateClaim) {
     let previousClaim: StateClaim | undefined;

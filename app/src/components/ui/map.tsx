@@ -1,6 +1,10 @@
 "use client";
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from "maplibre-gl";
+import MapLibreGL, {
+  type MarkerOptions,
+  type PaddingOptions,
+  type PopupOptions,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type * as GeoJSON from "geojson";
 import {
@@ -213,7 +217,10 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Show a loading indicator on the map */
   loading?: boolean;
-} & Omit<MapLibreGL.MapOptions, "container" | "style">;
+} & Omit<
+  MapLibreGL.MapOptions,
+  "attributionControl" | "container" | "style"
+>;
 
 function DefaultLoader() {
   return (
@@ -269,6 +276,12 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   });
 
   const stableStyles = useStableValue(styles);
+  const usesCartoBasemap = !blank && (
+    !stableStyles
+    || (resolvedTheme === "dark"
+      ? stableStyles.dark === undefined
+      : stableStyles.light === undefined)
+  );
 
   const mapStyles = useMemo(() => {
     // Explicit styles win. Otherwise `blank` opts into the transparent
@@ -300,9 +313,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       container: containerRef.current,
       style: initialStyle,
       renderWorldCopies: false,
-      attributionControl: {
-        compact: true,
-      },
+      attributionControl: false,
       ...props,
       ...viewport,
     });
@@ -420,10 +431,38 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
         {(!isLoaded || loading) && <DefaultLoader />}
         {/* SSR-safe: children render only when map is loaded on client */}
         {mapInstance && children}
+        {usesCartoBasemap && <CartoMapAttribution />}
       </div>
     </MapContext.Provider>
   );
 });
+
+function CartoMapAttribution() {
+  const linkClassName = "underline underline-offset-2 hover:text-foreground focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none";
+
+  return (
+    <div className="bg-background/85 text-muted-foreground absolute right-0 bottom-0 z-10 px-1.5 py-0.5 font-sans text-2xs leading-tight shadow-sm backdrop-blur-xs">
+      © {" "}
+      <a
+        className={linkClassName}
+        href="https://carto.com/attribution/"
+        rel="noreferrer"
+        target="_blank"
+      >
+        CARTO
+      </a>
+      {" · © "}
+      <a
+        className={linkClassName}
+        href="https://www.openstreetmap.org/copyright"
+        rel="noreferrer"
+        target="_blank"
+      >
+        OpenStreetMap contributors
+      </a>
+    </div>
+  );
+}
 
 type MarkerContextValue = {
   marker: MapLibreGL.Marker;
@@ -840,11 +879,17 @@ type MapControlsProps = {
   position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   /** Show zoom in/out buttons (default: true) */
   showZoom?: boolean;
-  /** Initial camera position used by the reset-view button. Omit to hide it. */
-  resetView?: {
-    center: [number, number];
-    zoom: number;
-  };
+  /** Camera target used by the reset-view button. Omit to hide it. */
+  resetView?:
+    | {
+        center: [number, number];
+        zoom: number;
+      }
+    | {
+        bounds: [[number, number], [number, number]];
+        padding?: number | PaddingOptions | ((map: MapLibreGL.Map) => number | PaddingOptions);
+        maxZoom?: number;
+      };
   /** Show compass button to reset bearing (default: false) */
   showCompass?: boolean;
   /** Show locate button to find user's location (default: false) */
@@ -925,6 +970,18 @@ function MapControls({
 
   const handleResetView = useCallback(() => {
     if (!map || !resetView) return;
+
+    if ("bounds" in resetView) {
+      map.resetNorthPitch({ duration: 0 });
+      map.fitBounds(resetView.bounds, {
+        padding: typeof resetView.padding === "function"
+          ? resetView.padding(map)
+          : resetView.padding ?? 24,
+        maxZoom: resetView.maxZoom,
+        duration: 600,
+      });
+      return;
+    }
 
     map.easeTo({
       center: resetView.center,
@@ -1175,8 +1232,8 @@ type MapRouteProps = {
   width?: number;
   /** Line opacity from 0 to 1 (default: 0.8) */
   opacity?: number;
-  /** Dash pattern [dash length, gap length] for dashed lines */
-  dashArray?: [number, number];
+  /** Dash pattern in line-width units, e.g. [dash, gap] or [gap, dash, gap] to offset the pattern */
+  dashArray?: readonly number[];
   /** Shape applied to each line or dash endpoint (default: round) */
   lineCap?: "butt" | "round";
   /** Callback when the route line is clicked */
@@ -1230,7 +1287,12 @@ function MapRoute({
         "line-color": color,
         "line-width": width,
         "line-opacity": opacity,
-        ...(dashArray && { "line-dasharray": dashArray }),
+        ...(dashArray && {
+          "line-dasharray": [...dashArray],
+          // Without this MapLibre cross-fades between dash patterns, which reads
+          // as flicker when the pattern is updated on every animation frame.
+          "line-dasharray-transition": { duration: 0, delay: 0 },
+        }),
       },
     });
 
@@ -1265,7 +1327,7 @@ function MapRoute({
     map.setPaintProperty(layerId, "line-color", color);
     map.setPaintProperty(layerId, "line-width", width);
     map.setPaintProperty(layerId, "line-opacity", opacity);
-    map.setPaintProperty(layerId, "line-dasharray", dashArray);
+    map.setPaintProperty(layerId, "line-dasharray", dashArray && [...dashArray]);
   }, [isLoaded, map, layerId, color, width, opacity, dashArray]);
 
   useEffect(() => {
@@ -1427,7 +1489,7 @@ function MapGeoJSON<
   const mergedFillPaint = useMemo(
     () =>
       mergeHoverPaint(
-        { "fill-color": defaults.fill, ...(fillPaint || {}) },
+        { "fill-color": defaults.fill, ...fillPaint },
         fillHoverPaint,
       ),
     [defaults.fill, fillPaint, fillHoverPaint],
@@ -1436,7 +1498,7 @@ function MapGeoJSON<
     () => ({
       "line-color": defaults.line,
       "line-width": 0.5,
-      ...(linePaint || {}),
+      ...linePaint,
     }),
     [defaults.line, linePaint],
   );

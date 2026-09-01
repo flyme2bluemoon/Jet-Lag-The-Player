@@ -8,7 +8,6 @@ import {
 import type {
     ResolvedTrackerInterval,
 } from "./tracker-model";
-import type { Coordinate } from "./tracker-routes";
 import type { LocationId } from "./tracker-static";
 import {
     trackerEpisodeRanges,
@@ -61,7 +60,3 @@ export {
     cropPath,
     getPointAlongPath,
 };
-
-export function getStationaryCoordinate(interval: TrackerInterval): Coordinate | null {
-    return interval.kind === "stationary" ? interval.coordinate : null;
-}

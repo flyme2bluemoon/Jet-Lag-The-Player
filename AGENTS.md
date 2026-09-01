@@ -1,55 +1,50 @@
 # Jet Lag: The Player
 
+## Domain language
+
+When naming or changing project-specific domain concepts, follow `CONTEXT-MAP.md` to the context that owns the topic. Use its canonical terms and flag conflicts instead of inventing synonyms.
+
 ## Game reference
 
 Jet Lag: The Game is a travel game show in which teams or individual players compete while traveling through a region.
 
 There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use the teams below when creating season graphics. The colors refer to the color palette below. In individual games, “team” and “player” may be used interchangeably.
 
-| Season | Game                          | Team 1                      | Team 2                   | Team 3      |
-| -----: | ----------------------------- | --------------------------- | ------------------------ | ----------- |
-|      1 | Connect Four Across America   | Sam & Brian                 | Ben & Adam               |             |
-|      2 | Circumnavigation              | Sam & Joseph                | Ben & Adam               |             |
-|      3 | Tag Eur It                    | Sam                         | Adam                     | Ben         |
-|      4 | Battle 4 America              | Sam & Brian (jet-lag-green) | Ben & Adam (jet-lag-red) |             |
-|      5 | Race To The End Of The World  | Sam & Toby                  | Ben & Adam               |             |
-|      6 | Capture The Flag Across Japan | Sam & Scotty                | Ben & Adam               |             |
-|      7 | Tag Eur It 2                  | Sam                         | Adam                     | Ben         |
-|      8 | Arctic Escape                 | Sam & Michelle              | Ben & Adam               |             |
-|      9 | Hide + Seek                   | Sam                         | Adam                     | Ben         |
-|     10 | AU$TRALIA                     | Sam & Toby                  | Ben & Adam               |             |
-|     11 | Tag Eur It 3                  | Sam                         | Adam                     | Ben         |
-|     12 | Hide + Seek: Japan            | Sam                         | Adam                     | Ben         |
-|     13 | Schengen Showdown             | Sam & Tom                   | Ben & Adam               |             |
-|   13.5 | Hide and Seek Across NYC      | Sam & Amy                   | Adam & Ben               |             |
-|     14 | SnaKe                         | Sam                         | Adam                     | Ben         |
-|     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian |
-|     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben         |
-|     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |             |
-|     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |             |
+| Season | Game                          | Team 1                      | Team 2                   | Team 3            |
+| -----: | ----------------------------- | --------------------------- | ------------------------ | ----------------- |
+|      1 | Connect Four Across America   | Sam & Brian                 | Ben & Adam               |                   |
+|      2 | Circumnavigation              | Sam & Joseph                | Ben & Adam               |                   |
+|      3 | Tag Eur It                    | Sam                         | Adam                     | Ben               |
+|      4 | Battle 4 America              | Sam & Brian (jet-lag-green) | Ben & Adam (jet-lag-red) |                   |
+|      5 | Race To The End Of The World  | Sam & Toby                  | Ben & Adam               |                   |
+|      6 | Capture The Flag Across Japan | Sam & Scotty                | Ben & Adam               |                   |
+|      7 | Tag Eur It 2                  | Sam                         | Adam                     | Ben               |
+|      8 | Arctic Escape                 | Sam & Michelle              | Ben & Adam               |                   |
+|      9 | Hide + Seek                   | Sam (jet-lag-yellow)        | Adam (jet-lag-green)     | Ben (jet-lag-red) |
+|     10 | AU$TRALIA                     | Sam & Toby                  | Ben & Adam               |                   |
+|     11 | Tag Eur It 3                  | Sam                         | Adam                     | Ben               |
+|     12 | Hide + Seek: Japan            | Sam                         | Adam                     | Ben               |
+|     13 | Schengen Showdown             | Sam & Tom                   | Ben & Adam               |                   |
+|   13.5 | Hide and Seek Across NYC      | Sam & Amy                   | Adam & Ben               |                   |
+|     14 | SnaKe                         | Sam                         | Adam                     | Ben               |
+|     15 | Tag: All Stars                | Sam & Toby                  | Michelle & Adam          | Ben & Brian       |
+|     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben               |
+|     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |                   |
+|     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |                   |
 
-For Season 4 challenge data, use the [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
-For Season 18 challenge data, use the [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
+For Season 4 challenge data, check out [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
+For Season 9 question bank data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Questions.
+For Season 9 curse data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Curses.
+For Season 18 challenge data, check out [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
 
 ## Repository layout
 
-- `app/` is the web application: a Next.js 16, React 19, TypeScript, and Tailwind CSS project. Run its package scripts from this directory with pnpm (`pnpm dev`, `pnpm lint`, `pnpm build`, and `pnpm start`).
+- `app/` is the web application: a Next.js 16, React 19, TypeScript, and Tailwind CSS project. Run its package scripts from this directory with pnpm (`pnpm dev`, `pnpm lint`, `pnpm test`, `pnpm build`, and `pnpm start`).
 - `transcript_downloader/` is a standalone Python utility that downloads English YouTube caption tracks for the listed seasons. It never downloads video or audio; it saves WebVTT captions, readable text transcripts, and YouTube metadata under `transcript_downloader/transcripts/`, which is generated and gitignored. See `transcript_downloader/README.md` for usage and options. Run it from that directory using its existing `.venv` virtual environment; install dependencies through that environment only when needed.
 
-## Playwright browser checks
+## Development servers
 
-Use the bundled Playwright CLI wrapper for browser automation. Do not run it from the repository or `app/`: the CLI writes `.playwright-cli/` artifacts to its working directory. Instead, run it from a temporary directory while targeting the local application:
-
-```sh
-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
-mkdir -p /tmp/jet-lag-playwright
-cd /tmp/jet-lag-playwright
-"$PWCLI" open http://localhost:3000
-"$PWCLI" snapshot
-```
-
-Use a fresh snapshot before interacting with element references, re-snapshot after navigation or major UI changes, and close the browser session when finished with `"$PWCLI" close`. Keep any screenshots, PDFs, and traces in `/tmp/jet-lag-playwright`; do not add test artifacts to the repository.
+Reuse an existing development server and rely on hot reloading for code changes. Never stop or kill a running development server. If a restart is unavoidable, leave the existing server running, start a separate server on a new port, and tell the user which port you used and that they should restart their own development server.
 
 ## Dashboard conventions
 
@@ -66,37 +61,44 @@ Use a fresh snapshot before interacting with element references, re-snapshot aft
 
 When adding a reusable helper function or component, document its purpose, import path, and key usage constraints in this section so future work can discover and use it consistently.
 
-To add a season:
+To add a Season to the archive, add its canonical slug, number, name, and YouTube playlist URL to `app/src/data/seasons.ts`. Store its cover at `app/public/thumbnails/<season-slug>/cover.jpg`.
 
-1. Add episode metadata in `app/src/data/season-<n>.ts`.
-2. Register it in `app/src/data/season-pages.ts`.
-3. Add its branch to `EpisodeDashboard` in `app/src/components/episode/episode-dashboard.tsx`.
+To add a Live dashboard:
 
-Routes, static params, episode navigation, and page metadata are then provided automatically.
+1. Add its Episode metadata in `app/src/data/season-<n>.ts`.
+2. Attach that data to the Season's `liveDashboard` field in `app/src/data/seasons.ts`. Add structured attribution there when the dashboard incorporates attributed data.
+3. Add the corresponding literal dynamic import to `app/src/components/episode/dashboard-registry.ts`.
+
+The `liveDashboard` field makes the Season supported. The dashboard registry is exhaustive, so type checking fails when a Supported season lacks a component. Routes, static params, Episode navigation, and page metadata are derived from the catalog.
 
 - Use `cn(...classes)` from `@/lib/utils` whenever a component accepts a `className` override.
 - Use `DashboardGrid` from `@/components/episode/dashboard-grid` for responsive dashboard layouts. Supply the `video`, `left`, `middle`, and `right` lanes rather than positioning columns in season code. It is single-column on small screens, uses a 7/5 video/sidebar split at `lg`, and becomes three columns at Tailwind's `2xl` viewport breakpoint (96rem/1536px), where the video spans the first two columns and every other lane remains one column wide. Set the wide tracks with a stable, positive `wideColumnRatio` tuple ordered as `[left, middle, right]`; it defaults to `[1, 1.15, 1]`.
 - Use `TeamDefinition`, `TailwindThemeColor`, and `MapHexColor` from `@/components/episode/types` for team display data. UI colors must be Tailwind theme-variable references; the separate hex value is only for APIs such as MapLibre that cannot resolve CSS custom properties.
 - Use `TeamLedgerCard` from `@/components/episode/team-ledger-card` for timestamped balances shared by multiple teams. Supply the season, ordered team IDs, team names/colors, visible ledger items, and season-specific balance/history renderers; items without a `team` apply to every team.
 - Use `TeamLedgerHistoryItem` from `@/components/episode/team-ledger-history-item` for shared ledger history rows. Use `AnimatedNumber` from `@/components/episode/animated-number` for reduced-motion-aware numeric transitions; supply a `formatValue` callback and appropriate accessibility attributes. Use `formatBudgetAmount` from `@/lib/formatters` for two-decimal budget formatting.
-- `YouTubePlayer` from `@/components/episode/youtube-player` owns the IFrame Player API lifecycle. Keep `currentTime` state in the season dashboard, update it through `onTimeChange` (every 250 ms), and pass it to time-aware cards. Never create one player per card.
+- `YouTubePlayer` from `@/components/episode/youtube-player` owns the IFrame Player API lifecycle. Keep `currentTime` state in the season dashboard and update it through `onTimeChange` (every 250 ms). When a season has a Game state projector, resolve it once in the dashboard and pass focused values to its cards. Pass the Episode timestamp to a card only when that card owns an independent projection. Never create one player per card.
 - Use `compareTimestamps(season, left, right)` from `@/lib/timestamps` for visibility windows, sorting, and event-derived state across episodes. It compares `{ episode, at }` using `season.episodes` order and throws for an unknown episode.
 - Use `isTimestampInRange(season, current, start, end)` from `@/lib/timestamps` for half-open visibility windows where the start is included and the end is excluded.
 - Use `formatEpisodeLabel(episode)` and `formatTimestamp(seconds)` from `@/lib/timestamps` for compact episode metadata such as `Ep. 1 · 4:05`; episode values should be standard `episode-<n>` slugs or `finale`.
+- Use `createTimestampProjection(...)` from `@/lib/timestamps` when a season derives one coherent Game state from several timestamped facts. Supply change boundaries derived mechanically from the authoritative records and a pure projection callback whose result depends only on those records and the requested Episode timestamp. The helper validates, sorts, and deduplicates boundaries, resolves revisions with binary search, and caches only the latest requested revision. Calls within that revision return the same reference; crossing a boundary or rewinding rederives the value and replaces the cache. Events at the same timestamp share one observable revision without implying a domain relationship.
 - Use `useMapRegionLabel()` from `@/components/episode/map-region-label` for compact map-region names that open immediately on click or after a deliberate hover. Connect its handlers to interactive `MapGeoJSON` layers and render its returned popup inside the same `Map`.
 - `@/seasons/season-18/tracker-map-utils` centralizes Season 18's pure tracker geometry, coordinate bounds, route resolution, colocation checks, and endpoint-label placement. Keep React and MapLibre lifecycle logic in `tracker-card.tsx`; pass resolved coordinate arrays into these helpers.
-- `useUsStatesGeoJson()` and `loadUsStatesGeoJson()` from `@/lib/us-states-geojson` share one client-side fetch and parsed object for `/geojson/us-states.geojson`. Use the hook in React components instead of fetching the file independently; it returns `null` while loading. The asset is cached as immutable, so publish changed geometry under a new filename.
+- Source GeoJSON lives in `app/assets/geojson/`. Run `pnpm generate:geojson` from `app/` to copy content-hashed variants into the ignored `public/geojson/generated/` directory and refresh `@/generated/geojson-assets`. The `build` script runs this automatically; `dev` also watches the source directory and regenerates after changes. Generated GeoJSON uses `no-store` in development and immutable one-year caching in production.
+- `useUsStatesGeoJson()` and `loadUsStatesGeoJson()` from `@/lib/us-states-geojson` share one client-side fetch and parsed object for the generated US states asset. Use the hook in React components instead of fetching the file independently; it returns `null` while loading.
+- `useSwitzerlandGeoJson()` and `loadSwitzerlandGeoJson()` from `@/lib/switzerland-geojson` share one client-side fetch and parsed object for Season 9's generated Switzerland asset. Use the hook instead of importing or fetching the boundary independently; it returns `null` while loading.
+- `useGeoJson<T>(url)` and `loadGeoJson<T>(url)` from `@/lib/geojson` cache static GeoJSON assets by URL for the client session. The hook stores the resolved object in React state, accepts `null` to defer loading, and returns `null` while loading. Keep named dataset helpers when a shared asset benefits from a fixed type and URL.
 - Start accessible controls and disclosures with the shared primitives in `@/components/ui/` (`Button`, `Select`, `Drawer`, `Accordion`, `Collapsible`, and `Skeleton`). Preserve their keyboard and focus-visible behavior when composing them.
 
 ### Maps and travel visuals
 
+- When downloading mapping or geospatial data, record the source, dataset name and version where available, license, required attribution wording and links, and whether the data was modified. If the application incorporates the data or a derived product, add the applicable season-specific attribution to `app/src/components/site-footer.tsx`, preserving any source-required wording or notices. Merely consulting or referencing data for research, validation, guidance, or LLM steering is not equivalent to using it; do not present a referenced-only source as an application data source.
 - `@/components/ui/map` provides MapLibre components: `Map`, `MapGeoJSON`, `MapArc`, `MapRoute`, `MapMarker`, marker popups/tooltips/labels, `MapControls`, and `MapClusterLayer`. Render map children inside `Map`. Use `<Map blank>` for a transparent, tile-free visualization; otherwise use the theme-aware Carto basemap. Set `MapMarker`'s optional `positionTransitionDuration` to interpolate coordinate updates; it defaults to immediate movement and respects reduced-motion preferences.
 - `@/components/ui/map-colors` is the single source for raw MapLibre color literals. Reuse its typed palette and theme maps whenever an API cannot resolve Tailwind CSS variables; do not repeat those hex values in season files.
 - `@/components/ui/flight` provides travel-timeline helpers: `FlightAirport`, `FlightRoute`, `FlightRoutes`, `FlightMultiRoute`, `generateArcGeometry`, and `generateArcCoordinates`. Airport references accept IATA codes or `[longitude, latitude]` tuples. Use `resolveAirport` when coordinates are required and `getAirportInfo` for optional lookup.
 
 ### Time-based data
 
-Store factual events as typed records with `episode` and `at`. Sort and filter them with `compareTimestamps`, and expose focused query functions such as `getVisible…(episodeSlug, currentTime)`. Across all season dashboards, event-derived query functions must return stable cached object, array, and `Map` references while the visible event revision is unchanged; rebuild results only when playback crosses a source-data event boundary so React memoization and imperative consumers such as MapLibre can skip redundant work. Season 4 examples include `state-claims.ts`, `budget-data.ts`, `battle-status-data.ts`, and `hand-data.ts`; reuse the pattern, not that season’s teams, claims, or card rules.
+Store factual event boundaries as typed `EpisodeTimestamp` values and derive indexes, revision boundaries, and projections from those authoritative records. Keep season mechanics in the season module. Projected values must depend only on the requested Episode timestamp and the factual records, so playback, skipping, and rewinding produce the same values. Use one timestamp projection per independently consumed value, rederiving that complete value when playback crosses one of its boundaries. Return stable object, array, and `Map` references while the visible revision is unchanged. Retain at most the latest revision unless a feature has an explicit, bounded need for history.
 
 ## Palette
 

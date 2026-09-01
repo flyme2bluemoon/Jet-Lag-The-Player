@@ -2,9 +2,11 @@
 
 import {
     useEffect,
+    useId,
     useMemo,
     useRef,
     useState,
+    type CSSProperties,
     type ReactNode,
 } from "react";
 
@@ -928,9 +930,11 @@ function TrajectoryRoutes({ states }: { states: ResolvedTeamState[] }) {
 
 function TeamStatus({
     state,
+    isLast,
     onFocus,
 }: {
     state: ResolvedTeamState;
+    isLast: boolean;
     onFocus: () => void;
 }) {
     const team = seasonEighteenTeams[state.event.team];
@@ -940,26 +944,30 @@ function TeamStatus({
             type="button"
             onClick={onFocus}
             aria-label={`Focus map on ${team.name}`}
-            className="flex min-w-0 flex-1 cursor-pointer items-start px-5 py-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-7"
+            className={`hover:bg-paper/5 flex w-full min-w-0 cursor-pointer flex-col items-start px-5 py-5 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-paper sm:px-6 ${isLast ? "" : "border-paper/20 border-b @xl:border-r @xl:border-b-0"}`}
+            style={{
+                backgroundImage: `linear-gradient(110deg, color-mix(in srgb, ${team.color} 14%, transparent), color-mix(in srgb, ${team.color} 4%, transparent))`,
+            }}
         >
-            <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                    <span
-                        aria-hidden="true"
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: team.color }}
-                    />
-                    <p className="wrap-break-word font-heading text-lg font-bold uppercase leading-none text-card-foreground">
-                        {team.name}
-                    </p>
-                </div>
-                <p className="mt-2 whitespace-normal wrap-break-word font-sans text-base font-semibold leading-snug text-card-foreground">
-                    {state.event.status.description}
-                </p>
-                <p className="mt-1 whitespace-normal wrap-break-word font-sans text-sm leading-snug text-muted-foreground">
-                    {state.event.status.location}
-                </p>
+            <div className="flex min-w-0 items-center gap-2">
+                <span
+                    aria-hidden="true"
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: team.color }}
+                />
+                <h3
+                    className="wrap-break-word font-heading text-base leading-none font-bold uppercase"
+                    style={{ color: team.color }}
+                >
+                    {team.name}
+                </h3>
             </div>
+            <p className="wrap-break-word mt-2 font-sans text-base leading-snug font-semibold whitespace-normal">
+                {state.event.status.description}
+            </p>
+            <p className="text-card-meta wrap-break-word mt-1 font-sans text-sm leading-snug whitespace-normal">
+                {state.event.status.location}
+            </p>
         </button>
     );
 }
@@ -969,6 +977,7 @@ export function TrackerCard({
     currentTime,
     className,
 }: TrackerCardProps) {
+    const titleId = useId();
     const trackerTime = clampTrackerTime(
         episodeSlug,
         Math.floor(currentTime / TRACKER_UPDATE_INTERVAL_SECONDS)
@@ -1024,20 +1033,28 @@ export function TrackerCard({
     };
 
     return (
-        <section className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}>
-            <div className="border-b border-border px-5 py-4 sm:px-7">
-                <h2 className="font-heading text-3xl font-bold uppercase tracking-tight text-card-foreground">
+        <section
+            className={cn(
+                "border-paper/25 bg-panel @container w-full overflow-hidden rounded-lg border",
+                className,
+            )}
+            aria-labelledby={titleId}
+        >
+            <header className="border-paper/20 border-b p-6">
+                <h2
+                    id={titleId}
+                    className="font-heading text-3xl leading-none font-bold tracking-tight uppercase"
+                >
                     Tracker
                 </h2>
-            </div>
+            </header>
 
-            <div className="relative h-124 min-h-96 sm:h-144">
+            <div className="relative h-124 sm:h-144">
                 <Map
                     center={mapStage.center}
                     zoom={mapStage.zoom}
                     minZoom={MAP_MIN_ZOOM}
                     maxZoom={16}
-                    attributionControl={false}
                 >
                     <TrackerCamera
                         stage={mapStage}
@@ -1057,11 +1074,15 @@ export function TrackerCard({
                 </Map>
             </div>
 
-            <div className="divide-y divide-border border-t border-border lg:flex lg:divide-x lg:divide-y-0">
-                {teamStates.map((state) => (
+            <div
+                className="border-paper/20 grid grid-cols-1 border-t @xl:grid-cols-[repeat(var(--team-count),minmax(0,1fr))]"
+                style={{ "--team-count": teamStates.length } as CSSProperties}
+            >
+                {teamStates.map((state, index) => (
                     <TeamStatus
                         key={state.event.team}
                         state={state}
+                        isLast={index === teamStates.length - 1}
                         onFocus={() => focusTeam(state)}
                     />
                 ))}

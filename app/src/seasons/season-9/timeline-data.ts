@@ -1,9 +1,28 @@
-import markup from "./episode-1-events.json";
+import markup from "./events.json";
 import { seasonNine } from "@/data/season-9";
-import { compareTimestamps, formatEpisodeLabel, formatTimestamp, type EpisodeTimestamp } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+    formatEpisodeLabel,
+    formatTimestamp,
+    type EpisodeTimestamp,
+} from "@/lib/timestamps";
+import type { SeasonNineEpisodeTimestamp } from "./types";
 
 export type PlayerId = "sam" | "adam" | "ben";
 export type QuestionCategory = "relative" | "radar" | "photo" | "oddball" | "precision" | "unknown";
+
+const TIMELINE_EVENT_TYPES = new Set([
+    "hider-change",
+    "question-asked",
+    "question-response",
+    "question-response-revealed",
+    "curse-purchased",
+    "curse-dice-rolled",
+    "curse-expired",
+    "endgame-started",
+    "run-ended",
+]);
 
 type EventMetadata = {
     hider?: PlayerId;
@@ -25,7 +44,7 @@ type EventMetadata = {
 
 type SeasonNineEvent = {
     id: string;
-    episode: string;
+    episode: SeasonNineEpisodeTimestamp["episode"];
     at: number;
     type: string;
     metadata: EventMetadata;
@@ -75,14 +94,16 @@ export type SeasonNineState = {
     leaderboard: readonly CompletedRun[];
 };
 
-const events = (markup.events as readonly SeasonNineEvent[]).toSorted((left, right) => {
-    const timestampComparison = compareTimestamps(seasonNine, left, right);
-    if (timestampComparison !== 0) return timestampComparison;
+const events = (markup.events as readonly SeasonNineEvent[])
+    .filter((event) => TIMELINE_EVENT_TYPES.has(event.type))
+    .toSorted((left, right) => {
+        const timestampComparison = compareTimestamps(seasonNine, left, right);
+        if (timestampComparison !== 0) return timestampComparison;
 
-    if (left.type === "question-response" && right.type === "question-response-revealed") return -1;
-    if (left.type === "question-response-revealed" && right.type === "question-response") return 1;
-    return 0;
-});
+        if (left.type === "question-response" && right.type === "question-response-revealed") return -1;
+        if (left.type === "question-response-revealed" && right.type === "question-response") return 1;
+        return 0;
+    });
 
 const QUESTION_DESCRIPTIONS: Record<string, string> = {
     longitude: "Is your longitude higher or lower than ours?",
@@ -140,8 +161,15 @@ const RESPONSE_ASSETS: Record<string, string> = {
     "adam_run2_5buildings.jpg": "/season-9/responses/adam_run2_5buildings.jpg",
 };
 
-const stateCache = new Map<string, SeasonNineState>();
-const CURSE_LOG_REVEAL: EpisodeTimestamp = { episode: "episode-1", at: 13 * 60 + 9 };
+const CURSE_LOG_REVEAL: SeasonNineEpisodeTimestamp = {
+    episode: "episode-1",
+    at: 13 * 60 + 9,
+};
+
+const seasonNineStateBoundaries: SeasonNineEpisodeTimestamp[] = [
+    ...events.map((event) => eventTimestamp(event)),
+    CURSE_LOG_REVEAL,
+];
 
 function required<T>(value: T | undefined, field: string): T {
     if (value === undefined) {
@@ -150,7 +178,7 @@ function required<T>(value: T | undefined, field: string): T {
     return value;
 }
 
-function eventTimestamp(event: SeasonNineEvent): EpisodeTimestamp {
+function eventTimestamp(event: SeasonNineEvent): SeasonNineEpisodeTimestamp {
     return { episode: event.episode, at: event.at };
 }
 
@@ -158,18 +186,15 @@ export function formatSeasonNineTimestamp(timestamp: EpisodeTimestamp) {
     return `${formatEpisodeLabel(timestamp.episode)} · ${formatTimestamp(timestamp.at)}`;
 }
 
-export function getSeasonNineState(episodeSlug: string, currentTime: number): SeasonNineState {
+function deriveSeasonNineState(timestamp: SeasonNineEpisodeTimestamp): SeasonNineState {
     const curseLogVisible = compareTimestamps(
         seasonNine,
-        { episode: episodeSlug, at: currentTime },
+        timestamp,
         CURSE_LOG_REVEAL,
     ) >= 0;
     const visibleEvents = events.filter((event) =>
-        compareTimestamps(seasonNine, event, { episode: episodeSlug, at: currentTime }) <= 0,
+        compareTimestamps(seasonNine, event, timestamp) <= 0,
     );
-    const cacheKey = `${episodeSlug}:${visibleEvents.length}:${curseLogVisible}`;
-    const cached = stateCache.get(cacheKey);
-    if (cached) return cached;
 
     let currentHider: PlayerId = "adam";
     let currentRunActive = true;
@@ -292,7 +317,7 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
 
     const leaderboard = completedRuns.toSorted((left, right) => right.durationSeconds - left.durationSeconds);
     const activeCurse = curses.findLast((curse) => curse.active) ?? null;
-    const state: SeasonNineState = {
+    return {
         currentHider,
         currentRunActive,
         currentRunStartedAt,
@@ -304,6 +329,10 @@ export function getSeasonNineState(episodeSlug: string, currentTime: number): Se
         curseLogVisible,
         leaderboard,
     };
-    stateCache.set(cacheKey, state);
-    return state;
 }
+
+export const getSeasonNineState = createTimestampProjection({
+    season: seasonNine,
+    boundaries: seasonNineStateBoundaries,
+    project: deriveSeasonNineState,
+});

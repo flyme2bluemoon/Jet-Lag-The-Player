@@ -137,6 +137,14 @@ describe("getSeasonNineGameState", () => {
         expect(after.seekersTracker).toBe(before.seekersTracker);
     });
 
+    it("preserves the timeline across a seekers-tracker-only change", () => {
+        const before = getSeasonNineGameState(at("episode-1", 388.9));
+        const after = getSeasonNineGameState(at("episode-1", 389));
+
+        expect(after.seekersTracker).not.toBe(before.seekersTracker);
+        expect(after.timeline).toBe(before.timeline);
+    });
+
     it("rederives the same values after rewinding", () => {
         const earlier = getSeasonNineGameState(at("episode-1", 179.9));
         getSeasonNineGameState(at("episode-1", 2178));

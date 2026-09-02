@@ -1,4 +1,4 @@
-import markup from "./episode-1-events.json";
+import markup from "./events.json";
 import { seasonNine } from "@/data/season-9";
 import {
     compareTimestamps,
@@ -11,6 +11,18 @@ import type { SeasonNineEpisodeTimestamp } from "./types";
 
 export type PlayerId = "sam" | "adam" | "ben";
 export type QuestionCategory = "relative" | "radar" | "photo" | "oddball" | "precision" | "unknown";
+
+const TIMELINE_EVENT_TYPES = new Set([
+    "hider-change",
+    "question-asked",
+    "question-response",
+    "question-response-revealed",
+    "curse-purchased",
+    "curse-dice-rolled",
+    "curse-expired",
+    "endgame-started",
+    "run-ended",
+]);
 
 type EventMetadata = {
     hider?: PlayerId;
@@ -82,14 +94,16 @@ export type SeasonNineState = {
     leaderboard: readonly CompletedRun[];
 };
 
-const events = (markup.events as readonly SeasonNineEvent[]).toSorted((left, right) => {
-    const timestampComparison = compareTimestamps(seasonNine, left, right);
-    if (timestampComparison !== 0) return timestampComparison;
+const events = (markup.events as readonly SeasonNineEvent[])
+    .filter((event) => TIMELINE_EVENT_TYPES.has(event.type))
+    .toSorted((left, right) => {
+        const timestampComparison = compareTimestamps(seasonNine, left, right);
+        if (timestampComparison !== 0) return timestampComparison;
 
-    if (left.type === "question-response" && right.type === "question-response-revealed") return -1;
-    if (left.type === "question-response-revealed" && right.type === "question-response") return 1;
-    return 0;
-});
+        if (left.type === "question-response" && right.type === "question-response-revealed") return -1;
+        if (left.type === "question-response-revealed" && right.type === "question-response") return 1;
+        return 0;
+    });
 
 const QUESTION_DESCRIPTIONS: Record<string, string> = {
     longitude: "Is your longitude higher or lower than ours?",

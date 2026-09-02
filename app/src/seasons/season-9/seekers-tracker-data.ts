@@ -1,4 +1,4 @@
-import markup from "./episode-1-events.json";
+import markup from "./events.json";
 import { seasonNine } from "@/data/season-9";
 import {
     compareTimestamps,

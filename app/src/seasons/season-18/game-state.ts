@@ -11,6 +11,10 @@ import {
     type MapFrame,
 } from "./map-frame-data";
 import {
+    getSeasonEighteenScore,
+    type SeasonEighteenScore,
+} from "./score-data";
+import {
     getTrackerState,
     type TrackerState,
 } from "./tracker-data";
@@ -21,6 +25,7 @@ type SeasonEighteenGameState = {
     gameBoard: GameBoardState;
     tracker: TrackerState;
     mapFrame: MapFrame;
+    score: SeasonEighteenScore;
 };
 
 let latestGameState: SeasonEighteenGameState | undefined;
@@ -33,6 +38,7 @@ export function getSeasonEighteenGameState(
     const gameBoard = getGameBoardState(timestamp);
     const tracker = getTrackerState(timestamp);
     const mapFrame = getMapFrame(timestamp);
+    const score = getSeasonEighteenScore(timestamp);
 
     if (
         latestGameState
@@ -40,11 +46,18 @@ export function getSeasonEighteenGameState(
         && latestGameState.gameBoard === gameBoard
         && latestGameState.tracker === tracker
         && latestGameState.mapFrame === mapFrame
+        && latestGameState.score === score
     ) {
         return latestGameState;
     }
 
-    latestGameState = { budgetTransactions, gameBoard, tracker, mapFrame };
+    latestGameState = {
+        budgetTransactions,
+        gameBoard,
+        tracker,
+        mapFrame,
+        score,
+    };
     return latestGameState;
 }
 

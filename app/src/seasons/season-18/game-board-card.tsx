@@ -45,6 +45,7 @@ import {
     type PrivateCardSlot,
     type TeamScore,
 } from "./game-data";
+import type { SeasonEighteenScore } from "./score-data";
 import {
     seasonEighteenTeamIds,
     seasonEighteenTeams,
@@ -54,7 +55,6 @@ import {
 const PUBLIC_HAND_SIZE = 6;
 const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
 const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
-const AREA_TIEBREAK_WINNER: TeamId = "sam-amy";
 const AVAILABLE_REGION_OPACITY = {
     light: 0.4,
     dark: 0.5,
@@ -62,8 +62,7 @@ const AVAILABLE_REGION_OPACITY = {
 
 type GameBoardCardProps = {
     gameBoard: GameBoardState;
-    showFinalScore: boolean;
-    showAreaTiebreak: boolean;
+    score: SeasonEighteenScore;
 };
 
 type RegionStatus =
@@ -79,8 +78,7 @@ type MapFillPattern = NonNullable<
 
 export function GameBoardCard({
     gameBoard: game,
-    showFinalScore,
-    showAreaTiebreak,
+    score,
 }: GameBoardCardProps) {
     const titleId = useId();
     const usStatesGeoJson = useUsStatesGeoJson();
@@ -119,8 +117,7 @@ export function GameBoardCard({
 
             <Scoreboard
                 scores={game.scores}
-                showFinalScore={showFinalScore}
-                showAreaTiebreak={showAreaTiebreak}
+                score={score}
             />
             <ClaimPanels claims={game.activeClaims} />
             <ClaimedStates game={game} />
@@ -377,19 +374,20 @@ function getStatusOpacity(
 
 function Scoreboard({
     scores,
-    showFinalScore,
-    showAreaTiebreak,
+    score,
 }: {
     scores: Record<TeamId, TeamScore>;
-    showFinalScore: boolean;
-    showAreaTiebreak: boolean;
+    score: SeasonEighteenScore;
 }) {
     const [leftTeam, rightTeam] = seasonEighteenTeamIds;
-    const areaLeader = showAreaTiebreak ? AREA_TIEBREAK_WINNER : null;
+    const isFinalScore = score.phase === "final";
+    const areaLeader = score.phase === "connected-state"
+        ? null
+        : score.areaLeader;
     const ariaLabel = seasonEighteenTeamIds
         .map((team) => {
-            const score = scores[team];
-            return `${seasonEighteenTeams[team].name}: score ${score.score}, ${score.statesClaimed} states claimed`;
+            const teamScore = scores[team];
+            return `${seasonEighteenTeams[team].name}: score ${teamScore.score}, ${teamScore.statesClaimed} states claimed`;
         })
         .join("; ");
 
@@ -401,7 +399,7 @@ function Scoreboard({
             }}
             aria-label={`Connected-state scores. ${ariaLabel}.${areaLeader ? ` ${seasonEighteenTeams[areaLeader].name} leads the area tiebreak.` : ""}`}
         >
-            {showFinalScore && (
+            {isFinalScore && (
                 <div className="mb-4 flex justify-center">
                     <span className="border-jet-lag-yellow/50 bg-jet-lag-yellow/10 text-jet-lag-yellow rounded-full border px-3 py-1 font-display text-xs leading-none font-bold uppercase">
                         Final

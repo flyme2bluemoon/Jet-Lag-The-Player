@@ -25,6 +25,7 @@ describe("getSeasonEighteenGameState", () => {
         expect(sameRevision.gameBoard).toBe(first.gameBoard);
         expect(sameRevision.tracker).toBe(first.tracker);
         expect(sameRevision.mapFrame).toBe(first.mapFrame);
+        expect(sameRevision.score).toBe(first.score);
     });
 
     it("preserves gameBoard when only a budget boundary is crossed", () => {
@@ -36,6 +37,7 @@ describe("getSeasonEighteenGameState", () => {
         expect(afterBudget.gameBoard).toBe(before.gameBoard);
         expect(afterBudget.tracker).toBe(before.tracker);
         expect(afterBudget.mapFrame).toBe(before.mapFrame);
+        expect(afterBudget.score).toBe(before.score);
     });
 
     it("preserves budget and board when only a tracker boundary is crossed", () => {
@@ -62,6 +64,24 @@ describe("getSeasonEighteenGameState", () => {
         expect(split.mapFrame.zoom).toBe(5);
         expect(flights.budgetTransactions).toBe(beforeFlights.budgetTransactions);
         expect(flights.gameBoard).toBe(beforeFlights.gameBoard);
+    });
+
+    it("moves through connected-state, Area tiebreak, and final score phases", () => {
+        const connected = getSeasonEighteenGameState(at("episode-5", 28.9));
+        const areaTiebreak = getSeasonEighteenGameState(at("episode-5", 29));
+        const final = getSeasonEighteenGameState(at("finale", 42 * 60 + 43));
+
+        expect(connected.score).toEqual({ phase: "connected-state" });
+        expect(areaTiebreak.score).toEqual({
+            phase: "area-tiebreak",
+            areaLeader: "sam-amy",
+        });
+        expect(final.score).toEqual({
+            phase: "final",
+            areaLeader: "sam-amy",
+        });
+        expect(areaTiebreak.score).not.toBe(connected.score);
+        expect(final.score).not.toBe(areaTiebreak.score);
     });
 
     it("projects a Claim and its card removal at the same timestamp", () => {

@@ -11,7 +11,6 @@ import { getSeasonEighteenGameState } from "./game-state";
 import { TrackerCard } from "./tracker-card";
 
 const WIDE_COLUMN_RATIO = [3, 3, 4] as const;
-const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
 
 export function SeasonEighteenDashboard({
     episodeSlug,
@@ -61,14 +60,7 @@ export function SeasonEighteenDashboard({
             right={
                 <GameBoardCard
                     gameBoard={gameState.gameBoard}
-                    showFinalScore={
-                        episode.slug === "finale"
-                        && currentTime >= FINAL_SCORE_REVEALED_AT
-                    }
-                    showAreaTiebreak={
-                        episode.slug === "finale"
-                        || (episode.slug === "episode-5" && currentTime >= 29)
-                    }
+                    score={gameState.score}
                 />
             }
         />

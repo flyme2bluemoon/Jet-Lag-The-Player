@@ -24,6 +24,7 @@ describe("getSeasonEighteenGameState", () => {
         expect(sameRevision.budgetTransactions).toBe(first.budgetTransactions);
         expect(sameRevision.gameBoard).toBe(first.gameBoard);
         expect(sameRevision.tracker).toBe(first.tracker);
+        expect(sameRevision.mapFrame).toBe(first.mapFrame);
     });
 
     it("preserves gameBoard when only a budget boundary is crossed", () => {
@@ -34,6 +35,7 @@ describe("getSeasonEighteenGameState", () => {
         expect(afterBudget.budgetTransactions).not.toBe(before.budgetTransactions);
         expect(afterBudget.gameBoard).toBe(before.gameBoard);
         expect(afterBudget.tracker).toBe(before.tracker);
+        expect(afterBudget.mapFrame).toBe(before.mapFrame);
     });
 
     it("preserves budget and board when only a tracker boundary is crossed", () => {
@@ -47,6 +49,19 @@ describe("getSeasonEighteenGameState", () => {
             .not.toBe(before.tracker["sam-amy"].id);
         expect(afterTracker.budgetTransactions).toBe(before.budgetTransactions);
         expect(afterTracker.gameBoard).toBe(before.gameBoard);
+    });
+
+    it("reframes the tracker map at authored map-frame boundaries", () => {
+        const beforeFlights = getSeasonEighteenGameState(at("episode-1", 10 * 60 + 42.9));
+        const flights = getSeasonEighteenGameState(at("episode-1", 10 * 60 + 43));
+        const split = getSeasonEighteenGameState(at("episode-1", 15 * 60 + 59));
+
+        expect(flights.mapFrame).not.toBe(beforeFlights.mapFrame);
+        expect(flights.mapFrame.zoom).toBe(4.25);
+        expect(split.mapFrame).not.toBe(flights.mapFrame);
+        expect(split.mapFrame.zoom).toBe(5);
+        expect(flights.budgetTransactions).toBe(beforeFlights.budgetTransactions);
+        expect(flights.gameBoard).toBe(beforeFlights.gameBoard);
     });
 
     it("projects a Claim and its card removal at the same timestamp", () => {

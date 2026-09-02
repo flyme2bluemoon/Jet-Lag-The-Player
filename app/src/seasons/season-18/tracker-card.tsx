@@ -40,6 +40,7 @@ import {
     type TrackerInterval,
     type TrackerState,
 } from "./tracker-data";
+import type { MapFrame } from "./map-frame-data";
 import type { SeasonEighteenEpisodeTimestamp } from "./types";
 import {
     coordinatesAreColocated,
@@ -61,12 +62,8 @@ type TrackerCardProps = {
     episodeSlug: SeasonEighteenEpisodeTimestamp["episode"];
     currentTime: number;
     intervals: TrackerState;
+    mapFrame: MapFrame;
     className?: string;
-};
-
-type MapStage = {
-    center: Coordinate;
-    zoom: number;
 };
 
 type TrackerTrajectory = (
@@ -127,44 +124,6 @@ const PIN_TILT_DEGREES = 8;
 const CAMERA_INTERACTION_GRACE_MS = 15_000;
 const PIN_POSITION_TRANSITION_MS = 500;
 
-const MAP_STAGES = {
-    newYork: { center: [-73.92, 40.76] as Coordinate, zoom: 10.7 },
-    flights: { center: [-83.7, 39.3] as Coordinate, zoom: 4.25 },
-    split: { center: [-87.96, 38.54] as Coordinate, zoom: 5 },
-    episodeTwoRoadtrip: { center: [-83.5, 38.5] as Coordinate, zoom: 3.65 },
-    episodeTwoFlights: { center: [-80.5, 39.5] as Coordinate, zoom: 3.85 },
-    episodeThree: { center: [-80.8, 39.7] as Coordinate, zoom: 3.7 },
-    episodeFour: { center: [-87.2, 40.3] as Coordinate, zoom: 3.15 },
-    episodeFive: { center: [-84.8, 42.2] as Coordinate, zoom: 3.1 },
-    finale: { center: [-74.7, 39.7] as Coordinate, zoom: 3.9 },
-} satisfies Record<string, MapStage>;
-
-function getMapStage(
-    episodeSlug: SeasonEighteenEpisodeTimestamp["episode"],
-    currentTime: number,
-): MapStage {
-    if (episodeSlug === "finale") return MAP_STAGES.finale;
-    if (episodeSlug === "episode-5") return MAP_STAGES.episodeFive;
-    if (episodeSlug === "episode-4") return MAP_STAGES.episodeFour;
-    if (episodeSlug === "episode-3") return MAP_STAGES.episodeThree;
-
-    if (episodeSlug === "episode-2") {
-        return currentTime < 30 * 60 + 13
-            ? MAP_STAGES.episodeTwoRoadtrip
-            : MAP_STAGES.episodeTwoFlights;
-    }
-
-    if (currentTime < 10 * 60 + 43) {
-        return MAP_STAGES.newYork;
-    }
-
-    if (currentTime < 15 * 60 + 59) {
-        return MAP_STAGES.flights;
-    }
-
-    return MAP_STAGES.split;
-}
-
 function getUniqueTeamStates(states: readonly ResolvedTeamState[]) {
     const byTeam = new globalThis.Map(
         states.map((state) => [state.event.team, state]),
@@ -195,20 +154,20 @@ function endpointMatchesStationaryState(
 }
 
 function TrackerCamera({
-    stage,
+    frame,
     states,
 }: {
-    stage: MapStage;
+    frame: MapFrame;
     states: ResolvedTeamState[];
 }) {
     const { map } = useMap();
     const lastInteractionAt = useRef(Number.NEGATIVE_INFINITY);
     const lastHandledUpdate = useRef<string | null>(null);
-    const previousStage = useRef<string | null>(null);
+    const previousFrame = useRef<string | null>(null);
     const previousStates = useRef<ResolvedTeamState[] | null>(null);
-    const stageKey = `${stage.center.join(",")}:${stage.zoom}`;
+    const frameKey = `${frame.center.join(",")}:${frame.zoom}`;
     const cameraUpdate = [
-        stageKey,
+        frameKey,
         ...states.map((state) => state.interval.id),
     ].join(":");
 
@@ -242,8 +201,8 @@ function TrackerCamera({
         if (!map || lastHandledUpdate.current === cameraUpdate) return;
 
         const priorStates = previousStates.current;
-        const stageChanged = previousStage.current !== null
-            && previousStage.current !== stageKey;
+        const frameChanged = previousFrame.current !== null
+            && previousFrame.current !== frameKey;
         const changedStates = states.flatMap((state, index) => {
             const previousState = priorStates?.[index];
             return previousState?.interval.id === state.interval.id
@@ -255,7 +214,7 @@ function TrackerCamera({
         // in-progress movement suppresses it, later position ticks must not
         // replay the update after the grace period expires.
         lastHandledUpdate.current = cameraUpdate;
-        previousStage.current = stageKey;
+        previousFrame.current = frameKey;
         previousStates.current = states;
 
         // The Map itself already receives the correct initial center and zoom.
@@ -270,10 +229,10 @@ function TrackerCamera({
             return;
         }
 
-        if (stageChanged) {
+        if (frameChanged) {
             map.easeTo({
-                center: stage.center,
-                zoom: stage.zoom,
+                center: frame.center,
+                zoom: frame.zoom,
                 duration: 900,
             });
             return;
@@ -315,7 +274,7 @@ function TrackerCamera({
             maxZoom: map.getZoom(),
             duration: 900,
         });
-    }, [cameraUpdate, map, stage, stageKey, states]);
+    }, [cameraUpdate, map, frame, frameKey, states]);
 
     return null;
 }
@@ -980,11 +939,11 @@ export function TrackerCard({
     episodeSlug,
     currentTime,
     intervals,
+    mapFrame,
     className,
 }: TrackerCardProps) {
     const titleId = useId();
     const trackerTime = clampTrackerTime(episodeSlug, currentTime);
-    const mapStage = getMapStage(episodeSlug, trackerTime);
     const teamStates = useMemo(() => TEAM_ORDER.map((team) => {
         const interval = intervals[team];
         const trajectory = interval.kind === "stationary"
@@ -1052,20 +1011,20 @@ export function TrackerCard({
 
             <div className="relative h-124 sm:h-144">
                 <Map
-                    center={mapStage.center}
-                    zoom={mapStage.zoom}
+                    center={mapFrame.center}
+                    zoom={mapFrame.zoom}
                     minZoom={MAP_MIN_ZOOM}
                     maxZoom={16}
                 >
                     <TrackerCamera
-                        stage={mapStage}
+                        frame={mapFrame}
                         states={teamStates}
                     />
                     <TeamFocusController request={focusRequest} />
                     <MapControls
                         position="bottom-right"
                         showCompass={false}
-                        resetView={mapStage}
+                        resetView={mapFrame}
                     />
 
                     <TrajectoryRoutes states={teamStates} />

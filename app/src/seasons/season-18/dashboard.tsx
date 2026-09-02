@@ -52,6 +52,7 @@ export function SeasonEighteenDashboard({
                     episodeSlug={episode.slug}
                     currentTime={currentTime}
                     intervals={gameState.tracker}
+                    mapFrame={gameState.mapFrame}
                 />
             }
             middle={

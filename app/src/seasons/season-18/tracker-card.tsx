@@ -32,14 +32,15 @@ import {
     clampTrackerTime,
     cropPath,
     getPointAlongPath,
-    resolveTrackerInterval,
     resolveTrackerProgress,
     type Coordinate,
     type ResolvedFlightTrajectory,
     type ResolvedGroundTrajectory,
     type ResolvedEndpointLabel,
     type TrackerInterval,
+    type TrackerState,
 } from "./tracker-data";
+import type { SeasonEighteenEpisodeTimestamp } from "./types";
 import {
     coordinatesAreColocated,
     coordinatesMatch,
@@ -57,8 +58,9 @@ import {
 } from "./tracker-map-utils";
 
 type TrackerCardProps = {
-    episodeSlug: string;
+    episodeSlug: SeasonEighteenEpisodeTimestamp["episode"];
     currentTime: number;
+    intervals: TrackerState;
     className?: string;
 };
 
@@ -123,7 +125,6 @@ const TEAM_ORDER = seasonEighteenTeamIds;
 const PIN_PROXIMITY_PX = 72;
 const PIN_TILT_DEGREES = 8;
 const CAMERA_INTERACTION_GRACE_MS = 15_000;
-const TRACKER_UPDATE_INTERVAL_SECONDS = 0.5;
 const PIN_POSITION_TRANSITION_MS = 500;
 
 const MAP_STAGES = {
@@ -138,7 +139,10 @@ const MAP_STAGES = {
     finale: { center: [-74.7, 39.7] as Coordinate, zoom: 3.9 },
 } satisfies Record<string, MapStage>;
 
-function getMapStage(episodeSlug: string, currentTime: number): MapStage {
+function getMapStage(
+    episodeSlug: SeasonEighteenEpisodeTimestamp["episode"],
+    currentTime: number,
+): MapStage {
     if (episodeSlug === "finale") return MAP_STAGES.finale;
     if (episodeSlug === "episode-5") return MAP_STAGES.episodeFive;
     if (episodeSlug === "episode-4") return MAP_STAGES.episodeFour;
@@ -975,17 +979,14 @@ function TeamStatus({
 export function TrackerCard({
     episodeSlug,
     currentTime,
+    intervals,
     className,
 }: TrackerCardProps) {
     const titleId = useId();
-    const trackerTime = clampTrackerTime(
-        episodeSlug,
-        Math.floor(currentTime / TRACKER_UPDATE_INTERVAL_SECONDS)
-            * TRACKER_UPDATE_INTERVAL_SECONDS,
-    );
+    const trackerTime = clampTrackerTime(episodeSlug, currentTime);
     const mapStage = getMapStage(episodeSlug, trackerTime);
     const teamStates = useMemo(() => TEAM_ORDER.map((team) => {
-        const interval = resolveTrackerInterval(episodeSlug, trackerTime, team);
+        const interval = intervals[team];
         const trajectory = interval.kind === "stationary"
             ? null
             : {
@@ -1022,7 +1023,7 @@ export function TrackerCard({
                 ? []
                 : interval.display.waypointLabels,
         } satisfies ResolvedTeamState;
-    }), [episodeSlug, trackerTime]);
+    }), [intervals, trackerTime]);
     const [focusRequest, setFocusRequest] = useState<TeamFocusRequest | null>(null);
 
     const focusTeam = (state: ResolvedTeamState) => {

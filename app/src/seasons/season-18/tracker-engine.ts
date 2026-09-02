@@ -615,30 +615,39 @@ function getTrackerIntervalBoundaries(
     return intervals.map((interval) => interval.time.start);
 }
 
-const getTrackerIntervalByTeam = {
-    "sam-amy": createTimestampProjection({
-        season: seasonEighteen,
-        boundaries: getTrackerIntervalBoundaries(compiledIntervals["sam-amy"]),
-        project: (timestamp) =>
-            resolveTrackerIntervalAt(compiledIntervals["sam-amy"], timestamp),
+export type TrackerState = Readonly<Record<TeamId, SeasonEighteenInterval>>;
+
+const getTrackerStateProjection = createTimestampProjection({
+    season: seasonEighteen,
+    boundaries: [
+        ...getTrackerIntervalBoundaries(compiledIntervals["sam-amy"]),
+        ...getTrackerIntervalBoundaries(compiledIntervals["ben-adam"]),
+    ],
+    project: (timestamp): TrackerState => ({
+        "sam-amy": resolveTrackerIntervalAt(
+            compiledIntervals["sam-amy"],
+            timestamp,
+        ),
+        "ben-adam": resolveTrackerIntervalAt(
+            compiledIntervals["ben-adam"],
+            timestamp,
+        ),
     }),
-    "ben-adam": createTimestampProjection({
-        season: seasonEighteen,
-        boundaries: getTrackerIntervalBoundaries(compiledIntervals["ben-adam"]),
-        project: (timestamp) =>
-            resolveTrackerIntervalAt(compiledIntervals["ben-adam"], timestamp),
-    }),
-} satisfies Record<TeamId, ReturnType<typeof createTimestampProjection<
-    TrackerTimestamp["episode"],
-    SeasonEighteenInterval
->>>;
+});
+
+export function getTrackerState(
+    episode: TrackerTimestamp["episode"],
+    at: number,
+): TrackerState {
+    return getTrackerStateProjection({ episode, at });
+}
 
 export function getTrackerInterval(
     episode: TrackerTimestamp["episode"],
     at: number,
     team: TeamId,
 ): SeasonEighteenInterval {
-    return getTrackerIntervalByTeam[team]({ episode, at });
+    return getTrackerState(episode, at)[team];
 }
 
 function validateCompiledIntervals() {

@@ -9,7 +9,6 @@ import { BudgetCard } from "./budget-card";
 import { GameBoardCard } from "./game-board-card";
 import { getSeasonEighteenGameState } from "./game-state";
 import { TrackerCard } from "./tracker-card";
-import { hasTrackerData } from "./tracker-data";
 
 const WIDE_COLUMN_RATIO = [3, 3, 4] as const;
 const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
@@ -49,12 +48,11 @@ export function SeasonEighteenDashboard({
                 />
             }
             left={
-                hasTrackerData(episodeSlug) ? (
-                    <TrackerCard
-                        episodeSlug={episodeSlug}
-                        currentTime={currentTime}
-                    />
-                ) : null
+                <TrackerCard
+                    episodeSlug={episode.slug}
+                    currentTime={currentTime}
+                    intervals={gameState.tracker}
+                />
             }
             middle={
                 <BudgetCard transactions={gameState.budgetTransactions} />

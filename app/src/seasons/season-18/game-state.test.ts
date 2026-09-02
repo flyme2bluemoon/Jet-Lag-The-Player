@@ -23,6 +23,7 @@ describe("getSeasonEighteenGameState", () => {
         expect(sameRevision).toBe(first);
         expect(sameRevision.budgetTransactions).toBe(first.budgetTransactions);
         expect(sameRevision.gameBoard).toBe(first.gameBoard);
+        expect(sameRevision.tracker).toBe(first.tracker);
     });
 
     it("preserves gameBoard when only a budget boundary is crossed", () => {
@@ -32,6 +33,20 @@ describe("getSeasonEighteenGameState", () => {
         expect(afterBudget).not.toBe(before);
         expect(afterBudget.budgetTransactions).not.toBe(before.budgetTransactions);
         expect(afterBudget.gameBoard).toBe(before.gameBoard);
+        expect(afterBudget.tracker).toBe(before.tracker);
+    });
+
+    it("preserves budget and board when only a tracker boundary is crossed", () => {
+        const before = getSeasonEighteenGameState(at("episode-1", 200));
+        const nextStart = before.tracker["sam-amy"].time.end;
+        const afterTracker = getSeasonEighteenGameState(nextStart);
+
+        expect(afterTracker).not.toBe(before);
+        expect(afterTracker.tracker).not.toBe(before.tracker);
+        expect(afterTracker.tracker["sam-amy"].id)
+            .not.toBe(before.tracker["sam-amy"].id);
+        expect(afterTracker.budgetTransactions).toBe(before.budgetTransactions);
+        expect(afterTracker.gameBoard).toBe(before.gameBoard);
     });
 
     it("projects a Claim and its card removal at the same timestamp", () => {

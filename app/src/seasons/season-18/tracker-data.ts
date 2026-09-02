@@ -4,15 +4,15 @@ import {
     getPointAlongPath,
     getTrackerInterval,
     getTrackerProgress,
+    getTrackerState as getTrackerStateAt,
+    type TrackerState,
 } from "./tracker-engine";
 import type {
     ResolvedTrackerInterval,
 } from "./tracker-model";
 import type { LocationId } from "./tracker-static";
-import {
-    trackerEpisodeRanges,
-    type TrackerEpisodeSlug,
-} from "./tracker-timeline";
+import { trackerEpisodeRanges } from "./tracker-timeline";
+import type { SeasonEighteenEpisodeTimestamp } from "./types";
 
 export type { Coordinate } from "./tracker-routes";
 export type {
@@ -22,31 +22,33 @@ export type {
     ResolvedTravelDisplay,
     TrackerStatus,
 } from "./tracker-model";
+export type { TrackerState };
 
 export type TrackerInterval = ResolvedTrackerInterval<LocationId>;
 
-export function hasTrackerData(
-    episodeSlug: string,
-): episodeSlug is TrackerEpisodeSlug {
-    return Object.hasOwn(trackerEpisodeRanges, episodeSlug);
-}
-
-export function clampTrackerTime(episodeSlug: string, currentTime: number) {
-    if (!hasTrackerData(episodeSlug)) return currentTime;
+/** Clamps playback time to the Episode's authored tracker window. */
+export function clampTrackerTime(
+    episodeSlug: SeasonEighteenEpisodeTimestamp["episode"],
+    currentTime: number,
+) {
     const range = trackerEpisodeRanges[episodeSlug];
     return Math.min(Math.max(currentTime, range.start), range.end);
 }
 
+/** Returns revision-stable per-team tracker intervals for an Episode timestamp. */
+export function getTrackerState(
+    timestamp: SeasonEighteenEpisodeTimestamp,
+): TrackerState {
+    const at = clampTrackerTime(timestamp.episode, timestamp.at);
+    return getTrackerStateAt(timestamp.episode, at);
+}
+
 export function resolveTrackerInterval(
-    episodeSlug: string,
+    episodeSlug: SeasonEighteenEpisodeTimestamp["episode"],
     currentTime: number,
     team: TeamId,
 ) {
-    if (!hasTrackerData(episodeSlug)) {
-        throw new RangeError(`No Season 18 tracker data exists for "${episodeSlug}".`);
-    }
-    const time = clampTrackerTime(episodeSlug, currentTime);
-    return getTrackerInterval(episodeSlug, time, team);
+    return getTrackerState({ episode: episodeSlug, at: currentTime })[team];
 }
 
 export function resolveTrackerProgress(
@@ -59,4 +61,5 @@ export function resolveTrackerProgress(
 export {
     cropPath,
     getPointAlongPath,
+    getTrackerInterval,
 };

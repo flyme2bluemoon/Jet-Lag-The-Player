@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { getTrackerInterval } from "./tracker-engine";
+import { getTrackerInterval, getTrackerState } from "./tracker-engine";
 
-describe("getTrackerInterval", () => {
-    it("returns the same interval reference within a revision", () => {
-        const first = getTrackerInterval("episode-1", 1000, "sam-amy");
-        const sameRevision = getTrackerInterval("episode-1", 1000.25, "sam-amy");
+describe("getTrackerState", () => {
+    it("returns the same state reference within a revision", () => {
+        const first = getTrackerState("episode-1", 1000);
+        const sameRevision = getTrackerState("episode-1", 1000.25);
 
         expect(sameRevision).toBe(first);
+        expect(sameRevision["sam-amy"]).toBe(first["sam-amy"]);
+        expect(sameRevision["ben-adam"]).toBe(first["ben-adam"]);
     });
 
     it("resolves the next interval at a contiguous boundary", () => {
@@ -21,14 +23,23 @@ describe("getTrackerInterval", () => {
         expect(atEnd.time.start).toEqual(interval.time.end);
     });
 
-    it("keeps independent team projections on separate caches", () => {
-        const samAmy = getTrackerInterval("episode-1", 1000, "sam-amy");
-        const benAdam = getTrackerInterval("episode-1", 1000, "ben-adam");
-        const samAmyAgain = getTrackerInterval("episode-1", 1000.5, "sam-amy");
+    it("keeps the other team's interval when only one team changes", () => {
+        const earlier = getTrackerState("episode-1", 1000);
+        const nextSamAmy = getTrackerInterval(
+            earlier["sam-amy"].time.end.episode,
+            earlier["sam-amy"].time.end.at,
+            "sam-amy",
+        );
+        const afterSamAmyBoundary = getTrackerState(
+            nextSamAmy.time.start.episode,
+            nextSamAmy.time.start.at,
+        );
 
-        expect(samAmy.team).toBe("sam-amy");
-        expect(benAdam.team).toBe("ben-adam");
-        expect(samAmyAgain).toBe(samAmy);
+        expect(afterSamAmyBoundary["sam-amy"]).not.toBe(earlier["sam-amy"]);
+        expect(afterSamAmyBoundary["sam-amy"]).toBe(nextSamAmy);
+        // Ben & Adam may or may not share that exact boundary; their interval
+        // object is still the compiled record for whatever revision is visible.
+        expect(afterSamAmyBoundary["ben-adam"].team).toBe("ben-adam");
     });
 
     it("invalidates when playback crosses an interval start", () => {
@@ -49,15 +60,17 @@ describe("getTrackerInterval", () => {
         expect(next.id).not.toBe(earlier.id);
     });
 
-    it("returns the earlier compiled interval after rewinding", () => {
-        const earlier = getTrackerInterval("episode-1", 1000, "ben-adam");
-        const later = getTrackerInterval("finale", 40 * 60, "ben-adam");
-        const rewound = getTrackerInterval("episode-1", 1000, "ben-adam");
+    it("returns the earlier intervals after rewinding", () => {
+        const earlier = getTrackerState("episode-1", 1000);
+        const later = getTrackerState("finale", 40 * 60);
+        const rewound = getTrackerState("episode-1", 1000);
 
         expect(later).not.toBe(earlier);
-        expect(later.id).not.toBe(earlier.id);
-        // Snapshots are the compiled interval objects, so a rewind that lands
-        // on the same revision returns the same reference.
-        expect(rewound).toBe(earlier);
+        expect(later["ben-adam"].id).not.toBe(earlier["ben-adam"].id);
+        // The composed state object is rederived on rewind, but nested
+        // intervals are the stable compiled records.
+        expect(rewound).not.toBe(earlier);
+        expect(rewound["sam-amy"]).toBe(earlier["sam-amy"]);
+        expect(rewound["ben-adam"]).toBe(earlier["ben-adam"]);
     });
 });

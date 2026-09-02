@@ -13,14 +13,25 @@ type SeasonEighteenGameState = {
     gameBoard: GameBoardState;
 };
 
+let latestGameState: SeasonEighteenGameState | undefined;
+
 /** Returns the complete Season 18 Game state visible at an Episode timestamp. */
 export function getSeasonEighteenGameState(
     timestamp: SeasonEighteenEpisodeTimestamp,
 ): SeasonEighteenGameState {
-    return {
-        budgetTransactions: getVisibleBudgetTransactions(timestamp),
-        gameBoard: getGameBoardState(timestamp),
-    };
+    const budgetTransactions = getVisibleBudgetTransactions(timestamp);
+    const gameBoard = getGameBoardState(timestamp);
+
+    if (
+        latestGameState
+        && latestGameState.budgetTransactions === budgetTransactions
+        && latestGameState.gameBoard === gameBoard
+    ) {
+        return latestGameState;
+    }
+
+    latestGameState = { budgetTransactions, gameBoard };
+    return latestGameState;
 }
 
 export type { SeasonEighteenGameState };

@@ -16,11 +16,11 @@ function publicCardIds(
 }
 
 describe("getSeasonEighteenGameState", () => {
-    it("keeps each projected value stable between change boundaries", () => {
+    it("keeps the complete Game state stable between change boundaries", () => {
         const first = getSeasonEighteenGameState(at("episode-1", 200));
         const sameRevision = getSeasonEighteenGameState(at("episode-1", 200.25));
 
-        expect(sameRevision).not.toBe(first);
+        expect(sameRevision).toBe(first);
         expect(sameRevision.budgetTransactions).toBe(first.budgetTransactions);
         expect(sameRevision.gameBoard).toBe(first.gameBoard);
     });
@@ -29,6 +29,7 @@ describe("getSeasonEighteenGameState", () => {
         const before = getSeasonEighteenGameState(at("episode-1", 4 * 60 + 13.9));
         const afterBudget = getSeasonEighteenGameState(at("episode-1", 4 * 60 + 14));
 
+        expect(afterBudget).not.toBe(before);
         expect(afterBudget.budgetTransactions).not.toBe(before.budgetTransactions);
         expect(afterBudget.gameBoard).toBe(before.gameBoard);
     });

@@ -64,7 +64,7 @@ export type InvestigationQuestion = {
     status: "waiting" | "received" | "answered" | "vetoed";
 };
 
-export type CurseRecord = {
+type CurseRecord = {
     purchaseId: string;
     name: string;
     description: string;

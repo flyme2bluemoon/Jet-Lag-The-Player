@@ -6,7 +6,6 @@ import type { EpisodeDashboardProps } from "@/components/episode/types";
 import { YouTubePlayer } from "@/components/episode/youtube-player";
 import { seasonNine } from "@/data/season-9";
 import { CurrentRunCard } from "./current-run-card";
-import { CurseCard } from "./curse-card";
 import { getSeasonNineGameState } from "./game-state";
 import { InvestigationBookCard } from "./investigation-book-card";
 import { LeaderboardCard } from "./leaderboard-card";
@@ -41,12 +40,7 @@ export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: Epis
                     onTimeChange={setCurrentTime}
                 />
             }
-            left={
-                <>
-                    <CurrentRunCard state={gameState.timeline} />
-                    <CurseCard curse={gameState.timeline.activeCurse} />
-                </>
-            }
+            left={<CurrentRunCard state={gameState.timeline} />}
             middle={<LeaderboardCard state={gameState.timeline} />}
             right={(
                 <InvestigationBookCard

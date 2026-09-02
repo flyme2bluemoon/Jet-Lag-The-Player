@@ -1,7 +1,12 @@
 import markup from "./episode-1-events.json";
 import { seasonNine } from "@/data/season-9";
-import { compareTimestamps, type EpisodeTimestamp } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+    type EpisodeTimestamp,
+} from "@/lib/timestamps";
 import { SEEKERS_RAIL_ROUTES } from "./seekers-rail-routes";
+import type { SeasonNineEpisodeTimestamp } from "./types";
 
 export type TrackerCoordinate = [longitude: number, latitude: number];
 
@@ -10,7 +15,7 @@ type TrackerWaypoint = {
     coordinate: TrackerCoordinate;
 };
 
-type SeekersLocationEvent = EpisodeTimestamp & {
+type SeekersLocationEvent = SeasonNineEpisodeTimestamp & {
     id: string;
     type: "seekers-location";
     metadata: { location: string };
@@ -132,20 +137,17 @@ const locationEvents = (markup.events as readonly SeekersLocationEvent[])
     .filter((event) => event.type === "seekers-location")
     .toSorted((left, right) => compareTimestamps(seasonNine, left, right));
 
-const stateCache = new Map<number, SeekersTrackerState>();
+const seekersTrackerBoundaries: SeasonNineEpisodeTimestamp[] =
+    locationEvents.map(({ episode, at }) => ({ episode, at }));
 
-function createState(index: number): SeekersTrackerState {
-    const cached = stateCache.get(index);
-    if (cached) return cached;
-
+function buildSeekersTrackerState(index: number): SeekersTrackerState {
     const event = locationEvents[index]!;
     const nextEvent = locationEvents[index + 1] ?? null;
     const label = event.metadata.location;
     const point = POINTS_BY_LABEL[label];
-    let state: SeekersTrackerState;
 
     if (point) {
-        state = {
+        return {
             id: event.id,
             kind: "point",
             label: point.name,
@@ -153,50 +155,51 @@ function createState(index: number): SeekersTrackerState {
             startedAt: event,
             endsAt: nextEvent,
         };
-    } else {
-        const destinations = TRANSIT_DESTINATIONS[label];
-        if (!destinations) throw new Error(`Unknown Season 9 seekers location: ${label}`);
-
-        let origin: Station = STATIONS.lucerne;
-        for (let previousIndex = index - 1; previousIndex >= 0; previousIndex -= 1) {
-            const previousPoint = POINTS_BY_LABEL[locationEvents[previousIndex]!.metadata.location];
-            if (previousPoint) {
-                origin = previousPoint;
-                break;
-            }
-        }
-
-        state = {
-            id: event.id,
-            kind: "transit",
-            label: `${origin.name} → ${destinations.at(-1)!.name}`,
-            route: TRANSIT_ROUTE_OVERRIDES[label]
-                ?? SEEKERS_RAIL_ROUTES[event.id]
-                ?? [origin.coordinate, ...destinations.map((stop) => stop.coordinate)],
-            waypoints: (TRANSIT_WAYPOINTS[label] ?? []).map((waypoint) => ({
-                label: waypoint.name,
-                coordinate: waypoint.coordinate,
-            })),
-            startedAt: event,
-            endsAt: nextEvent,
-        };
     }
 
-    stateCache.set(index, state);
-    return state;
+    const destinations = TRANSIT_DESTINATIONS[label];
+    if (!destinations) throw new Error(`Unknown Season 9 seekers location: ${label}`);
+
+    let origin: Station = STATIONS.lucerne;
+    for (let previousIndex = index - 1; previousIndex >= 0; previousIndex -= 1) {
+        const previousPoint = POINTS_BY_LABEL[locationEvents[previousIndex]!.metadata.location];
+        if (previousPoint) {
+            origin = previousPoint;
+            break;
+        }
+    }
+
+    return {
+        id: event.id,
+        kind: "transit",
+        label: `${origin.name} → ${destinations.at(-1)!.name}`,
+        route: TRANSIT_ROUTE_OVERRIDES[label]
+            ?? SEEKERS_RAIL_ROUTES[event.id]
+            ?? [origin.coordinate, ...destinations.map((stop) => stop.coordinate)],
+        waypoints: (TRANSIT_WAYPOINTS[label] ?? []).map((waypoint) => ({
+            label: waypoint.name,
+            coordinate: waypoint.coordinate,
+        })),
+        startedAt: event,
+        endsAt: nextEvent,
+    };
 }
 
-export function getSeekersTrackerState(
-    episodeSlug: string,
-    currentTime: number,
+function deriveSeekersTrackerState(
+    timestamp: SeasonNineEpisodeTimestamp,
 ): SeekersTrackerState {
-    const current = { episode: episodeSlug, at: currentTime };
     let visibleIndex = 0;
 
     for (let index = 1; index < locationEvents.length; index += 1) {
-        if (compareTimestamps(seasonNine, locationEvents[index]!, current) > 0) break;
+        if (compareTimestamps(seasonNine, locationEvents[index]!, timestamp) > 0) break;
         visibleIndex = index;
     }
 
-    return createState(visibleIndex);
+    return buildSeekersTrackerState(visibleIndex);
 }
+
+export const getSeekersTrackerState = createTimestampProjection({
+    season: seasonNine,
+    boundaries: seekersTrackerBoundaries,
+    project: deriveSeekersTrackerState,
+});

@@ -1,11 +1,16 @@
 import { seasonEighteen } from "@/data/season-18";
-import { compareTimestamps, isTimestampInRange } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+    isTimestampInRange,
+} from "@/lib/timestamps";
 import {
     seasonEighteenTeamIds,
     type TeamId,
 } from "./team-data";
+import type { SeasonEighteenEpisodeTimestamp } from "./types";
 
-type EpisodeSlug = (typeof seasonEighteen.episodes)[number]["slug"];
+type EpisodeSlug = SeasonEighteenEpisodeTimestamp["episode"];
 
 export type BoardRegion =
     | "Alabama"
@@ -624,54 +629,23 @@ const seasonEighteenClaims: Claim[] = [
     },
 ];
 
-const gameBoardStateCache = new Map<number, GameBoardState>();
-const emptyGameBoardState: GameBoardState = {
-    activeClaims: [],
-    cardsByLocation: makeEmptyCardsByLocation(),
-    claims: new Map(),
-    privateSlots: makeEmptyPrivateSlots(),
-    scores: makeScores(new Map()),
-};
+const gameBoardChangeBoundaries = [
+    ...cardChanges.map(({ episode, at }) => ({ episode, at })),
+    ...seasonEighteenClaims.flatMap((claim) => [
+        { episode: claim.episode, at: claim.startedAt },
+        { episode: claim.episode, at: claim.claimedAt },
+    ]),
+];
 
-function getGameBoardRevision(episode: string, currentTime: number) {
-    const currentTimestamp = { episode, at: currentTime };
-    const visibleCardChanges = cardChanges.reduce(
-        (count, change) => count + Number(
-            compareTimestamps(seasonEighteen, change, currentTimestamp) <= 0,
-        ),
-        0,
-    );
-    const claimBoundaries = seasonEighteenClaims.reduce((count, claim) => {
-        const started = compareTimestamps(
-            seasonEighteen,
-            { episode: claim.episode, at: claim.startedAt },
-            currentTimestamp,
-        ) <= 0;
-        const completed = compareTimestamps(
-            seasonEighteen,
-            { episode: claim.episode, at: claim.claimedAt },
-            currentTimestamp,
-        ) <= 0;
+export const getGameBoardState = createTimestampProjection({
+    season: seasonEighteen,
+    boundaries: gameBoardChangeBoundaries,
+    project: deriveGameBoardState,
+});
 
-        return count + Number(started) + Number(completed);
-    }, 0);
-
-    return visibleCardChanges + claimBoundaries;
-}
-
-export function getGameBoardState(
-    episode: string,
-    currentTime: number,
+function deriveGameBoardState(
+    currentTimestamp: SeasonEighteenEpisodeTimestamp,
 ): GameBoardState {
-    if (!seasonEighteen.episodes.some(({ slug }) => slug === episode)) {
-        return emptyGameBoardState;
-    }
-
-    const revision = getGameBoardRevision(episode, currentTime);
-    const cachedState = gameBoardStateCache.get(revision);
-    if (cachedState) return cachedState;
-
-    const currentTimestamp = { episode, at: currentTime };
     const cardLocations = new Map<GameCardKey, CardLocation>();
     const privateSlots = makeEmptyPrivateSlots();
 
@@ -729,15 +703,13 @@ export function getGameBoardState(
         ),
     );
 
-    const gameBoardState = {
+    return {
         activeClaims,
         cardsByLocation,
         claims,
         privateSlots,
         scores: makeScores(claims),
     };
-    gameBoardStateCache.set(revision, gameBoardState);
-    return gameBoardState;
 }
 
 function makeEmptyPrivateSlots(): Record<TeamId, PrivateCardSlot[]> {

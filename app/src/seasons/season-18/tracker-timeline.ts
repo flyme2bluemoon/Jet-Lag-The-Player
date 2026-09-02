@@ -32,9 +32,9 @@ export const trackerEpisodeRanges = {
     "episode-4": { start: EPISODE_FOUR_TRACKER_START, end: EPISODE_FOUR_TRACKER_END },
     "episode-5": { start: EPISODE_FIVE_TRACKER_START, end: EPISODE_FIVE_TRACKER_END },
     finale: { start: FINALE_TRACKER_START, end: FINALE_TRACKER_END },
-} as const satisfies Partial<Record<EpisodeSlug, { start: number; end: number }>>;
+} as const satisfies Record<EpisodeSlug, { start: number; end: number }>;
 
-export type TrackerEpisodeSlug = keyof typeof trackerEpisodeRanges;
+export type TrackerEpisodeSlug = EpisodeSlug;
 
 function time(episode: EpisodeSlug, at: number): TrackerTimestamp {
     return { episode, at };

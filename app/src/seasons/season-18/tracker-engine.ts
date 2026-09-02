@@ -1,5 +1,9 @@
 import { seasonEighteen } from "@/data/season-18";
-import { compareTimestamps, isTimestampInRange } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+    isTimestampInRange,
+} from "@/lib/timestamps";
 
 import type { TeamId } from "./team-data";
 import type {
@@ -587,13 +591,10 @@ const compiledIntervals: Readonly<Record<TeamId, readonly SeasonEighteenInterval
     "ben-adam": compileTeam("ben-adam"),
 };
 
-export function getTrackerInterval(
-    episode: TrackerTimestamp["episode"],
-    at: number,
-    team: TeamId,
+function resolveTrackerIntervalAt(
+    intervals: readonly SeasonEighteenInterval[],
+    current: TrackerTimestamp,
 ): SeasonEighteenInterval {
-    const current = { episode, at };
-    const intervals = compiledIntervals[team];
     const interval = intervals.findLast((candidate) =>
         compare(candidate.time.start, current) <= 0
         && (
@@ -606,6 +607,38 @@ export function getTrackerInterval(
             || timestampEquals(current, candidate.time.end)
         ));
     return interval ?? intervals[0];
+}
+
+function getTrackerIntervalBoundaries(
+    intervals: readonly SeasonEighteenInterval[],
+) {
+    return intervals.map((interval) => interval.time.start);
+}
+
+const getTrackerIntervalByTeam = {
+    "sam-amy": createTimestampProjection({
+        season: seasonEighteen,
+        boundaries: getTrackerIntervalBoundaries(compiledIntervals["sam-amy"]),
+        project: (timestamp) =>
+            resolveTrackerIntervalAt(compiledIntervals["sam-amy"], timestamp),
+    }),
+    "ben-adam": createTimestampProjection({
+        season: seasonEighteen,
+        boundaries: getTrackerIntervalBoundaries(compiledIntervals["ben-adam"]),
+        project: (timestamp) =>
+            resolveTrackerIntervalAt(compiledIntervals["ben-adam"], timestamp),
+    }),
+} satisfies Record<TeamId, ReturnType<typeof createTimestampProjection<
+    TrackerTimestamp["episode"],
+    SeasonEighteenInterval
+>>>;
+
+export function getTrackerInterval(
+    episode: TrackerTimestamp["episode"],
+    at: number,
+    team: TeamId,
+): SeasonEighteenInterval {
+    return getTrackerIntervalByTeam[team]({ episode, at });
 }
 
 function validateCompiledIntervals() {

@@ -1,14 +1,12 @@
 "use client";
 
 import { Banknote, Car, CarTaxiFront, Plane, type LucideIcon } from "lucide-react";
-import { useMemo } from "react";
 import { AnimatedNumber } from "@/components/episode/animated-number";
 import { TeamLedgerCard } from "@/components/episode/team-ledger-card";
 import { TeamLedgerHistoryItem } from "@/components/episode/team-ledger-history-item";
 import { seasonEighteen } from "@/data/season-18";
 import { formatBudgetAmount } from "@/lib/formatters";
 import {
-    getVisibleBudgetTransactions,
     type BudgetTransaction,
     type TransportMode,
 } from "./budget-data";
@@ -19,8 +17,7 @@ import {
 } from "./team-data";
 
 type BudgetCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    transactions: readonly BudgetTransaction[];
 };
 
 const transportModeIcons: Record<TransportMode, LucideIcon> = {
@@ -69,18 +66,13 @@ function TransactionContent({
     );
 }
 
-export function BudgetCard({ episodeSlug, currentTime }: BudgetCardProps) {
-    const visibleTransactions = useMemo(
-        () => getVisibleBudgetTransactions(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
-
+export function BudgetCard({ transactions }: BudgetCardProps) {
     return (
         <TeamLedgerCard
             emptyLabel="No transactions yet"
             formatBalanceLabel={(balance) => `$${formatBudgetAmount(balance)}`}
             historyTitle="Transaction History"
-            items={visibleTransactions}
+            items={transactions}
             renderBalance={(balance) => (
                 <>
                     $

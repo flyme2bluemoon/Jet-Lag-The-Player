@@ -37,7 +37,6 @@ import {
     type UsStatesGeoJson,
 } from "@/lib/us-states-geojson";
 import {
-    getGameBoardState,
     seasonEighteenCards,
     type BoardRegion,
     type Claim,
@@ -55,7 +54,6 @@ import {
 const PUBLIC_HAND_SIZE = 6;
 const PRIVATE_OVERLAP_PATTERN_ID = "season-eighteen-private-overlap";
 const TRANSPARENT_PATTERN_ID = "season-eighteen-transparent";
-const FINAL_SCORE_REVEALED_AT = 42 * 60 + 43;
 const AREA_TIEBREAK_WINNER: TeamId = "sam-amy";
 const AVAILABLE_REGION_OPACITY = {
     light: 0.4,
@@ -63,8 +61,9 @@ const AVAILABLE_REGION_OPACITY = {
 } as const;
 
 type GameBoardCardProps = {
-    episodeSlug: string;
-    currentTime: number;
+    gameBoard: GameBoardState;
+    showFinalScore: boolean;
+    showAreaTiebreak: boolean;
 };
 
 type RegionStatus =
@@ -79,14 +78,11 @@ type MapFillPattern = NonNullable<
 >;
 
 export function GameBoardCard({
-    episodeSlug,
-    currentTime,
+    gameBoard: game,
+    showFinalScore,
+    showAreaTiebreak,
 }: GameBoardCardProps) {
     const titleId = useId();
-    const game = useMemo(
-        () => getGameBoardState(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
     const usStatesGeoJson = useUsStatesGeoJson();
     const stateOutlinePaths = useStateOutlinePaths(usStatesGeoJson);
 
@@ -123,14 +119,8 @@ export function GameBoardCard({
 
             <Scoreboard
                 scores={game.scores}
-                showFinalScore={
-                    episodeSlug === "finale"
-                    && currentTime >= FINAL_SCORE_REVEALED_AT
-                }
-                showAreaTiebreak={
-                    episodeSlug === "finale"
-                    || (episodeSlug === "episode-5" && currentTime >= 29)
-                }
+                showFinalScore={showFinalScore}
+                showAreaTiebreak={showAreaTiebreak}
             />
             <ClaimPanels claims={game.activeClaims} />
             <ClaimedStates game={game} />

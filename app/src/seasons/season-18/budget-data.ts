@@ -1,13 +1,15 @@
 import { seasonEighteen } from "@/data/season-18";
-import { compareTimestamps } from "@/lib/timestamps";
+import {
+    compareTimestamps,
+    createTimestampProjection,
+} from "@/lib/timestamps";
 import type { TeamId } from "./team-data";
+import type { SeasonEighteenEpisodeTimestamp } from "./types";
 
 export type TransportMode = "flight" | "rental-car" | "rideshare";
 
-export type BudgetTransaction = {
+export type BudgetTransaction = SeasonEighteenEpisodeTimestamp & {
     id: string;
-    episode: (typeof seasonEighteen.episodes)[number]["slug"];
-    at: number;
     amount: number;
     title: string;
     transportMode?: TransportMode;
@@ -304,37 +306,14 @@ const seasonEighteenBudgetTransactions: BudgetTransaction[] = [
     },
 ];
 
-const visibleBudgetTransactionsCache = new Map<
-    number,
-    BudgetTransaction[]
->();
+const budgetTransactionBoundaries =
+    seasonEighteenBudgetTransactions.map(({ episode, at }) => ({ episode, at }));
 
-export function getVisibleBudgetTransactions(
-    episode: string,
-    currentTime: number,
-) {
-    if (!seasonEighteen.episodes.some(({ slug }) => slug === episode)) {
-        return [];
-    }
-
-    const currentTimestamp = { episode, at: currentTime };
-    const visibleCount = seasonEighteenBudgetTransactions.reduce(
-        (count, transaction) => count + Number(
-            compareTimestamps(
-                seasonEighteen,
-                transaction,
-                currentTimestamp,
-            ) <= 0,
+export const getVisibleBudgetTransactions = createTimestampProjection({
+    season: seasonEighteen,
+    boundaries: budgetTransactionBoundaries,
+    project: (timestamp): readonly BudgetTransaction[] =>
+        seasonEighteenBudgetTransactions.filter((transaction) =>
+            compareTimestamps(seasonEighteen, transaction, timestamp) <= 0
         ),
-        0,
-    );
-    const cachedTransactions = visibleBudgetTransactionsCache.get(visibleCount);
-    if (cachedTransactions) return cachedTransactions;
-
-    const visibleTransactions = seasonEighteenBudgetTransactions.filter(
-        (transaction) =>
-            compareTimestamps(seasonEighteen, transaction, currentTimestamp) <= 0,
-    );
-    visibleBudgetTransactionsCache.set(visibleCount, visibleTransactions);
-    return visibleTransactions;
-}
+});

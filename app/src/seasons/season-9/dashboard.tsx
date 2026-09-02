@@ -1,28 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DashboardGrid } from "@/components/episode/dashboard-grid";
 import type { EpisodeDashboardProps } from "@/components/episode/types";
 import { YouTubePlayer } from "@/components/episode/youtube-player";
+import { seasonNine } from "@/data/season-9";
 import { CurrentRunCard } from "./current-run-card";
-import { CurseCard } from "./curse-card";
+import { getSeasonNineGameState } from "./game-state";
 import { InvestigationBookCard } from "./investigation-book-card";
 import { LeaderboardCard } from "./leaderboard-card";
-import { getSeekersTrackerState } from "./seekers-tracker-data";
-import { getSeasonNineState } from "./timeline-data";
 
 const WIDE_COLUMN_RATIO = [0.9, 0.95, 1.35] as const;
 
 export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: EpisodeDashboardProps) {
     const [currentTime, setCurrentTime] = useState(0);
-    const state = useMemo(
-        () => getSeasonNineState(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
+    const episode = seasonNine.episodes.find(
+        (candidate) => candidate.slug === episodeSlug,
     );
-    const seekersTrackerState = useMemo(
-        () => getSeekersTrackerState(episodeSlug, currentTime),
-        [currentTime, episodeSlug],
-    );
+
+    if (!episode) {
+        throw new RangeError(`Episode "${episodeSlug}" does not belong to Season 9.`);
+    }
+
+    const gameState = getSeasonNineGameState({
+        episode: episode.slug,
+        at: currentTime,
+    });
 
     return (
         <DashboardGrid
@@ -37,17 +40,12 @@ export function SeasonNineDashboard({ episodeSlug, label, title, videoId }: Epis
                     onTimeChange={setCurrentTime}
                 />
             }
-            left={
-                <>
-                    <CurrentRunCard state={state} />
-                    <CurseCard curse={state.activeCurse} />
-                </>
-            }
-            middle={<LeaderboardCard state={state} />}
+            left={<CurrentRunCard state={gameState.timeline} />}
+            middle={<LeaderboardCard state={gameState.timeline} />}
             right={(
                 <InvestigationBookCard
-                    seekersTrackerState={seekersTrackerState}
-                    state={state}
+                    seekersTrackerState={gameState.seekersTracker}
+                    state={gameState.timeline}
                 />
             )}
         />

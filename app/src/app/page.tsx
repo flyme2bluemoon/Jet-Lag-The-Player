@@ -63,6 +63,9 @@ function SeasonSection({ id, title, seasons }: { id: string; title: string; seas
 export default function Home() {
   const supportedSeasons = seasons.filter(isSupportedSeason);
   const unsupportedSeasons = seasons.filter((season) => !isSupportedSeason(season));
+  const activeSeasonTrailers = seasonTrailers.filter(
+    (trailer) => !supportedSeasons.some((season) => season.slug === trailer.slug),
+  );
 
   return (
     <main className="page-texture min-h-screen overflow-hidden">
@@ -96,7 +99,9 @@ export default function Home() {
       </section>
 
       <div className="max-w-page px-gutter tablet:pt-0 mx-auto space-y-12 pt-6 pb-18">
-        <TrailerSection id="new-season-title" title="New season" trailers={seasonTrailers} />
+        {activeSeasonTrailers.length > 0 && (
+          <TrailerSection id="new-season-title" title="New season" trailers={activeSeasonTrailers} />
+        )}
         <SeasonSection id="watch-now-title" title="Watch now" seasons={supportedSeasons} />
         <SeasonSection id="coming-soon-title" title="Coming soon" seasons={unsupportedSeasons} />
       </div>

@@ -19,18 +19,4 @@ export type SeasonTrailer = {
   youtubePremiere: string;
 };
 
-export const seasonNineteenTrailer = {
-  slug: "season-19",
-  number: 19,
-  name: "Japanorama",
-  tagline: "The next Jet Lag season is almost here.",
-  releasedTagline: "The wait is finally over, the next season of Jet Lag is here",
-  videoId: "lPPCjg79EyI",
-  thumbnail: "/thumbnails/season-19/cover.jpg",
-  nebulaSeason: "https://nebula.tv/jetlag/season/19",
-  nebulaFirstEpisode: "https://nebula.tv/videos/jetlag-s19e1",
-  nebulaPremiere: "2026-08-19T10:30:00-04:00",
-  youtubePremiere: "2026-08-26T10:30:00-04:00",
-} as const satisfies SeasonTrailer;
-
-export const seasonTrailers = [seasonNineteenTrailer] as const satisfies readonly SeasonTrailer[];
+export const seasonTrailers: readonly SeasonTrailer[] = [];

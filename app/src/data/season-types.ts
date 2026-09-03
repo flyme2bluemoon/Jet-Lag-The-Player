@@ -43,6 +43,8 @@ export type SeasonDefinition = {
   liveDashboard?: LiveDashboard;
 };
 
-export function isReleasedEpisode(episode: Episode): episode is ReleasedEpisode {
+export function isReleasedEpisode<T extends Episode>(
+  episode: T,
+): episode is Extract<T, ReleasedEpisode> {
   return episode.slug !== undefined && episode.video !== undefined;
 }

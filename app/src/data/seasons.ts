@@ -1,4 +1,5 @@
 import { seasonEighteen } from "./season-18";
+import { seasonNineteen } from "./season-19";
 import { seasonFour } from "./season-4";
 import { seasonNine } from "./season-9";
 import type { LiveDashboard, SeasonDefinition } from "./season-types";
@@ -258,6 +259,13 @@ export const seasons = [
       },
     ],
     liveDashboard: seasonEighteen,
+  },
+  {
+    slug: "season-19",
+    number: 19,
+    name: "Japanorama",
+    playlistUrl: "https://www.youtube.com/playlist?list=PLKPpLfWggWh0",
+    liveDashboard: seasonNineteen,
   },
 ] as const satisfies readonly SeasonDefinition[];
 

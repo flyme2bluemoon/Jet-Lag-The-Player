@@ -23,4 +23,9 @@ export const dashboardRegistry: Record<SupportedSeasonSlug, DashboardComponent> 
             (module) => module.SeasonEighteenDashboard,
         ),
     ),
+    "season-19": dynamic(() =>
+        import("@/seasons/season-19/dashboard").then(
+            (module) => module.SeasonNineteenDashboard,
+        ),
+    ),
 };

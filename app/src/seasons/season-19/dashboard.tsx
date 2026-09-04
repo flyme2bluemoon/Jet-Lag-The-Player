@@ -3,6 +3,7 @@
 import { DashboardGrid } from "@/components/episode/dashboard-grid";
 import type { EpisodeDashboardProps } from "@/components/episode/types";
 import { YouTubePlayer } from "@/components/episode/youtube-player";
+import { GameBoardCard } from "./game-board-card";
 
 export function SeasonNineteenDashboard({
   label,
@@ -16,7 +17,7 @@ export function SeasonNineteenDashboard({
       }
       left={null}
       middle={null}
-      right={null}
+      right={<GameBoardCard />}
     />
   );
 }

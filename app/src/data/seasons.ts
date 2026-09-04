@@ -265,6 +265,34 @@ export const seasons = [
     number: 19,
     name: "Japanorama",
     playlistUrl: "https://www.youtube.com/playlist?list=PLKPpLfWggWh0",
+    attribution: [
+      {
+        parts: [
+          "Basemap tiles from ",
+          { text: "CARTO", href: "https://carto.com/attribution/" },
+          " · Basemap data from © ",
+          {
+            text: "OpenStreetMap contributors",
+            href: "https://www.openstreetmap.org/copyright",
+          },
+        ],
+      },
+      {
+        label: "Japan",
+        parts: [
+          {
+            text: "Simplified national boundary data from geoBoundaries",
+            href: "https://www.geoboundaries.org/",
+          },
+          ", licensed under ",
+          {
+            text: "CC BY 4.0",
+            href: "https://creativecommons.org/licenses/by/4.0/",
+          },
+          " and modified for this application",
+        ],
+      },
+    ],
     liveDashboard: seasonNineteen,
   },
 ] as const satisfies readonly SeasonDefinition[];

@@ -2,6 +2,7 @@
 
 export const CANADA_GEOJSON_URL = "/geojson/generated/canada-a36e922c3621.geojson";
 export const CENTRE_PARTY_CANTONS_URL = "/geojson/generated/centre-party-cantons-670d3a7c6555.json";
+export const JAPAN_PREFECTURES_GEOJSON_URL = "/geojson/generated/japan-prefectures-34250ee466c1.geojson";
 export const JAPAN_GEOJSON_URL = "/geojson/generated/japan-9a34f3486d50.geojson";
 export const NON_MITTELLAND_REGIONS_URL = "/geojson/generated/non-mittelland-regions-ca6dc34a92d3.json";
 export const SWITZERLAND_GEOJSON_URL = "/geojson/generated/switzerland-ad76fa0a8354.geojson";

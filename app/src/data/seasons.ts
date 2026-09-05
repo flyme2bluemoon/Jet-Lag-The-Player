@@ -289,6 +289,16 @@ export const seasons = [
             text: "CC BY 4.0",
             href: "https://creativecommons.org/licenses/by/4.0/",
           },
+          " and modified for this application · ",
+          {
+            text: "Prefecture boundary data from geoBoundaries",
+            href: "https://www.geoboundaries.org/",
+          },
+          " (OpenStreetMap / Wambacher), licensed under the ",
+          {
+            text: "Open Data Commons Open Database License 1.0",
+            href: "https://opendatacommons.org/licenses/odbl/1-0/",
+          },
           " and modified for this application",
         ],
       },

@@ -31,11 +31,13 @@ There are 18 full seasons plus the _Hide and Seek Across NYC_ mini-season. Use t
 |     16 | Hide & Seek: U.K.             | Sam                         | Adam                     | Ben               |
 |     17 | Taiwan Rail Rush              | Sam & Michael               | Ben & Adam               |                   |
 |     18 | Stateside Scramble            | Sam & Amy (jet-lag-yellow)  | Ben & Adam (jet-lag-red) |                   |
+|     19 | Japanorama                    | Sam & Ben (jet-lag-yellow)  | Adam & Tom (jet-lag-red) |                   |
 
 For Season 4 challenge data, check out [Battle 4 America challenge reference](https://jetlag.fandom.com/wiki/Battle_4_America/Challenges).
 For Season 9 question bank data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Questions.
 For Season 9 curse data, check out https://jetlag.fandom.com/wiki/Hide_%2B_Seek/Curses.
 For Season 18 challenge data, check out [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Stateside_Scramble/Challenges).
+For Season 19 challenge data, check out [Stateside Scramble challenge reference](https://jetlag.fandom.com/wiki/Japanorama/Challenges).
 
 ## Repository layout
 

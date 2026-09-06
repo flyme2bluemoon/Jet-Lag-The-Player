@@ -19,6 +19,7 @@ ENV/
 
 # Node.js / Next.js
 node_modules/
+.pnpm-store/
 .next/
 out/
 *.tsbuildinfo

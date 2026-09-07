@@ -38,14 +38,23 @@ export const MAPLIBRE_SCOREBOARD_COLORS = {
     Record<"unavailableRegion" | "unclaimedRegion" | "line", MapHexColor>
 >;
 
-export const MAPLIBRE_COUNTRY_MASK_COLORS = {
-    light: "#e6e3dc",
-    dark: "#071722",
+/**
+ * Carto Positron / Dark Matter `water` fill. Mirrors `--map-water-canvas`.
+ * Use for island maps with intricate coasts where the outside mask should
+ * blend into ocean rather than the warm scoreboard canvas.
+ */
+export const MAPLIBRE_WATER_CANVAS_COLORS = {
+    light: "#d4dadc",
+    dark: "#2C353C",
 } as const satisfies Record<"light" | "dark", MapHexColor>;
 
 export const MAPLIBRE_INVESTIGATION_COLORS = {
     eliminated: "#6C8591",
-    outside: MAPLIBRE_COUNTRY_MASK_COLORS,
+    // Matches `--map-canvas` for Season 9's outside-Switzerland mask.
+    outside: {
+        light: "#e6e3dc",
+        dark: "#071722",
+    },
 } as const satisfies {
     eliminated: MapHexColor;
     outside: Record<"light" | "dark", MapHexColor>;

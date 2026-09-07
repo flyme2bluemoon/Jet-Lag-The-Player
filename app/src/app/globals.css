@@ -20,6 +20,7 @@
     --control: #354c58;
     --footer-copy: #586b75;
     --map-canvas: #e6e3dc;
+    --map-water-canvas: #d4dadc;
     --budget-credit: color-mix(in oklch, var(--color-jet-lag-green) 72%, black);
     --budget-debit: color-mix(in oklch, var(--color-jet-lag-red) 78%, black);
     --texture-line: color-mix(in srgb, var(--color-foreground) 4%, transparent);
@@ -62,6 +63,7 @@
     --control: #c4ccd0;
     --footer-copy: #8c9aa2;
     --map-canvas: #071722;
+    --map-water-canvas: #2C353C;
     --budget-credit: color-mix(in oklch, var(--color-jet-lag-green) 70%, white);
     --budget-debit: color-mix(in oklch, var(--color-jet-lag-red) 72%, white);
     --texture-line: color-mix(
@@ -475,6 +477,7 @@
     --color-control: var(--control);
     --color-footer-copy: var(--footer-copy);
     --color-map-canvas: var(--map-canvas);
+    --color-map-water-canvas: var(--map-water-canvas);
     --color-challenge-card-paper: #f4f0e9;
     --color-challenge-card-ink: #061724;
     --color-budget-credit: var(--budget-credit);

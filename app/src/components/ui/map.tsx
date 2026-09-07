@@ -1564,6 +1564,7 @@ function MapGeoJSON<
           id: lineLayerId,
           type: "line",
           source: sourceId,
+          layout: { "line-join": "round", "line-cap": "round" },
           paint: mergedLinePaint,
         },
         beforeId,

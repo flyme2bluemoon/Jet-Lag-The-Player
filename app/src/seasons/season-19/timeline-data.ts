@@ -26,7 +26,7 @@ export type SeasonNineteenTeamLocationEvent = SeasonNineteenTimestamp &
       }
     | {
         kind: "in-transit";
-        mode: "train" | "shinkansen" | "bus" | "taxi" | "walking";
+        mode: "train" | "shinkansen" | "bus" | "taxi" | "walking" | "ferry";
         from: SeasonNineteenPlaceId;
         to: SeasonNineteenPlaceId;
       }
@@ -92,7 +92,12 @@ const episodeOne = (at: number): SeasonNineteenTimestamp => ({
   at,
 });
 
-/** Places explicitly shown or named during Episode 1. */
+const episodeTwo = (at: number): SeasonNineteenTimestamp => ({
+  episode: "episode-2",
+  at,
+});
+
+/** Places explicitly shown or named in the extracted episodes. */
 export const seasonNineteenPlaces = {
   "nishi-oyama-station": {
     id: "nishi-oyama-station",
@@ -168,6 +173,106 @@ export const seasonNineteenPlaces = {
     id: "miyazaki-shrine",
     name: "Miyazaki Shrine",
     prefecture: "Miyazaki",
+  },
+  "mojiko-station": {
+    id: "mojiko-station",
+    name: "Mojikō Station",
+    prefecture: "Fukuoka",
+  },
+  "kanmon-bridge": {
+    id: "kanmon-bridge",
+    name: "Kanmon Bridge (Moji side)",
+    prefecture: "Fukuoka",
+  },
+  "kanmon-tunnel-shimonoseki-exit": {
+    id: "kanmon-tunnel-shimonoseki-exit",
+    name: "Kanmon Tunnel / Shimonoseki-side bus stop",
+    prefecture: "Yamaguchi",
+  },
+  "shimonoseki-station": {
+    id: "shimonoseki-station",
+    name: "Shimonoseki Station",
+    prefecture: "Yamaguchi",
+  },
+  "usuki-station": {
+    id: "usuki-station",
+    name: "Usuki Station",
+    prefecture: "Oita",
+  },
+  "usuki-port": {
+    id: "usuki-port",
+    name: "Usuki Port",
+    prefecture: "Oita",
+  },
+  "yawatahama-port": {
+    id: "yawatahama-port",
+    name: "Yawatahama Port",
+    prefecture: "Ehime",
+  },
+  "yawatahama-station": {
+    id: "yawatahama-station",
+    name: "Yawatahama Station",
+    prefecture: "Ehime",
+  },
+  "tsuzu-station": {
+    id: "tsuzu-station",
+    name: "Tsuzu Station",
+    prefecture: "Yamaguchi",
+  },
+  "tsuzu-fishing-supply-store": {
+    id: "tsuzu-fishing-supply-store",
+    name: "Kameya fishing-supply store in Tsuzu",
+    prefecture: "Yamaguchi",
+  },
+  "tsuzu-beach": {
+    id: "tsuzu-beach",
+    name: "Tsuzu beach / river mouth",
+    prefecture: "Yamaguchi",
+  },
+  "sakura-ido": {
+    id: "sakura-ido",
+    name: "Sakura Ido",
+    prefecture: "Yamaguchi",
+  },
+  "hiroshima-station": {
+    id: "hiroshima-station",
+    name: "Hiroshima Station",
+    prefecture: "Hiroshima",
+  },
+  "hiroshima-cat-cafe": {
+    id: "hiroshima-cat-cafe",
+    name: "Cat café near Hiroshima Station",
+    prefecture: "Hiroshima",
+  },
+  "matsuyama-station": {
+    id: "matsuyama-station",
+    name: "Matsuyama Station",
+    prefecture: "Ehime",
+  },
+  "matsuyama-fishing-harbor": {
+    id: "matsuyama-fishing-harbor",
+    name: "Matsuyama fishing harbor",
+    prefecture: "Ehime",
+  },
+  "matsuyama-fishing-supply-store": {
+    id: "matsuyama-fishing-supply-store",
+    name: "Matsuyama fishing-supply store",
+    prefecture: "Ehime",
+  },
+  "matsuyama-fishing-shore": {
+    id: "matsuyama-fishing-shore",
+    name: "Matsuyama fishing waterfront",
+    prefecture: "Ehime",
+  },
+  "saijo-station": {
+    id: "saijo-station",
+    name: "Saijō Station",
+    prefecture: "Hiroshima",
+  },
+  "matsuyama-city-station-area": {
+    id: "matsuyama-city-station-area",
+    name: "Matsuyama City Station area",
+    prefecture: "Ehime",
   },
 } as const satisfies Record<string, SeasonNineteenPlace>;
 
@@ -267,6 +372,162 @@ export const seasonNineteenTeamLocations = {
       to: "kitakyushu",
     },
     { ...episodeOne(4314), kind: "stationary", place: "kitakyushu" },
+    {
+      ...episodeTwo(108),
+      kind: "in-transit",
+      mode: "train",
+      from: "kitakyushu",
+      to: "mojiko-station",
+    },
+    {
+      ...episodeTwo(287),
+      kind: "stationary",
+      place: "mojiko-station",
+    },
+    {
+      ...episodeTwo(320),
+      kind: "in-transit",
+      mode: "walking",
+      from: "mojiko-station",
+      to: "kanmon-bridge",
+    },
+    {
+      ...episodeTwo(438),
+      kind: "stationary",
+      place: "kanmon-bridge",
+    },
+    {
+      ...episodeTwo(685),
+      kind: "in-transit",
+      mode: "walking",
+      from: "kanmon-bridge",
+      to: "kanmon-tunnel-shimonoseki-exit",
+    },
+    {
+      ...episodeTwo(807),
+      kind: "stationary",
+      place: "kanmon-tunnel-shimonoseki-exit",
+    },
+    {
+      ...episodeTwo(810),
+      kind: "in-transit",
+      mode: "bus",
+      from: "kanmon-tunnel-shimonoseki-exit",
+      to: "shimonoseki-station",
+    },
+    {
+      ...episodeTwo(815),
+      kind: "stationary",
+      place: "shimonoseki-station",
+    },
+    {
+      ...episodeTwo(822),
+      kind: "in-transit",
+      mode: "train",
+      from: "shimonoseki-station",
+      to: "tsuzu-station",
+    },
+    {
+      ...episodeTwo(1541),
+      kind: "stationary",
+      place: "tsuzu-station",
+    },
+    {
+      ...episodeTwo(1543),
+      kind: "in-transit",
+      mode: "walking",
+      from: "tsuzu-station",
+      to: "tsuzu-fishing-supply-store",
+    },
+    {
+      ...episodeTwo(1561),
+      kind: "stationary",
+      place: "tsuzu-fishing-supply-store",
+    },
+    {
+      ...episodeTwo(1594),
+      kind: "in-transit",
+      mode: "walking",
+      from: "tsuzu-fishing-supply-store",
+      to: "tsuzu-beach",
+    },
+    {
+      ...episodeTwo(1680),
+      kind: "stationary",
+      place: "tsuzu-beach",
+    },
+    {
+      ...episodeTwo(2128),
+      kind: "in-transit",
+      mode: "walking",
+      from: "tsuzu-beach",
+      to: "sakura-ido",
+    },
+    {
+      ...episodeTwo(2199),
+      kind: "stationary",
+      place: "sakura-ido",
+    },
+    {
+      ...episodeTwo(2478),
+      kind: "in-transit",
+      mode: "walking",
+      from: "sakura-ido",
+      to: "tsuzu-station",
+    },
+    {
+      ...episodeTwo(2729),
+      kind: "stationary",
+      place: "tsuzu-station",
+    },
+    {
+      ...episodeTwo(2734),
+      kind: "in-transit",
+      mode: "train",
+      from: "tsuzu-station",
+      to: "hiroshima-station",
+    },
+    {
+      ...episodeTwo(2939),
+      kind: "stationary",
+      place: "hiroshima-station",
+    },
+    {
+      ...episodeTwo(2945),
+      kind: "in-transit",
+      mode: "walking",
+      from: "hiroshima-station",
+      to: "hiroshima-cat-cafe",
+    },
+    {
+      ...episodeTwo(2990),
+      kind: "stationary",
+      place: "hiroshima-cat-cafe",
+    },
+    {
+      ...episodeTwo(3313),
+      kind: "in-transit",
+      mode: "walking",
+      from: "hiroshima-cat-cafe",
+      to: "hiroshima-station",
+    },
+    {
+      ...episodeTwo(3330),
+      kind: "stationary",
+      place: "hiroshima-station",
+    },
+    {
+      ...episodeTwo(3420),
+      kind: "in-transit",
+      mode: "train",
+      from: "hiroshima-station",
+      to: "saijo-station",
+    },
+    {
+      ...episodeTwo(3729),
+      kind: "stationary",
+      place: "saijo-station",
+    },
   ],
   "adam-tom": [
     { ...episodeOne(0), kind: "stationary", place: "nishi-oyama-station" },
@@ -342,6 +603,138 @@ export const seasonNineteenTeamLocations = {
       to: "miyazaki-shrine",
     },
     { ...episodeOne(4763), kind: "stationary", place: "miyazaki-shrine" },
+    {
+      ...episodeTwo(105),
+      kind: "in-transit",
+      mode: "taxi",
+      from: "miyazaki-shrine",
+      to: "miyazaki-station-area",
+    },
+    {
+      ...episodeTwo(242),
+      kind: "stationary",
+      place: "miyazaki-station-area",
+    },
+    {
+      ...episodeTwo(559),
+      kind: "in-transit",
+      mode: "train",
+      from: "miyazaki-station-area",
+      to: "usuki-station",
+    },
+    {
+      ...episodeTwo(945),
+      kind: "stationary",
+      place: "usuki-station",
+    },
+    {
+      ...episodeTwo(951),
+      kind: "in-transit",
+      mode: "walking",
+      from: "usuki-station",
+      to: "usuki-port",
+    },
+    {
+      ...episodeTwo(987),
+      kind: "stationary",
+      place: "usuki-port",
+    },
+    {
+      ...episodeTwo(1003),
+      kind: "in-transit",
+      mode: "ferry",
+      from: "usuki-port",
+      to: "yawatahama-port",
+    },
+    {
+      ...episodeTwo(1950),
+      kind: "stationary",
+      place: "yawatahama-port",
+    },
+    {
+      ...episodeTwo(1966),
+      kind: "in-transit",
+      mode: "walking",
+      from: "yawatahama-port",
+      to: "yawatahama-station",
+    },
+    {
+      ...episodeTwo(1991),
+      kind: "stationary",
+      place: "yawatahama-station",
+    },
+    {
+      ...episodeTwo(1999),
+      kind: "in-transit",
+      mode: "train",
+      from: "yawatahama-station",
+      to: "matsuyama-station",
+    },
+    {
+      ...episodeTwo(2616),
+      kind: "stationary",
+      place: "matsuyama-station",
+    },
+    {
+      ...episodeTwo(2620),
+      kind: "in-transit",
+      mode: "walking",
+      from: "matsuyama-station",
+      to: "matsuyama-fishing-harbor",
+    },
+    {
+      ...episodeTwo(2632),
+      kind: "stationary",
+      place: "matsuyama-fishing-harbor",
+    },
+    {
+      ...episodeTwo(2661),
+      kind: "in-transit",
+      mode: "walking",
+      from: "matsuyama-fishing-harbor",
+      to: "matsuyama-fishing-supply-store",
+    },
+    {
+      ...episodeTwo(2664),
+      kind: "stationary",
+      place: "matsuyama-fishing-supply-store",
+    },
+    {
+      ...episodeTwo(2718),
+      kind: "in-transit",
+      mode: "walking",
+      from: "matsuyama-fishing-supply-store",
+      to: "matsuyama-fishing-shore",
+    },
+    {
+      ...episodeTwo(2786),
+      kind: "stationary",
+      place: "matsuyama-fishing-shore",
+    },
+    {
+      ...episodeTwo(3568),
+      kind: "in-transit",
+      mode: "taxi",
+      from: "matsuyama-fishing-shore",
+      to: "matsuyama-station",
+    },
+    {
+      ...episodeTwo(3669),
+      kind: "stationary",
+      place: "matsuyama-station",
+    },
+    {
+      ...episodeTwo(3680),
+      kind: "in-transit",
+      mode: "walking",
+      from: "matsuyama-station",
+      to: "matsuyama-city-station-area",
+    },
+    {
+      ...episodeTwo(3770),
+      kind: "stationary",
+      place: "matsuyama-city-station-area",
+    },
   ],
 } as const satisfies Record<
   SeasonNineteenTeamId,
@@ -417,6 +810,48 @@ export const seasonNineteenChallenges = {
     title: "Answer a Riddle Under a Big Bridge",
     description:
       "Correctly answer Tristan's riddle while standing under a bridge longer than 400 meters. If you fail, this challenge cannot be reattempted by your team.",
+    cardPulls: 2,
+  },
+  "find-a-clam": {
+    id: "find-a-clam",
+    title: "Find a Clam",
+    description:
+      "It's peak clam season in Japan! Clam-digging, or shiohigari, is a springtime tradition in Japan. Go to a beach and dig up a clam!",
+    cardPulls: 4,
+  },
+  "catvenger-hunt-part-deux": {
+    id: "catvenger-hunt-part-deux",
+    title: "Catvenger Hunt Part Deux",
+    description:
+      "Before leaving the prefecture, find four of these five cats. They must be different cats: a meowing cat; a cat that is licking itself; a cat that is touching you (you may not get closer than one foot from the cat to begin this; the cat must cover the remaining one foot); a cat that is all one color; a cat that is being pet by someone who is not you or your partner.",
+    cardPulls: 1,
+  },
+  "hide-at-japan-landscape": {
+    id: "hide-at-japan-landscape",
+    title: "Hide at One of the 100 Landscapes of Japan",
+    description:
+      "At one of the 100 Landscapes of Japan, one partner must generate a number 2–10. They must then hide in a place where they believe it will take their partner that amount of time to find them. You get a one-minute margin of error on each side, and may make an attempt every 10 minutes.",
+    cardPulls: 2,
+  },
+  "taste-rice-at-rice-field": {
+    id: "taste-rice-at-rice-field",
+    title: "Taste Rice at a Rice Field",
+    description:
+      "Visit a field of rice terraces. One team member will randomly generate a number of grains and feed them to their teammate, who is blindfolded. They must correctly determine the number of grains in their mouth. If they fail, you must wait 10 minutes before trying again.",
+    cardPulls: 3,
+  },
+  "get-recognized": {
+    id: "get-recognized",
+    title: "Get Recognized",
+    description:
+      "A person you do not know personally must come up to you and make it clear they recognize you from the internet. You may try to situate yourself in noticeable places, and act recognizable, but you may not directly solicit recognition, either verbally or in writing. You may not post on social media about your location. In order to be eligible to complete this challenge, you must select which member of your team must be recognized. You must successfully gather footage in which the person is recognizing you; you may not ask them to recreate the moment.",
+    cardPulls: 5,
+  },
+  "taste-test-strawberries": {
+    id: "taste-test-strawberries",
+    title: "Taste Test Strawberries",
+    description:
+      "It's strawberry season! At a strawberry farm, pick three strawberries based on appearance and predict how your blindfolded partner will rank them based on taste. If you do not match, you must wait 30 minutes before trying again.",
     cardPulls: 2,
   },
 } as const satisfies Record<string, SeasonNineteenChallenge>;
@@ -576,6 +1011,223 @@ export const seasonNineteenChallengeEvents = [
     team: "sam-ben",
     challenge: "answer-riddle-under-bridge",
   },
+  {
+    ...episodeOne(4770),
+    kind: "attempt-ended",
+    attempt: "adam-tom-scavenger-3",
+    team: "adam-tom",
+    challenge: "japan-scavenger-hunt",
+    outcome: "completed",
+  },
+  {
+    ...episodeOne(4773),
+    kind: "completed",
+    team: "adam-tom",
+    challenge: "japan-scavenger-hunt",
+  },
+  {
+    ...episodeTwo(188),
+    kind: "revealed",
+    challenge: "find-a-clam",
+  },
+  {
+    ...episodeTwo(533),
+    kind: "attempt-ended",
+    attempt: "sam-ben-riddle-1",
+    team: "sam-ben",
+    challenge: "answer-riddle-under-bridge",
+    outcome: "completed",
+  },
+  {
+    ...episodeTwo(535),
+    kind: "completed",
+    team: "sam-ben",
+    challenge: "answer-riddle-under-bridge",
+  },
+  {
+    ...episodeTwo(652),
+    kind: "revealed",
+    challenge: "catvenger-hunt-part-deux",
+  },
+  {
+    ...episodeTwo(938),
+    kind: "attempt-started",
+    attempt: "adam-tom-boat-1",
+    team: "adam-tom",
+    challenge: "leave-prefecture-by-boat",
+  },
+  {
+    ...episodeTwo(1053),
+    kind: "attempt-ended",
+    attempt: "adam-tom-boat-1",
+    team: "adam-tom",
+    challenge: "leave-prefecture-by-boat",
+    outcome: "completed",
+  },
+  {
+    ...episodeTwo(1055),
+    kind: "completed",
+    team: "adam-tom",
+    challenge: "leave-prefecture-by-boat",
+  },
+  {
+    ...episodeTwo(1175),
+    kind: "revealed",
+    challenge: "hide-at-japan-landscape",
+  },
+  {
+    ...episodeTwo(1525),
+    kind: "attempt-started",
+    attempt: "sam-ben-fish-1",
+    team: "sam-ben",
+    challenge: "catch-a-fish",
+  },
+  {
+    ...episodeTwo(1720),
+    kind: "attempt-started",
+    attempt: "sam-ben-clam-1",
+    team: "sam-ben",
+    challenge: "find-a-clam",
+  },
+  {
+    ...episodeTwo(2120),
+    kind: "attempt-ended",
+    attempt: "sam-ben-fish-1",
+    team: "sam-ben",
+    challenge: "catch-a-fish",
+    outcome: "abandoned",
+  },
+  {
+    ...episodeTwo(2120),
+    kind: "attempt-ended",
+    attempt: "sam-ben-clam-1",
+    team: "sam-ben",
+    challenge: "find-a-clam",
+    outcome: "abandoned",
+  },
+  {
+    ...episodeTwo(2159),
+    kind: "attempt-started",
+    attempt: "sam-ben-water-1",
+    team: "sam-ben",
+    challenge: "flip-remarkable-water",
+  },
+  {
+    ...episodeTwo(2460),
+    kind: "attempt-ended",
+    attempt: "sam-ben-water-1",
+    team: "sam-ben",
+    challenge: "flip-remarkable-water",
+    outcome: "completed",
+  },
+  {
+    ...episodeTwo(2462),
+    kind: "completed",
+    team: "sam-ben",
+    challenge: "flip-remarkable-water",
+  },
+  {
+    ...episodeTwo(2555),
+    kind: "revealed",
+    challenge: "taste-rice-at-rice-field",
+  },
+  {
+    ...episodeTwo(2613),
+    kind: "attempt-started",
+    attempt: "adam-tom-fish-1",
+    team: "adam-tom",
+    challenge: "catch-a-fish",
+  },
+  {
+    ...episodeTwo(2945),
+    kind: "attempt-started",
+    attempt: "sam-ben-catvenger-1",
+    team: "sam-ben",
+    challenge: "catvenger-hunt-part-deux",
+  },
+  {
+    ...episodeTwo(3195),
+    kind: "attempt-ended",
+    attempt: "sam-ben-catvenger-1",
+    team: "sam-ben",
+    challenge: "catvenger-hunt-part-deux",
+    outcome: "completed",
+  },
+  {
+    ...episodeTwo(3198),
+    kind: "completed",
+    team: "sam-ben",
+    challenge: "catvenger-hunt-part-deux",
+  },
+  {
+    ...episodeTwo(3367),
+    kind: "revealed",
+    challenge: "find-prefectural-bird",
+  },
+  {
+    ...episodeTwo(3526),
+    kind: "attempt-ended",
+    attempt: "adam-tom-fish-1",
+    team: "adam-tom",
+    challenge: "catch-a-fish",
+    outcome: "abandoned",
+  },
+  {
+    ...episodeTwo(3793),
+    kind: "removed",
+    challenge: "find-prefectural-bird",
+  },
+  {
+    ...episodeTwo(3793),
+    kind: "removed",
+    challenge: "find-a-clam",
+  },
+  {
+    ...episodeTwo(3827),
+    kind: "revealed",
+    challenge: "get-recognized",
+  },
+  {
+    ...episodeTwo(3875),
+    kind: "attempt-started",
+    attempt: "adam-tom-recognized-1",
+    team: "adam-tom",
+    challenge: "get-recognized",
+  },
+  {
+    ...episodeTwo(3885),
+    kind: "revealed",
+    challenge: "taste-test-strawberries",
+  },
+  {
+    ...episodeTwo(3941),
+    kind: "attempt-started",
+    attempt: "adam-tom-rice-1",
+    team: "adam-tom",
+    challenge: "taste-rice-at-rice-field",
+  },
+  {
+    ...episodeTwo(3975),
+    kind: "attempt-ended",
+    attempt: "adam-tom-recognized-1",
+    team: "adam-tom",
+    challenge: "get-recognized",
+    outcome: "completed",
+  },
+  {
+    ...episodeTwo(3993),
+    kind: "completed",
+    team: "adam-tom",
+    challenge: "get-recognized",
+  },
+  {
+    ...episodeTwo(4009),
+    kind: "attempt-ended",
+    attempt: "adam-tom-rice-1",
+    team: "adam-tom",
+    challenge: "taste-rice-at-rice-field",
+    outcome: "abandoned",
+  },
 ] as const satisfies readonly SeasonNineteenChallengeEvent[];
 
 /** Unlocks use the first frame of each full-screen Challenge Completed graphic. */
@@ -598,9 +1250,45 @@ export const seasonNineteenPrefectureUnlocks = [
     prefecture: "Kagoshima",
     challenge: "play-suikawari",
   },
+  {
+    ...episodeOne(4773),
+    team: "adam-tom",
+    prefecture: "Miyazaki",
+    challenge: "japan-scavenger-hunt",
+  },
+  {
+    ...episodeTwo(535),
+    team: "sam-ben",
+    prefecture: "Fukuoka",
+    challenge: "answer-riddle-under-bridge",
+  },
+  {
+    ...episodeTwo(1055),
+    team: "adam-tom",
+    prefecture: "Oita",
+    challenge: "leave-prefecture-by-boat",
+  },
+  {
+    ...episodeTwo(2462),
+    team: "sam-ben",
+    prefecture: "Yamaguchi",
+    challenge: "flip-remarkable-water",
+  },
+  {
+    ...episodeTwo(3198),
+    team: "sam-ben",
+    prefecture: "Hiroshima",
+    challenge: "catvenger-hunt-part-deux",
+  },
+  {
+    ...episodeTwo(3993),
+    team: "adam-tom",
+    prefecture: "Ehime",
+    challenge: "get-recognized",
+  },
 ] as const satisfies readonly SeasonNineteenPrefectureUnlock[];
 
-/** Every reward card whose face is shown in Episode 1. */
+/** Every reward card whose face is shown in the extracted episodes. */
 export const seasonNineteenRewardCards = {
   "unlock-opponent-prefecture": {
     id: "unlock-opponent-prefecture",
@@ -625,6 +1313,41 @@ export const seasonNineteenRewardCards = {
   "triple-reward-prefecture-ending-e": {
     id: "triple-reward-prefecture-ending-e",
     title: '3× Reward in a Prefecture That Ends in "E"',
+  },
+  "curse-forbidden-quest": {
+    id: "curse-forbidden-quest",
+    title: "Curse of the Forbidden Quest",
+    description:
+      "Play this curse in response to a new challenge entering the board. That challenge cannot be attempted by the opposing team.",
+  },
+  "curse-toxic-cloud": {
+    id: "curse-toxic-cloud",
+    title: "Curse of the Toxic Cloud",
+    description:
+      "Select a prefecture that the opposing team is not currently in. The opposing team must flip a coin after every hour they spend in that prefecture. If it is tails, they must discard a card at random.",
+  },
+  "shinkansen-60-minutes": {
+    id: "shinkansen-60-minutes",
+    title: "Shinkansen — 60 Minutes",
+  },
+  "unlock-any-prefecture": {
+    id: "unlock-any-prefecture",
+    title: "Unlock Any Prefecture",
+  },
+  "curse-pickpocket": {
+    id: "curse-pickpocket",
+    title: "Curse of the Pickpocket",
+    description: "Steal one card at random from the opposing team.",
+  },
+  "curse-bounty-hunter": {
+    id: "curse-bounty-hunter",
+    title: "Curse of the Bounty Hunter",
+    description:
+      "Take a photo of at least one of your opponents. You steal their entire hand and unlock the current prefecture for your team.",
+  },
+  "curse-reverse": {
+    id: "curse-reverse",
+    title: "Curse Reverse",
   },
 } as const satisfies Record<string, SeasonNineteenRewardCard>;
 
@@ -653,6 +1376,36 @@ export const seasonNineteenHandEvents = [
     kind: "kept",
     team: "adam-tom",
     card: "triple-reward-prefecture-ending-e",
+  },
+  {
+    ...episodeTwo(172),
+    kind: "kept",
+    team: "adam-tom",
+    card: "shinkansen-45-minutes",
+  },
+  {
+    ...episodeTwo(645),
+    kind: "kept",
+    team: "sam-ben",
+    card: "curse-forbidden-quest",
+  },
+  {
+    ...episodeTwo(1152),
+    kind: "kept",
+    team: "adam-tom",
+    card: "unlock-any-prefecture",
+  },
+  {
+    ...episodeTwo(2534),
+    kind: "kept",
+    team: "sam-ben",
+    card: "curse-reverse",
+  },
+  {
+    ...episodeTwo(3266),
+    kind: "kept",
+    team: "sam-ben",
+    card: "unlock-any-prefecture",
   },
 ] as const satisfies readonly SeasonNineteenHandEvent[];
 

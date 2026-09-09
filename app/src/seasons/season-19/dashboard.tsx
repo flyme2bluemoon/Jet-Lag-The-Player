@@ -11,6 +11,10 @@ import { DashboardGrid } from "@/components/episode/dashboard-grid";
 import type { EpisodeDashboardProps } from "@/components/episode/types";
 import { YouTubePlayer } from "@/components/episode/youtube-player";
 import { GameBoardCard } from "./game-board-card";
+import {
+  resolvePrefectureUnlocks,
+  resolveTeamLocations,
+} from "./game-board";
 
 export function SeasonNineteenDashboard({
   episodeSlug,
@@ -27,6 +31,8 @@ export function SeasonNineteenDashboard({
   const timestamp = { episode: episode.slug, at: currentTime };
   const challenges = resolveChallengesBoard(timestamp);
   const activeAttempts = resolveActiveChallenges(timestamp);
+  const locations = resolveTeamLocations(timestamp);
+  const unlocks = resolvePrefectureUnlocks(timestamp);
 
   return (
     <DashboardGrid
@@ -48,7 +54,7 @@ export function SeasonNineteenDashboard({
           {activeAttempts.map((attempt) => (
             <ActiveChallengeCard key={attempt.id} attempt={attempt} />
           ))}
-          <GameBoardCard />
+          <GameBoardCard locations={locations} unlocks={unlocks} />
         </>
       }
     />

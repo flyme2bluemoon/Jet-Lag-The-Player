@@ -13,10 +13,16 @@ export type SeasonNineteenEpisodeSlug =
 export type SeasonNineteenTimestamp = EpisodeTimestamp<SeasonNineteenEpisodeSlug>;
 export type SeasonNineteenTeamId = "sam-ben" | "adam-tom";
 
+export type SeasonNineteenCoordinate = readonly [longitude: number, latitude: number];
+
 export type SeasonNineteenPlace = {
   id: string;
   name: string;
+  /** Compact map label; defaults to `name` when omitted. */
+  label?: string;
   prefecture: string;
+  /** MapLibre `[longitude, latitude]` used by the Game Board tracker. */
+  coordinate: SeasonNineteenCoordinate;
 };
 
 export type SeasonNineteenPlaceId = keyof typeof seasonNineteenPlaces;
@@ -112,77 +118,105 @@ export const seasonNineteenPlaces = {
   "nishi-oyama-station": {
     id: "nishi-oyama-station",
     name: "Nishi-Ōyama Station",
+    label: "Nishi-Ōyama",
     prefecture: "Kagoshima",
+    coordinate: [130.57646, 31.1903],
   },
   "kagoshima-chuo-station": {
     id: "kagoshima-chuo-station",
     name: "Kagoshima-Chūō Station",
+    label: "Kagoshima-Chūō",
     prefecture: "Kagoshima",
+    coordinate: [130.5435, 31.58466],
   },
   "sengan-en": {
     id: "sengan-en",
     name: "Sengan-en / Kagoshima Cultural Experience",
+    label: "Sengan-en",
     prefecture: "Kagoshima",
+    coordinate: [130.57663, 31.61662],
   },
   "sengan-en-station": {
     id: "sengan-en-station",
     name: "Sengan-en Station",
+    label: "Sengan-en Sta.",
     prefecture: "Kagoshima",
+    // Transit point beside Sengan-en / Iso Beach used between walking and train legs.
+    coordinate: [130.5755, 31.6145],
   },
   "shin-yatsushiro-station": {
     id: "shin-yatsushiro-station",
     name: "Shin-Yatsushiro Station",
+    label: "Shin-Yatsushiro",
     prefecture: "Kumamoto",
+    coordinate: [130.63484, 32.51804],
   },
   "kumamoto-station": {
     id: "kumamoto-station",
     name: "Kumamoto Station",
+    label: "Kumamoto Sta.",
     prefecture: "Kumamoto",
+    coordinate: [130.6897, 32.78968],
   },
   "round1-stadium-kumamoto": {
     id: "round1-stadium-kumamoto",
     name: "Round1 Stadium Kumamoto",
+    label: "Round1 Kumamoto",
     prefecture: "Kumamoto",
+    coordinate: [130.67753, 32.78505],
   },
   "meteo-sports-plaza": {
     id: "meteo-sports-plaza",
     name: "Meteo Sports Plaza",
+    label: "Meteo Sports Plaza",
     prefecture: "Kagoshima",
+    coordinate: [130.52805, 31.51681],
   },
   "taniyama-station": {
     id: "taniyama-station",
     name: "Taniyama Station",
+    label: "Taniyama Sta.",
     prefecture: "Kagoshima",
+    coordinate: [130.51908, 31.52673],
   },
   "iso-beach": {
     id: "iso-beach",
     name: "Iso Beach",
     prefecture: "Kagoshima",
+    coordinate: [130.57532, 31.6141],
   },
   "omuta-station": {
     id: "omuta-station",
     name: "Ōmuta Station",
+    label: "Ōmuta Sta.",
     prefecture: "Fukuoka",
+    coordinate: [130.4451, 33.02939],
   },
   "hakata-station": {
     id: "hakata-station",
     name: "Hakata Station",
+    label: "Hakata Sta.",
     prefecture: "Fukuoka",
+    coordinate: [130.4199, 33.59004],
   },
   kitakyushu: {
     id: "kitakyushu",
     name: "Kitakyushu",
     prefecture: "Fukuoka",
+    coordinate: [130.88218, 33.88676],
   },
   "miyazaki-station-area": {
     id: "miyazaki-station-area",
     name: "Miyazaki Station area",
+    label: "Miyazaki Sta.",
     prefecture: "Miyazaki",
+    coordinate: [131.43195, 31.91575],
   },
   "miyazaki-shrine": {
     id: "miyazaki-shrine",
     name: "Miyazaki Shrine",
     prefecture: "Miyazaki",
+    coordinate: [131.43049, 31.93844],
   },
   "mojiko-station": {
     id: "mojiko-station",

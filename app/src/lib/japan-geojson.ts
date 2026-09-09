@@ -8,10 +8,9 @@ export type JapanGeoJson = FeatureCollection<
   MultiPolygon,
   {
     shapeName: string;
-    shapeISO: string;
-    shapeID: string;
     shapeGroup: string;
     shapeType: string;
+    source: string;
   }
 >;
 

@@ -2,15 +2,26 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+/**
+ * Full-resolution Japan ADM1 from geoBoundaries (OSM / Wambacher). Same OSM
+ * coastline family as the Carto Positron basemap — keep simplification mild so
+ * occupied outlines track the tiles instead of drifting inland/offshore.
+ */
 const SOURCE_URL =
-  "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/JPN/ADM1/geoBoundaries-JPN-ADM1_simplified.geojson";
+  "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/JPN/ADM1/geoBoundaries-JPN-ADM1.geojson";
 const outputPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../assets/geojson/japan-prefectures.geojson",
 );
-/** Finer than the ADM0 national mask so adjacent prefecture borders stay usable. */
-const SIMPLIFICATION_TOLERANCE = 0.005;
-const MINIMUM_POLYGON_AREA = 0.0005;
+/** ~25 m at mid-latitudes — enough to drop noise without inventing new coasts. */
+const SIMPLIFICATION_TOLERANCE = 0.00025;
+const MINIMUM_POLYGON_AREA = 0.00008;
+/**
+ * Keep multipolygon parts near the largest landmass so remote islands outside
+ * the four main Japanese islands (e.g. Kagoshima's Amami / Ryukyu chain) drop
+ * out of fills and outlines. Expansion is in degrees around the primary bbox.
+ */
+const PRIMARY_LANDMASS_BBOX_PADDING = 0.12;
 const EXPECTED_PREFECTURE_COUNT = 47;
 
 function squaredSegmentDistance(point, start, end) {
@@ -106,6 +117,56 @@ function simplifyPolygon(polygon) {
   return rings.length > 0 ? rings : null;
 }
 
+function ringBBox(ring) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of ring) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  return [minX, minY, maxX, maxY];
+}
+
+function expandBBox([minX, minY, maxX, maxY], padding) {
+  return [minX - padding, minY - padding, maxX + padding, maxY + padding];
+}
+
+function pointInBBox([x, y], [minX, minY, maxX, maxY]) {
+  return x >= minX && x <= maxX && y >= minY && y <= maxY;
+}
+
+function ringCentroid(ring) {
+  let x = 0;
+  let y = 0;
+  const count = ring.length - 1;
+  for (let index = 0; index < count; index += 1) {
+    x += ring[index][0];
+    y += ring[index][1];
+  }
+  return [x / count, y / count];
+}
+
+/** Drop remote island parts that sit outside the primary landmass neighborhood. */
+function keepPrimaryLandmass(polygons) {
+  if (polygons.length <= 1) return polygons;
+
+  const ranked = polygons
+    .map((polygon) => ({ polygon, area: ringArea(polygon[0]) }))
+    .toSorted((left, right) => right.area - left.area);
+  const primaryBBox = expandBBox(
+    ringBBox(ranked[0].polygon[0]),
+    PRIMARY_LANDMASS_BBOX_PADDING,
+  );
+
+  return ranked
+    .filter(({ polygon }) => pointInBBox(ringCentroid(polygon[0]), primaryBBox))
+    .map(({ polygon }) => polygon);
+}
+
 function prefectureName(shapeName) {
   return shapeName.replace(/ Prefecture$/, "");
 }
@@ -141,9 +202,11 @@ function simplifyFeature(feature) {
   }
 
   if (geometry?.type === "MultiPolygon") {
-    const coordinates = geometry.coordinates
-      .map(simplifyPolygon)
-      .filter((polygon) => polygon !== null);
+    const coordinates = keepPrimaryLandmass(
+      geometry.coordinates
+        .map(simplifyPolygon)
+        .filter((polygon) => polygon !== null),
+    );
     if (coordinates.length === 0) {
       throw new RangeError(
         `Prefecture ${properties.shapeName} simplified to empty geometry`,

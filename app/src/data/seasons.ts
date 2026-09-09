@@ -281,16 +281,6 @@ export const seasons = [
         label: "Japan",
         parts: [
           {
-            text: "Simplified national boundary data from geoBoundaries",
-            href: "https://www.geoboundaries.org/",
-          },
-          ", licensed under ",
-          {
-            text: "CC BY 4.0",
-            href: "https://creativecommons.org/licenses/by/4.0/",
-          },
-          " and modified for this application · ",
-          {
             text: "Prefecture boundary data from geoBoundaries",
             href: "https://www.geoboundaries.org/",
           },
@@ -299,7 +289,7 @@ export const seasons = [
             text: "Open Data Commons Open Database License 1.0",
             href: "https://opendatacommons.org/licenses/odbl/1-0/",
           },
-          " and modified for this application",
+          " and modified for this application; the national outline is dissolved from that prefecture set",
         ],
       },
     ],

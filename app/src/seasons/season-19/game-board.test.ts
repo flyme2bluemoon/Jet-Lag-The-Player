@@ -45,6 +45,32 @@ describe("Season 19 game board projections", () => {
     ]);
   });
 
+  it("projects complete tracker states throughout Episode 3", () => {
+    const opening = resolveTeamLocations({ episode: "episode-3", at: 0 });
+    const ending = resolveTeamLocations({ episode: "episode-3", at: 3604 });
+
+    expect(opening["sam-ben"]).toMatchObject({
+      kind: "stationary",
+      place: "saijo-station",
+      coordinate: [132.7436714, 34.4313263],
+    });
+    expect(opening["adam-tom"]).toMatchObject({
+      kind: "stationary",
+      place: "matsuyama-city-station-area",
+      coordinate: [132.7636738, 33.8362664],
+    });
+    expect(ending["sam-ben"]).toMatchObject({
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-house",
+      coordinate: [135.4885791, 34.7787771],
+    });
+    expect(ending["adam-tom"]).toMatchObject({
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-house",
+      coordinate: [135.4885791, 34.7787771],
+    });
+  });
+
   it("fills unlocked prefectures and drops outline once unlocked", () => {
     const before = resolvePrefectureUnlocks({ episode: "episode-1", at: 1290 });
     const after = resolvePrefectureUnlocks({ episode: "episode-1", at: 1291 });

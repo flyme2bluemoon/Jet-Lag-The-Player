@@ -17,9 +17,16 @@ export const seasonNineteen = {
       image: "/thumbnails/season-19/episode-2.jpg",
     },
     {
+      slug: "episode-3",
       label: "Episode 3",
       title: "The Man on the Hill",
+      video: "uzr_gkc81SQ",
       image: "/thumbnails/season-19/episode-3.jpg",
+    },
+    {
+      label: "Episode 4",
+      title: "Bamboozled",
+      image: "/thumbnails/season-19/episode-4.jpg",
     },
   ],
 } as const satisfies LiveDashboard;

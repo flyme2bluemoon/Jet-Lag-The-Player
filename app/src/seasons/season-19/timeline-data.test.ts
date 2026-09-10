@@ -5,6 +5,7 @@ import {
   seasonNineteenChallengeEvents,
   seasonNineteenChallenges,
   seasonNineteenHandEvents,
+  seasonNineteenPlaces,
   seasonNineteenPrefectureUnlocks,
   seasonNineteenRewardCards,
   seasonNineteenTimelineBoundaries,
@@ -13,14 +14,26 @@ import {
 } from "./timeline-data";
 
 const season = {
-  // Extraction does not publish Episode 3 in the dashboard catalog.
-  episodes: [
-    ...seasonNineteen.episodes.filter((episode) => "slug" in episode),
-    { slug: "episode-3" },
-  ],
+  episodes: seasonNineteen.episodes.filter((episode) => "slug" in episode),
 };
 
 describe("Season 19 timeline data", () => {
+  it("provides finite map coordinates for every tracker place", () => {
+    const referencedPlaces = new Set(
+      Object.values(seasonNineteenTeamLocations).flatMap((events) =>
+        events.flatMap((event) =>
+          event.kind === "stationary" ? [event.place] : [event.from, event.to],
+        ),
+      ),
+    );
+
+    for (const placeId of referencedPlaces) {
+      const coordinate = seasonNineteenPlaces[placeId].coordinate;
+      expect(coordinate).toHaveLength(2);
+      expect(coordinate.every(Number.isFinite)).toBe(true);
+    }
+  });
+
   it("keeps each team location route continuous and chronological", () => {
     for (const events of Object.values(seasonNineteenTeamLocations)) {
       for (const [index, event] of events.entries()) {

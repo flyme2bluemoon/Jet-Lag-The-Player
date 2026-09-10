@@ -6,10 +6,7 @@ type ReleasedSeasonNineteenEpisode = Extract<
   { slug: string }
 >;
 
-// Episode 3 is extracted ahead of its dashboard/catalog release.
-export type SeasonNineteenEpisodeSlug =
-  | ReleasedSeasonNineteenEpisode["slug"]
-  | "episode-3";
+export type SeasonNineteenEpisodeSlug = ReleasedSeasonNineteenEpisode["slug"];
 export type SeasonNineteenTimestamp = EpisodeTimestamp<SeasonNineteenEpisodeSlug>;
 export type SeasonNineteenTeamId = "sam-ben" | "adam-tom";
 
@@ -222,161 +219,193 @@ export const seasonNineteenPlaces = {
     id: "mojiko-station",
     name: "Mojikō Station",
     prefecture: "Fukuoka",
+    coordinate: [130.9614754, 33.9451155],
   },
   "kanmon-bridge": {
     id: "kanmon-bridge",
     name: "Kanmon Bridge (Moji side)",
     prefecture: "Fukuoka",
+    coordinate: [130.9622895, 33.9606598],
   },
   "kanmon-tunnel-shimonoseki-exit": {
     id: "kanmon-tunnel-shimonoseki-exit",
     name: "Kanmon Tunnel / Shimonoseki-side bus stop",
     prefecture: "Yamaguchi",
+    coordinate: [130.956144, 33.9655078],
   },
   "shimonoseki-station": {
     id: "shimonoseki-station",
     name: "Shimonoseki Station",
     prefecture: "Yamaguchi",
+    coordinate: [130.9217895, 33.9493851],
   },
   "usuki-station": {
     id: "usuki-station",
     name: "Usuki Station",
     prefecture: "Oita",
+    coordinate: [131.807899, 33.1186021],
   },
   "usuki-port": {
     id: "usuki-port",
     name: "Usuki Port",
     prefecture: "Oita",
+    coordinate: [131.8105296, 33.1264865],
   },
   "yawatahama-port": {
     id: "yawatahama-port",
     name: "Yawatahama Port",
     prefecture: "Ehime",
+    coordinate: [132.4163796, 33.4589111],
   },
   "yawatahama-station": {
     id: "yawatahama-station",
     name: "Yawatahama Station",
     prefecture: "Ehime",
+    coordinate: [132.4359747, 33.4581242],
   },
   "tsuzu-station": {
     id: "tsuzu-station",
     name: "Tsuzu Station",
     prefecture: "Yamaguchi",
+    coordinate: [132.2049813, 34.0681847],
   },
   "tsuzu-fishing-supply-store": {
     id: "tsuzu-fishing-supply-store",
     name: "Kameya fishing-supply store in Tsuzu",
     prefecture: "Yamaguchi",
+    coordinate: [132.2084845, 34.072119],
   },
   "tsuzu-beach": {
     id: "tsuzu-beach",
     name: "Tsuzu beach / river mouth",
     prefecture: "Yamaguchi",
+    coordinate: [132.2087698, 34.076732],
   },
   "sakura-ido": {
     id: "sakura-ido",
     name: "Sakura Ido",
     prefecture: "Yamaguchi",
+    coordinate: [132.2040392, 34.0729586],
   },
   "hiroshima-station": {
     id: "hiroshima-station",
     name: "Hiroshima Station",
     prefecture: "Hiroshima",
+    coordinate: [132.4755766, 34.3978256],
   },
   "hiroshima-cat-cafe": {
     id: "hiroshima-cat-cafe",
     name: "Cat café near Hiroshima Station",
     prefecture: "Hiroshima",
+    coordinate: [132.4748826, 34.3973182],
   },
   "matsuyama-station": {
     id: "matsuyama-station",
     name: "Matsuyama Station",
     prefecture: "Ehime",
+    coordinate: [132.750762, 33.8397822],
   },
   "matsuyama-fishing-harbor": {
     id: "matsuyama-fishing-harbor",
     name: "Matsuyama fishing harbor",
     prefecture: "Ehime",
+    coordinate: [132.70459, 33.837799],
   },
   "matsuyama-fishing-supply-store": {
     id: "matsuyama-fishing-supply-store",
     name: "Matsuyama fishing-supply store",
     prefecture: "Ehime",
+    coordinate: [132.7424156, 33.815009],
   },
   "matsuyama-fishing-shore": {
     id: "matsuyama-fishing-shore",
     name: "Matsuyama fishing waterfront",
     prefecture: "Ehime",
+    coordinate: [132.6965449, 33.850839],
   },
   "saijo-station": {
     id: "saijo-station",
     name: "Saijō Station",
     prefecture: "Hiroshima",
+    coordinate: [132.7436714, 34.4313263],
   },
   "matsuyama-city-station-area": {
     id: "matsuyama-city-station-area",
     name: "Matsuyama City Station area",
     prefecture: "Ehime",
+    coordinate: [132.7636738, 33.8362664],
   },
   "kasaoka-station": {
     id: "kasaoka-station",
     name: "Kasaoka Station",
-    prefecture: "Okayama"
+    prefecture: "Okayama",
+    coordinate: [133.5047114, 34.5047232],
   },
   "kasaoka-dinosaur-park-coast": {
     id: "kasaoka-dinosaur-park-coast",
     name: "Kasaoka Dinosaur Park / Horseshoe Crab Museum coastline",
-    prefecture: "Okayama"
+    prefecture: "Okayama",
+    coordinate: [133.5213699, 34.4774642],
   },
   "fukuyama-station": {
     id: "fukuyama-station",
     name: "Fukuyama Station",
-    prefecture: "Hiroshima"
+    prefecture: "Hiroshima",
+    coordinate: [133.3618898, 34.4892799],
   },
   "okayama-station": {
     id: "okayama-station",
     name: "Okayama Station",
-    prefecture: "Okayama"
+    prefecture: "Okayama",
+    coordinate: [133.917825, 34.6654089],
   },
   "koraku-en": {
     id: "koraku-en",
     name: "Kōraku-en",
-    prefecture: "Okayama"
+    prefecture: "Okayama",
+    coordinate: [133.9373948, 34.66633],
   },
   "koraku-en-bus-stop": {
     id: "koraku-en-bus-stop",
     name: "Kōraku-en bus stop",
-    prefecture: "Okayama"
+    prefecture: "Okayama",
+    coordinate: [133.93382, 34.66984],
   },
   "shin-kobe-station": {
     id: "shin-kobe-station",
     name: "Shin-Kōbe Station",
-    prefecture: "Hyogo"
+    prefecture: "Hyogo",
+    coordinate: [135.1958713, 34.7061386],
   },
   "kobe-nunobiki-ropeway": {
     id: "kobe-nunobiki-ropeway",
     name: "Kōbe Nunobiki Herb Gardens & Ropeway",
-    prefecture: "Hyogo"
+    prefecture: "Hyogo",
+    coordinate: [135.1948851, 34.7038416],
   },
   "sannomiya-station": {
     id: "sannomiya-station",
     name: "Sannomiya Station",
-    prefecture: "Hyogo"
+    prefecture: "Hyogo",
+    coordinate: [135.1954173, 34.6933747],
   },
   "shin-osaka-station": {
     id: "shin-osaka-station",
     name: "Shin-Ōsaka Station",
-    prefecture: "Osaka"
+    prefecture: "Osaka",
+    coordinate: [135.5018726, 34.7340782],
   },
   "japanese-farmhouses-museum-parking": {
     id: "japanese-farmhouses-museum-parking",
     name: "Open Air Museum of Old Japanese Farm Houses / parking area",
-    prefecture: "Osaka"
+    prefecture: "Osaka",
+    coordinate: [135.4878429, 34.7803793],
   },
   "japanese-farmhouses-museum-house": {
     id: "japanese-farmhouses-museum-house",
     name: "Gassho-zukuri house at the Open Air Museum of Old Japanese Farm Houses",
-    prefecture: "Osaka"
+    prefecture: "Osaka",
+    coordinate: [135.4885791, 34.7787771],
   },
 } as const satisfies Record<string, SeasonNineteenPlace>;
 

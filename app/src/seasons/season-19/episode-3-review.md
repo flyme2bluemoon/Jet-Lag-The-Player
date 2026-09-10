@@ -2,7 +2,7 @@
 
 Source: [We Raced The Entire Length Of Japan, Episode 3](https://www.youtube.com/watch?v=uzr_gkc81SQ). Reviewed using T3 Code Browser Use, the video frames, and the English transcript displayed by YouTube. Gameplay ends at approximately 60:04; the following promotion is excluded.
 
-The data extends the existing event streams in `timeline-data.ts`. Episode timestamps are seconds into this YouTube upload. The dashboard and episode catalog are unchanged. The extraction's timestamp type explicitly permits `episode-3` ahead of its catalog release.
+The data extends the existing event streams in `timeline-data.ts`. Episode timestamps are seconds into this YouTube upload. The extraction was completed before Episode 3 entered the dashboard catalog.
 
 ## Checks against the footage
 

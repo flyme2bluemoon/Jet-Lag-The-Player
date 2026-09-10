@@ -124,6 +124,7 @@ const TRANSIT_MODE_LABELS = {
   bus: "Bus",
   taxi: "Taxi",
   walking: "Walking",
+  ferry: "Ferry",
 } as const satisfies Record<
   Extract<TeamTrackerState, { kind: "in-transit" }>["mode"],
   string

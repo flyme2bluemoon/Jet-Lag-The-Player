@@ -6,12 +6,18 @@ import {
   seasonNineteenChallenges,
   seasonNineteenHandEvents,
   seasonNineteenPrefectureUnlocks,
+  seasonNineteenRewardCards,
+  seasonNineteenTimelineBoundaries,
   seasonNineteenTeamLocations,
   type SeasonNineteenTeamId,
 } from "./timeline-data";
 
 const season = {
-  episodes: seasonNineteen.episodes.filter((episode) => "slug" in episode),
+  // Extraction does not publish Episode 3 in the dashboard catalog.
+  episodes: [
+    ...seasonNineteen.episodes.filter((episode) => "slug" in episode),
+    { slug: "episode-3" },
+  ],
 };
 
 describe("Season 19 timeline data", () => {
@@ -66,9 +72,9 @@ describe("Season 19 timeline data", () => {
       (event) => event.kind === "completed",
     );
 
-    expect(completedAttempts).toHaveLength(9);
-    expect(completions).toHaveLength(9);
-    expect(seasonNineteenPrefectureUnlocks).toHaveLength(9);
+    expect(completedAttempts).toHaveLength(12);
+    expect(completions).toHaveLength(12);
+    expect(seasonNineteenPrefectureUnlocks).toHaveLength(14);
 
     for (const attempt of completedAttempts) {
       const completion = completions.find(
@@ -99,12 +105,15 @@ describe("Season 19 timeline data", () => {
 
     for (const event of seasonNineteenHandEvents) {
       const hand = hands.get(event.team)!;
+      expect(seasonNineteenRewardCards[event.card].title.length).toBeGreaterThan(0);
       if (event.kind === "kept") {
+        expect(hand.has(event.card)).toBe(false);
         hand.add(event.card);
       } else {
         expect(hand.has(event.card)).toBe(true);
         hand.delete(event.card);
       }
+      expect(hand.size).toBeLessThanOrEqual(5);
     }
 
     expect([...hands.get("sam-ben")!]).toEqual([
@@ -112,11 +121,13 @@ describe("Season 19 timeline data", () => {
       "curse-forbidden-quest",
       "curse-reverse",
       "unlock-any-prefecture",
+      "shinkansen-landlocked-prefecture",
     ]);
     expect([...hands.get("adam-tom")!]).toEqual([
-      "triple-reward-prefecture-ending-e",
       "shinkansen-45-minutes",
-      "unlock-any-prefecture",
+      "curse-reverse",
+      "shinkansen-60-minutes",
+      "reshuffle-challenges",
     ]);
   });
 
@@ -173,11 +184,12 @@ describe("Season 19 timeline data", () => {
 
     expect([...board]).toEqual([
       "catch-a-fish",
-      "hide-at-japan-landscape",
       "taste-rice-at-rice-field",
       "taste-test-strawberries",
+      "build-house-of-cards",
+      "record-iconic-sound",
     ]);
-    expect([...attempts]).toEqual([]);
+    expect([...attempts]).toEqual(["sam-ben-house-of-cards-1"]);
   });
 
   it("carries the Episode 1 riddle attempt forward and does not duplicate the recap", () => {
@@ -261,5 +273,102 @@ describe("Season 19 timeline data", () => {
     expect(episodeTwoHandEvents).toHaveLength(5);
     expect(episodeTwoHandEvents.every((event) => event.kind === "kept")).toBe(true);
     expect(episodeTwoHandEvents.every((event) => event.at < 3993)).toBe(true);
+  });
+
+  it("records Episode 3's completion graphics, direct unlock, and mirrored unlock separately", () => {
+    expect(seasonNineteenPrefectureUnlocks.filter(
+      (event) => event.episode === "episode-3",
+    )).toEqual([
+      { episode: "episode-3", at: 961, team: "sam-ben", prefecture: "Okayama", challenge: "hide-at-japan-landscape" },
+      { episode: "episode-3", at: 1259, team: "adam-tom", prefecture: "Kagawa", card: "unlock-any-prefecture" },
+      { episode: "episode-3", at: 1957, team: "adam-tom", prefecture: "Okayama", challenge: "find-secret-spot-great-garden" },
+      { episode: "episode-3", at: 2629, team: "sam-ben", prefecture: "Hyogo", challenge: "spot-partner-from-ropeway" },
+      { episode: "episode-3", at: 2629, team: "adam-tom", prefecture: "Hyogo", challenge: "spot-partner-from-ropeway", card: "curse-magic-mirror" },
+    ]);
+    // Magic Mirror grants the result, not a second attempt or board removal.
+    expect(seasonNineteenChallengeEvents.filter(
+      (event) => event.episode === "episode-3" && event.kind === "completed",
+    )).toHaveLength(3);
+    for (const unlock of seasonNineteenPrefectureUnlocks) {
+      if (!("card" in unlock)) continue;
+      expect(seasonNineteenHandEvents.some(
+        (event) => event.kind === "used" && event.team === unlock.team &&
+          event.card === unlock.card && compareTimestamps(season, event, unlock) <= 0,
+      )).toBe(true);
+    }
+  });
+
+  it("keeps three selections from the tripled Episode 2 reward without duplicating its completion", () => {
+    expect(seasonNineteenHandEvents.filter(
+      (event) => event.episode === "episode-3" && event.at < 264,
+    )).toEqual([
+      { episode: "episode-3", at: 146, kind: "used", team: "adam-tom", card: "triple-reward-prefecture-ending-e" },
+      { episode: "episode-3", at: 171, kind: "kept", team: "adam-tom", card: "shinkansen-opponent-prefecture" },
+      { episode: "episode-3", at: 214, kind: "kept", team: "adam-tom", card: "curse-reverse" },
+      { episode: "episode-3", at: 238, kind: "kept", team: "adam-tom", card: "shinkansen-60-minutes" },
+    ]);
+    expect(seasonNineteenChallengeEvents.filter(
+      (event) => event.episode === "episode-3" && event.challenge === "get-recognized",
+    )).toEqual([]);
+    expect(seasonNineteenHandEvents.filter(
+      (event) => event.episode === "episode-3" && event.kind === "kept",
+    )).toHaveLength(7);
+  });
+
+  it("retains the Episode 2 hands when seeking backward from Episode 3", () => {
+    function handAt(team: SeasonNineteenTeamId, at: number) {
+      const hand = new Set<string>();
+      for (const event of seasonNineteenHandEvents) {
+        if (event.team !== team || compareTimestamps(season, event, { episode: "episode-3", at }) > 0) continue;
+        if (event.kind === "kept") hand.add(event.card);
+        else hand.delete(event.card);
+      }
+      return [...hand];
+    }
+    expect(handAt("adam-tom", 3604)).toEqual([
+      "shinkansen-45-minutes", "curse-reverse", "shinkansen-60-minutes", "reshuffle-challenges",
+    ]);
+    expect(handAt("adam-tom", 0)).toEqual([
+      "triple-reward-prefecture-ending-e", "shinkansen-45-minutes", "unlock-any-prefecture",
+    ]);
+    expect(handAt("sam-ben", 0)).toEqual([
+      "curse-golden-carriage", "curse-forbidden-quest", "curse-reverse", "unlock-any-prefecture",
+    ]);
+    expect(handAt("adam-tom", 1258)).toContain("unlock-any-prefecture");
+    expect(handAt("adam-tom", 1259)).not.toContain("unlock-any-prefecture");
+    expect(handAt("sam-ben", 1510)).toContain("shinkansen-60-minutes");
+    expect(handAt("sam-ben", 1511)).not.toContain("shinkansen-60-minutes");
+  });
+
+  it("ends the failed house attempt without awarding Osaka or inventing the next attempt", () => {
+    expect(seasonNineteenChallengeEvents.filter(
+      (event) => event.challenge === "build-house-of-cards" && event.kind === "attempt-ended",
+    )).toEqual([{
+      episode: "episode-3", at: 3582, kind: "attempt-ended", challenge: "build-house-of-cards",
+      attempt: "adam-tom-house-of-cards-1", team: "adam-tom", outcome: "failed",
+    }]);
+    expect(seasonNineteenPrefectureUnlocks.map((event) => event.prefecture)).not.toContain("Osaka");
+    expect(seasonNineteenTeamLocations["sam-ben"].at(-1)).toEqual({
+      episode: "episode-3", at: 3603, kind: "stationary", place: "japanese-farmhouses-museum-house",
+    });
+    expect(seasonNineteenTeamLocations["adam-tom"].at(-1)).toEqual({
+      episode: "episode-3", at: 3392, kind: "stationary", place: "japanese-farmhouses-museum-house",
+    });
+  });
+
+  it("includes Episode 3 facts in all four independent boundary sets", () => {
+    for (const [boundaries, records] of [
+      [seasonNineteenTimelineBoundaries.teamLocations, Object.values(seasonNineteenTeamLocations).flat()],
+      [seasonNineteenTimelineBoundaries.challengeBoard, seasonNineteenChallengeEvents],
+      [seasonNineteenTimelineBoundaries.prefectureUnlocks, seasonNineteenPrefectureUnlocks],
+      [seasonNineteenTimelineBoundaries.teamHands, seasonNineteenHandEvents],
+    ] as const) {
+      expect(boundaries.filter((event) => event.episode === "episode-3")).toEqual(
+        records.filter((event) => event.episode === "episode-3").map(({ episode, at }) => ({ episode, at })),
+      );
+      expect(boundaries.filter((event) => event.episode === "episode-3").every(
+        (event) => event.at <= 3604,
+      )).toBe(true);
+    }
   });
 });

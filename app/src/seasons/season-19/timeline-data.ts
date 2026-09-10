@@ -6,7 +6,10 @@ type ReleasedSeasonNineteenEpisode = Extract<
   { slug: string }
 >;
 
-export type SeasonNineteenEpisodeSlug = ReleasedSeasonNineteenEpisode["slug"];
+// Episode 3 is extracted ahead of its dashboard/catalog release.
+export type SeasonNineteenEpisodeSlug =
+  | ReleasedSeasonNineteenEpisode["slug"]
+  | "episode-3";
 export type SeasonNineteenTimestamp = EpisodeTimestamp<SeasonNineteenEpisodeSlug>;
 export type SeasonNineteenTeamId = "sam-ben" | "adam-tom";
 
@@ -70,8 +73,10 @@ export type SeasonNineteenChallengeEvent = SeasonNineteenTimestamp &
 export type SeasonNineteenPrefectureUnlock = SeasonNineteenTimestamp & {
   team: SeasonNineteenTeamId;
   prefecture: string;
-  challenge: SeasonNineteenChallengeId;
-};
+} & (
+  | { challenge: SeasonNineteenChallengeId; card?: "curse-magic-mirror" }
+  | { card: "unlock-any-prefecture"; challenge?: never }
+);
 
 export type SeasonNineteenRewardCardId = keyof typeof seasonNineteenRewardCards;
 
@@ -94,6 +99,11 @@ const episodeOne = (at: number): SeasonNineteenTimestamp => ({
 
 const episodeTwo = (at: number): SeasonNineteenTimestamp => ({
   episode: "episode-2",
+  at,
+});
+
+const episodeThree = (at: number): SeasonNineteenTimestamp => ({
+  episode: "episode-3",
   at,
 });
 
@@ -159,7 +169,7 @@ export const seasonNineteenPlaces = {
     name: "Hakata Station",
     prefecture: "Fukuoka",
   },
-  "kitakyushu": {
+  kitakyushu: {
     id: "kitakyushu",
     name: "Kitakyushu",
     prefecture: "Fukuoka",
@@ -273,6 +283,66 @@ export const seasonNineteenPlaces = {
     id: "matsuyama-city-station-area",
     name: "Matsuyama City Station area",
     prefecture: "Ehime",
+  },
+  "kasaoka-station": {
+    id: "kasaoka-station",
+    name: "Kasaoka Station",
+    prefecture: "Okayama"
+  },
+  "kasaoka-dinosaur-park-coast": {
+    id: "kasaoka-dinosaur-park-coast",
+    name: "Kasaoka Dinosaur Park / Horseshoe Crab Museum coastline",
+    prefecture: "Okayama"
+  },
+  "fukuyama-station": {
+    id: "fukuyama-station",
+    name: "Fukuyama Station",
+    prefecture: "Hiroshima"
+  },
+  "okayama-station": {
+    id: "okayama-station",
+    name: "Okayama Station",
+    prefecture: "Okayama"
+  },
+  "koraku-en": {
+    id: "koraku-en",
+    name: "Kōraku-en",
+    prefecture: "Okayama"
+  },
+  "koraku-en-bus-stop": {
+    id: "koraku-en-bus-stop",
+    name: "Kōraku-en bus stop",
+    prefecture: "Okayama"
+  },
+  "shin-kobe-station": {
+    id: "shin-kobe-station",
+    name: "Shin-Kōbe Station",
+    prefecture: "Hyogo"
+  },
+  "kobe-nunobiki-ropeway": {
+    id: "kobe-nunobiki-ropeway",
+    name: "Kōbe Nunobiki Herb Gardens & Ropeway",
+    prefecture: "Hyogo"
+  },
+  "sannomiya-station": {
+    id: "sannomiya-station",
+    name: "Sannomiya Station",
+    prefecture: "Hyogo"
+  },
+  "shin-osaka-station": {
+    id: "shin-osaka-station",
+    name: "Shin-Ōsaka Station",
+    prefecture: "Osaka"
+  },
+  "japanese-farmhouses-museum-parking": {
+    id: "japanese-farmhouses-museum-parking",
+    name: "Open Air Museum of Old Japanese Farm Houses / parking area",
+    prefecture: "Osaka"
+  },
+  "japanese-farmhouses-museum-house": {
+    id: "japanese-farmhouses-museum-house",
+    name: "Gassho-zukuri house at the Open Air Museum of Old Japanese Farm Houses",
+    prefecture: "Osaka"
   },
 } as const satisfies Record<string, SeasonNineteenPlace>;
 
@@ -528,6 +598,138 @@ export const seasonNineteenTeamLocations = {
       kind: "stationary",
       place: "saijo-station",
     },
+    {
+      ...episodeThree(128),
+      kind: "in-transit",
+      mode: "train",
+      from: "saijo-station",
+      to: "kasaoka-station"
+    },
+    {
+      ...episodeThree(489),
+      kind: "stationary",
+      place: "kasaoka-station"
+    },
+    {
+      ...episodeThree(497),
+      kind: "in-transit",
+      mode: "taxi",
+      from: "kasaoka-station",
+      to: "kasaoka-dinosaur-park-coast"
+    },
+    {
+      ...episodeThree(527),
+      kind: "stationary",
+      place: "kasaoka-dinosaur-park-coast"
+    },
+    {
+      ...episodeThree(1044),
+      kind: "in-transit",
+      mode: "walking",
+      from: "kasaoka-dinosaur-park-coast",
+      to: "kasaoka-station"
+    },
+    {
+      ...episodeThree(1419),
+      kind: "stationary",
+      place: "kasaoka-station"
+    },
+    {
+      ...episodeThree(1435),
+      kind: "in-transit",
+      mode: "train",
+      from: "kasaoka-station",
+      to: "fukuyama-station"
+    },
+    {
+      ...episodeThree(1474),
+      kind: "stationary",
+      place: "fukuyama-station"
+    },
+    {
+      ...episodeThree(1511),
+      kind: "in-transit",
+      mode: "shinkansen",
+      from: "fukuyama-station",
+      to: "shin-kobe-station"
+    },
+    {
+      ...episodeThree(2042),
+      kind: "stationary",
+      place: "shin-kobe-station"
+    },
+    {
+      ...episodeThree(2060),
+      kind: "in-transit",
+      mode: "walking",
+      from: "shin-kobe-station",
+      to: "kobe-nunobiki-ropeway"
+    },
+    {
+      ...episodeThree(2181),
+      kind: "stationary",
+      place: "kobe-nunobiki-ropeway"
+    },
+    {
+      ...episodeThree(2722),
+      kind: "in-transit",
+      mode: "walking",
+      from: "kobe-nunobiki-ropeway",
+      to: "shin-kobe-station"
+    },
+    {
+      ...episodeThree(2728),
+      kind: "stationary",
+      place: "shin-kobe-station"
+    },
+    {
+      ...episodeThree(2913),
+      kind: "in-transit",
+      mode: "walking",
+      from: "shin-kobe-station",
+      to: "sannomiya-station"
+    },
+    {
+      ...episodeThree(2976),
+      kind: "stationary",
+      place: "sannomiya-station"
+    },
+    {
+      ...episodeThree(2987),
+      kind: "in-transit",
+      mode: "train",
+      from: "sannomiya-station",
+      to: "shin-osaka-station"
+    },
+    {
+      ...episodeThree(3140),
+      kind: "stationary",
+      place: "shin-osaka-station"
+    },
+    {
+      ...episodeThree(3322),
+      kind: "in-transit",
+      mode: "taxi",
+      from: "shin-osaka-station",
+      to: "japanese-farmhouses-museum-parking"
+    },
+    {
+      ...episodeThree(3537),
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-parking"
+    },
+    {
+      ...episodeThree(3539),
+      kind: "in-transit",
+      mode: "walking",
+      from: "japanese-farmhouses-museum-parking",
+      to: "japanese-farmhouses-museum-house"
+    },
+    {
+      ...episodeThree(3603),
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-house"
+    },
   ],
   "adam-tom": [
     { ...episodeOne(0), kind: "stationary", place: "nishi-oyama-station" },
@@ -735,6 +937,102 @@ export const seasonNineteenTeamLocations = {
       kind: "stationary",
       place: "matsuyama-city-station-area",
     },
+    {
+      ...episodeThree(102),
+      kind: "in-transit",
+      mode: "train",
+      from: "matsuyama-city-station-area",
+      to: "matsuyama-station"
+    },
+    {
+      ...episodeThree(251),
+      kind: "stationary",
+      place: "matsuyama-station"
+    },
+    {
+      ...episodeThree(443),
+      kind: "in-transit",
+      mode: "train",
+      from: "matsuyama-station",
+      to: "okayama-station"
+    },
+    {
+      ...episodeThree(1566),
+      kind: "stationary",
+      place: "okayama-station"
+    },
+    {
+      ...episodeThree(1614),
+      kind: "in-transit",
+      mode: "bus",
+      from: "okayama-station",
+      to: "koraku-en"
+    },
+    {
+      ...episodeThree(1683),
+      kind: "stationary",
+      place: "koraku-en"
+    },
+    {
+      ...episodeThree(1971),
+      kind: "in-transit",
+      mode: "walking",
+      from: "koraku-en",
+      to: "koraku-en-bus-stop"
+    },
+    {
+      ...episodeThree(2069),
+      kind: "stationary",
+      place: "koraku-en-bus-stop"
+    },
+    {
+      ...episodeThree(2190),
+      kind: "in-transit",
+      mode: "bus",
+      from: "koraku-en-bus-stop",
+      to: "okayama-station"
+    },
+    {
+      ...episodeThree(2246),
+      kind: "stationary",
+      place: "okayama-station"
+    },
+    {
+      ...episodeThree(2759),
+      kind: "in-transit",
+      mode: "shinkansen",
+      from: "okayama-station",
+      to: "shin-osaka-station"
+    },
+    {
+      ...episodeThree(3206),
+      kind: "stationary",
+      place: "shin-osaka-station"
+    },
+    {
+      ...episodeThree(3284),
+      kind: "in-transit",
+      mode: "taxi",
+      from: "shin-osaka-station",
+      to: "japanese-farmhouses-museum-parking"
+    },
+    {
+      ...episodeThree(3368),
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-parking"
+    },
+    {
+      ...episodeThree(3369),
+      kind: "in-transit",
+      mode: "walking",
+      from: "japanese-farmhouses-museum-parking",
+      to: "japanese-farmhouses-museum-house"
+    },
+    {
+      ...episodeThree(3392),
+      kind: "stationary",
+      place: "japanese-farmhouses-museum-house"
+    },
   ],
 } as const satisfies Record<
   SeasonNineteenTeamId,
@@ -853,6 +1151,30 @@ export const seasonNineteenChallenges = {
     description:
       "It's strawberry season! At a strawberry farm, pick three strawberries based on appearance and predict how your blindfolded partner will rank them based on taste. If you do not match, you must wait 30 minutes before trying again.",
     cardPulls: 2,
+  },
+  "spot-partner-from-ropeway": {
+    id: "spot-partner-from-ropeway",
+    title: "Spot Your Partner from a Ropeway",
+    description: "One player must secretly generate a random number 250–500 and situate themselves at least that many feet from the ropeway station. Their partner must ride the suspended ropeway and spot them. When the ropeway begins its journey, the hiding player may send a top-down photo of themselves. You may not collude beforehand. If you fail, try again on the descent; after a second failure, switch roles before reattempting.",
+    cardPulls: 3
+  },
+  "find-secret-spot-great-garden": {
+    id: "find-secret-spot-great-garden",
+    title: "Find the Secret Spot at One of Japan's Great Gardens",
+    description: "Just outside Kenroku-en, Kōraku-en, or Kairaku-en, reveal Amy's secret location for that garden. Find it within 10 minutes without using your phone. For every minute past the timer, wait at the garden an additional five minutes before leaving.",
+    cardPulls: 3
+  },
+  "build-house-of-cards": {
+    id: "build-house-of-cards",
+    title: "Build a House of Cards at a Gassho-zukuri House",
+    description: "Go to any gassho-zukuri house and construct a two-story house of cards using your Jet Lag cards. You may practice. If any cards tip over and hit their flat parts on the ground during an attempt, wait 30 minutes before trying again.",
+    cardPulls: 3
+  },
+  "record-iconic-sound": {
+    id: "record-iconic-sound",
+    title: "Record an Iconic Sound",
+    description: "Record one of the sounds on the Japanese government's 1996 list of the 100 Soundscapes of Japan.",
+    cardPulls: 2
   },
 } as const satisfies Record<string, SeasonNineteenChallenge>;
 
@@ -1228,9 +1550,159 @@ export const seasonNineteenChallengeEvents = [
     challenge: "taste-rice-at-rice-field",
     outcome: "abandoned",
   },
+  {
+    ...episodeThree(264),
+    kind: "revealed",
+    challenge: "spot-partner-from-ropeway"
+  },
+  {
+    ...episodeThree(551),
+    kind: "attempt-started",
+    attempt: "sam-ben-landscape-1",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+  },
+  {
+    ...episodeThree(740),
+    kind: "attempt-ended",
+    attempt: "sam-ben-landscape-1",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+    outcome: "failed",
+  },
+  {
+    ...episodeThree(783),
+    kind: "attempt-started",
+    attempt: "sam-ben-landscape-2",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+  },
+  {
+    ...episodeThree(842),
+    kind: "attempt-ended",
+    attempt: "sam-ben-landscape-2",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+    outcome: "failed",
+  },
+  {
+    ...episodeThree(866),
+    kind: "attempt-started",
+    attempt: "sam-ben-landscape-3",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+  },
+  {
+    ...episodeThree(957),
+    kind: "attempt-ended",
+    attempt: "sam-ben-landscape-3",
+    team: "sam-ben",
+    challenge: "hide-at-japan-landscape",
+    outcome: "completed",
+  },
+  {
+    ...episodeThree(961),
+    kind: "completed",
+    challenge: "hide-at-japan-landscape",
+    team: "sam-ben"
+  },
+  {
+    ...episodeThree(1050),
+    kind: "revealed",
+    challenge: "find-secret-spot-great-garden"
+  },
+  {
+    ...episodeThree(1683),
+    kind: "attempt-started",
+    challenge: "find-secret-spot-great-garden",
+    attempt: "adam-tom-garden-1",
+    team: "adam-tom"
+  },
+  {
+    ...episodeThree(1954),
+    kind: "attempt-ended",
+    challenge: "find-secret-spot-great-garden",
+    attempt: "adam-tom-garden-1",
+    team: "adam-tom",
+    outcome: "completed"
+  },
+  {
+    ...episodeThree(1957),
+    kind: "completed",
+    challenge: "find-secret-spot-great-garden",
+    team: "adam-tom"
+  },
+  {
+    ...episodeThree(2022),
+    kind: "attempt-started",
+    challenge: "spot-partner-from-ropeway",
+    attempt: "sam-ben-ropeway-1",
+    team: "sam-ben"
+  },
+  {
+    ...episodeThree(2147),
+    kind: "revealed",
+    challenge: "build-house-of-cards"
+  },
+  {
+    ...episodeThree(2400),
+    kind: "attempt-ended",
+    attempt: "sam-ben-ropeway-1",
+    team: "sam-ben",
+    challenge: "spot-partner-from-ropeway",
+    outcome: "failed",
+  },
+  {
+    ...episodeThree(2518),
+    kind: "attempt-started",
+    attempt: "sam-ben-ropeway-2",
+    team: "sam-ben",
+    challenge: "spot-partner-from-ropeway",
+  },
+  {
+    ...episodeThree(2626),
+    kind: "attempt-ended",
+    challenge: "spot-partner-from-ropeway",
+    attempt: "sam-ben-ropeway-2",
+    team: "sam-ben",
+    outcome: "completed"
+  },
+  {
+    ...episodeThree(2629),
+    kind: "completed",
+    challenge: "spot-partner-from-ropeway",
+    team: "sam-ben"
+  },
+  {
+    ...episodeThree(2919),
+    kind: "revealed",
+    challenge: "record-iconic-sound"
+  },
+  {
+    ...episodeThree(3428),
+    kind: "attempt-started",
+    challenge: "build-house-of-cards",
+    attempt: "adam-tom-house-of-cards-1",
+    team: "adam-tom"
+  },
+  {
+    ...episodeThree(3446),
+    kind: "attempt-started",
+    challenge: "build-house-of-cards",
+    attempt: "sam-ben-house-of-cards-1",
+    team: "sam-ben"
+  },
+  {
+    ...episodeThree(3582),
+    kind: "attempt-ended",
+    challenge: "build-house-of-cards",
+    attempt: "adam-tom-house-of-cards-1",
+    team: "adam-tom",
+    outcome: "failed"
+  },
 ] as const satisfies readonly SeasonNineteenChallengeEvent[];
 
-/** Unlocks use the first frame of each full-screen Challenge Completed graphic. */
+/** Challenge unlocks use the completion graphic; direct card unlocks use card play. */
 export const seasonNineteenPrefectureUnlocks = [
   {
     ...episodeOne(1291),
@@ -1285,6 +1757,37 @@ export const seasonNineteenPrefectureUnlocks = [
     team: "adam-tom",
     prefecture: "Ehime",
     challenge: "get-recognized",
+  },
+  {
+    ...episodeThree(961),
+    team: "sam-ben",
+    prefecture: "Okayama",
+    challenge: "hide-at-japan-landscape"
+  },
+  {
+    ...episodeThree(1259),
+    team: "adam-tom",
+    prefecture: "Kagawa",
+    card: "unlock-any-prefecture"
+  },
+  {
+    ...episodeThree(1957),
+    team: "adam-tom",
+    prefecture: "Okayama",
+    challenge: "find-secret-spot-great-garden"
+  },
+  {
+    ...episodeThree(2629),
+    team: "sam-ben",
+    prefecture: "Hyogo",
+    challenge: "spot-partner-from-ropeway"
+  },
+  {
+    ...episodeThree(2629),
+    team: "adam-tom",
+    prefecture: "Hyogo",
+    challenge: "spot-partner-from-ropeway",
+    card: "curse-magic-mirror"
   },
 ] as const satisfies readonly SeasonNineteenPrefectureUnlock[];
 
@@ -1349,6 +1852,55 @@ export const seasonNineteenRewardCards = {
     id: "curse-reverse",
     title: "Curse Reverse",
   },
+  "shinkansen-30-minutes": {
+    id: "shinkansen-30-minutes",
+    title: "Shinkansen — 30 Minutes"
+  },
+  "unlock-landlocked-prefecture": {
+    id: "unlock-landlocked-prefecture",
+    title: "Unlock a Prefecture That Is Landlocked"
+  },
+  "shinkansen-opponent-prefecture": {
+    id: "shinkansen-opponent-prefecture",
+    title: "Shinkansen from a Prefecture Your Opponents Unlocked"
+  },
+  "curse-german-engineering": {
+    id: "curse-german-engineering",
+    title: "Curse of German Engineering",
+    description: "Select a prefecture. The opposing team cannot take the Shinkansen in that prefecture. Cannot be played on Aomori or Hokkaido."
+  },
+  "curse-apprentice": {
+    id: "curse-apprentice",
+    title: "Curse of the Apprentice",
+    description: "The next challenge completed by the opposing team may be reattempted by your team in any prefecture at any time."
+  },
+  "curse-magic-mirror": {
+    id: "curse-magic-mirror",
+    title: "Curse of the Magic Mirror",
+    description: "The next prefecture the opposing team unlocks is unlocked for both teams, and the reward is earned by both teams."
+  },
+  "shinkansen-sea-of-japan-prefecture": {
+    id: "shinkansen-sea-of-japan-prefecture",
+    title: "Shinkansen from a Prefecture Touching the Sea of Japan"
+  },
+  "curse-hidden-funnel": {
+    id: "curse-hidden-funnel",
+    title: "Curse of the Hidden Funnel",
+    description: "Select a prefecture that the opposing team is not currently in. All rewards earned by them in that prefecture go to you."
+  },
+  "reshuffle-challenges": {
+    id: "reshuffle-challenges",
+    title: "Reshuffle Challenges",
+    description: "Completely new, different ones."
+  },
+  "shinkansen-landlocked-prefecture": {
+    id: "shinkansen-landlocked-prefecture",
+    title: "Shinkansen from a Prefecture That Is Landlocked"
+  },
+  "unlock-kanto-prefecture": {
+    id: "unlock-kanto-prefecture",
+    title: "Unlock a Prefecture That Is in the Kantō Region"
+  },
 } as const satisfies Record<string, SeasonNineteenRewardCard>;
 
 /** Only cards actually selected for a hand are kept; rejected pulls are omitted. */
@@ -1406,6 +1958,78 @@ export const seasonNineteenHandEvents = [
     kind: "kept",
     team: "sam-ben",
     card: "unlock-any-prefecture",
+  },
+  {
+    ...episodeThree(146),
+    kind: "used",
+    team: "adam-tom",
+    card: "triple-reward-prefecture-ending-e"
+  },
+  {
+    ...episodeThree(171),
+    kind: "kept",
+    team: "adam-tom",
+    card: "shinkansen-opponent-prefecture"
+  },
+  {
+    ...episodeThree(214),
+    kind: "kept",
+    team: "adam-tom",
+    card: "curse-reverse"
+  },
+  {
+    ...episodeThree(238),
+    kind: "kept",
+    team: "adam-tom",
+    card: "shinkansen-60-minutes"
+  },
+  {
+    ...episodeThree(1023),
+    kind: "kept",
+    team: "sam-ben",
+    card: "shinkansen-60-minutes"
+  },
+  {
+    ...episodeThree(1259),
+    kind: "used",
+    team: "adam-tom",
+    card: "unlock-any-prefecture"
+  },
+  {
+    ...episodeThree(1511),
+    kind: "used",
+    team: "sam-ben",
+    card: "shinkansen-60-minutes"
+  },
+  {
+    ...episodeThree(2108),
+    kind: "kept",
+    team: "adam-tom",
+    card: "curse-magic-mirror"
+  },
+  {
+    ...episodeThree(2193),
+    kind: "used",
+    team: "adam-tom",
+    card: "curse-magic-mirror"
+  },
+  {
+    ...episodeThree(2707),
+    kind: "kept",
+    team: "adam-tom",
+    card: "reshuffle-challenges"
+  },
+  {
+    ...episodeThree(2768),
+    kind: "used",
+    team: "adam-tom",
+    card: "shinkansen-opponent-prefecture"
+  },
+  {
+    ...episodeThree(2886),
+    kind: "kept",
+    team: "sam-ben",
+    card: "shinkansen-landlocked-prefecture"
   },
 ] as const satisfies readonly SeasonNineteenHandEvent[];
 
